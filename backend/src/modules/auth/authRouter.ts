@@ -1,42 +1,59 @@
-import express from 'express';
-import { register, login, refreshAccessToken } from './authService';
+import express from "express";
+import * as model from "./authModel";
 
 const router = express.Router();
 
-// Route สำหรับการลงทะเบียน (Register)
-router.post('/register', async (req, res) => {
-  const { email, password, role } = req.body;
+// REGISTER
+router.post("/register", async (req, res) => {
   try {
-    const token = await register(email, password, role);
-    res.status(201).json({ token });
-  } catch (error: any) {  // ระบุประเภทของ error ให้เป็น `any`
-    res.status(400).json({ message: error.message });
+    const result = await model.register(req.body);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 });
 
-// Route สำหรับการเข้าสู่ระบบ (Login)
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+// LOGIN
+router.post("/login", async (req, res) => {
   try {
-    const token = await login(email, password);
-    res.status(200).json({ token });
-  } catch (error: any) {  // ระบุประเภทของ error ให้เป็น `any`
-    res.status(401).json({ message: error.message });
+    const result = await model.login(req.body);
+
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      sameSite: "strict",
+    });
+
+    res.json({ accessToken: result.accessToken });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 });
 
-// Route สำหรับการรีเฟรช Access Token
-router.post('/refresh-token', async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;  // ดึง refresh token จาก cookie
-  if (!refreshToken) {
-    return res.status(401).json({ message: 'No refresh token provided' });
+// REFRESH TOKEN
+router.post("/refresh-token", async (req, res) => {
+  try {
+    const result = await model.refreshToken(req);
+    res.json(result);
+  } catch (err: any) {
+    res.status(401).json({ error: err.message });
+  }
+});
+
+// LOGOUT (เฉพาะ user.id)
+router.post("/logout/:id", async (req, res) => {
+  const userIdFromUrl = req.params.id;
+  const token = req.cookies?.refreshToken;
+
+  if (!token) {
+    return res.status(400).json({ error: "No refresh token found" });
   }
 
   try {
-    const newAccessToken = await refreshAccessToken(refreshToken);
-    res.status(200).json({ accessToken: newAccessToken });
-  } catch (error: any) {  // ระบุประเภทของ error ให้เป็น `any`
-    res.status(403).json({ message: 'Invalid or expired refresh token' });
+    const result = await model.logout(userIdFromUrl, token);
+    res.clearCookie("refreshToken");
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
   }
 });
 

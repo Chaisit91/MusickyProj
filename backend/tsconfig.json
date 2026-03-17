@@ -11,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true
   },
-  "include": ["src/**/*.ts", "lib/**/*.ts"],  // รวม lib ด้วย
+  "include": ["src/**/*.ts", "src/lib/**/*.ts"],  // รวม lib ด้วย
   "exclude": ["node_modules"]
 }

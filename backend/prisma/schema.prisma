@@ -7,18 +7,21 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  songs     Song[]   @relation("LikedSongs")
-  playlists Playlist[]
-  downloads Download[]
-  queues    Queue[]
-  searchHistory SearchHistory[]
-  likedsongs LikedSong[] @relation("LikedSongs")
+  id             String        @id @default(uuid())
+  name           String        // เพิ่มฟิลด์ name
+  email          String        @unique
+  password       String
+  role           Role          @default(USER)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  isActive       Boolean       @default(true)   // เพิ่มฟิลด์ isActive
+  lastLogin      DateTime?     // เพิ่มฟิลด์ lastLogin (optional)
+  songs          Song[]        @relation("LikedSongs")
+  playlists      Playlist[]
+  downloads      Download[]
+  queues         Queue[]
+  searchHistory  SearchHistory[]
+  likedsongs     LikedSong[]   @relation("LikedSongs")
 }
 
 model Song {

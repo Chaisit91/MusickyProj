@@ -1,25 +1,20 @@
 import express from 'express';
-import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser';
-import authRouter from './modules/auth/authRouter';  // ใช้ Router ของ Auth
+import { prisma } from './lib/prisma';
+import cors from "cors"
+import authRouter from "./modules/auth/authRouter"
+const app = express();
+const port = process.env.PORT || 8080;
 
-dotenv.config();  // โหลด environment variables
+import cookieParser from "cookie-parser"
 
-const app = express();  // สร้าง instance ของ Express
 
-// Middleware
-app.use(cookieParser());  // ใช้ cookie-parser สำหรับจัดการ cookies
-app.use(express.json());  // ให้ Express อ่าน JSON request body
+app.use(cors());
+app.use(express.json());
+app.use(cookieParser())
 
-// ตั้งค่า route สำหรับ Auth
-app.use('/auth', authRouter);  // กำหนด route สำหรับ Login/Registration
+// test git
+app.use("/api/auth", authRouter)
 
-// สร้าง route ทั่วไป
-app.get('/', (req, res) => {
-  res.send('Welcome to Musicky API!');
-});
-
-// ตั้งค่า Server ให้รับฟังที่ port 3000
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+app.listen(port, () => {
+    console.log(`Server is running on http:localhost:${port}`);
 });
