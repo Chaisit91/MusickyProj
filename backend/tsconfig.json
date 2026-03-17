@@ -4,13 +4,14 @@
     "module": "commonjs",
     "lib": ["es2018"],
     "outDir": "./dist",
-    "rootDir": "./",  // เปลี่ยนเป็น rootDir: "./" เพื่อรองรับทั้ง src และ lib
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames":true,
     "sourceMap": true
+
   },
-  "include": ["src/**/*.ts", "lib/**/*.ts"],  // รวม lib ด้วย
+  "include": ["src/**/*.ts", "lib/**/*.ts"],
   "exclude": ["node_modules"]
 }
