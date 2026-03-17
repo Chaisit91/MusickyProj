@@ -1,13 +1,140 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id             String        @id @default(uuid())
+  name           String        // เพิ่มฟิลด์ name
+  email          String        @unique
+  password       String
+  role           Role          @default(USER)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  isActive       Boolean       @default(true)   // เพิ่มฟิลด์ isActive
+  lastLogin      DateTime?     // เพิ่มฟิลด์ lastLogin (optional)
+  songs          Song[]        @relation("LikedSongs")
+  playlists      Playlist[]
+  downloads      Download[]
+  queues         Queue[]
+  searchHistory  SearchHistory[]
+  likedsongs     LikedSong[]   @relation("LikedSongs")
+}
+
+model Song {
+  id          String     @id @default(uuid())
+  title       String
+  artistId    String
+  albumId     String
+  genreId     String
+  filePath    String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  artist      Artist     @relation(fields: [artistId], references: [id])
+  album       Album      @relation(fields: [albumId], references: [id])
+  genre       Genre      @relation(fields: [genreId], references: [id])
+  likedBy     User[]     @relation("LikedSongs")
+  playlists   Playlist[] @relation("PlaylistSongs")
+  downloads   Download[]
+  queues      Queue[]
+  likedsongs  LikedSong[] @relation("LikedSongs")
+  playlistsongs PlaylistSong[] @relation("PlaylistSongs")
+}
+
+model Artist {
+  id        String   @id @default(uuid())
+  name      String
+  songs     Song[]
+  albums    Album[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Album {
+  id        String   @id @default(uuid())
+  title     String
+  artistId  String
+  releaseDate DateTime
+  songs     Song[]
+  artist    Artist   @relation(fields: [artistId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Genre {
+  id        String   @id @default(uuid())
+  name      String
+  songs     Song[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Playlist {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  songs     Song[]   @relation("PlaylistSongs")
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  playlistsongs PlaylistSong[] @relation("PlaylistSongs")
+}
+
+model PlaylistSong {
+  id        String   @id @default(uuid())
+  playlistId String
+  songId    String
+  position  Int
+  createdAt DateTime @default(now())
+
+  playlist  Playlist @relation("PlaylistSongs", fields: [playlistId], references: [id])
+  song      Song     @relation("PlaylistSongs", fields: [songId], references: [id])
+}
+
+model LikedSong {
+  id        String   @id @default(uuid())
+  userId    String
+  songId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation("LikedSongs", fields: [userId], references: [id])
+  song      Song     @relation("LikedSongs", fields: [songId], references: [id])
+}
+
+model Download {
+  id        String   @id @default(uuid())
+  userId    String
+  songId    String
+  downloadedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  song      Song     @relation(fields: [songId], references: [id])
+}
+
+model Queue {
+  id        String   @id @default(uuid())
+  userId    String
+  songId    String
+  queuedAt  DateTime @default(now())
+  position  Int
+
+  user      User     @relation(fields: [userId], references: [id])
+  song      Song     @relation(fields: [songId], references: [id])
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  query     String
+  searchedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
 }
