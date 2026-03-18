@@ -1,3 +1,4 @@
+// authService.ts
 import * as repo from "./authRepository";
 import jwt from "jsonwebtoken";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
@@ -7,12 +8,19 @@ function validateRegister(data: any) {
   if (!data.email || typeof data.email !== "string") {
     throw new Error("Email must be string");
   }
-  if (!data.email.includes("@")) {
-    throw new Error("Invalid email format");
+
+  // แปลงอีเมลทั้งหมดเป็นตัวพิมพ์เล็กแล้วตรวจสอบ
+  const email = data.email.toLowerCase();
+
+  // ตรวจสอบว่าอีเมลเป็น Gmail หรือไม่
+  if (!email.includes("@gmail.com")) {
+    throw new Error("Email must be a Gmail account");
   }
+
   if (!data.name || typeof data.name !== "string") {
     throw new Error("Name required");
   }
+
   if (!data.password || data.password.length < 6) {
     throw new Error("Password must be at least 6 chars");
   }
