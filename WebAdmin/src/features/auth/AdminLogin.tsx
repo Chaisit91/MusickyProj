@@ -35,6 +35,10 @@ const AdminLogin = () => {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-4 mb-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
         />
+        <button
+          onClick={handleLogin}
+          className="w-full p-4 mb-4 rounded-lg bg-white text-black font-semibold hover:bg-green-600 transition duration-300"
+        >Login</button>
       </div>
     </div>
   );
