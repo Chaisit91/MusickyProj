@@ -1,13 +1,162 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id            String          @id @default(uuid())
+  name          String
+  email         String          @unique
+  password      String
+  role          Role            @default(USER)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  isActive      Boolean         @default(true)
+  lastLogin     DateTime?
+  playlists     Playlist[]
+  downloads     Download[]
+  queues        Queue[]
+  searchHistory SearchHistory[]
+  likedSongs    LikedSong[]
+  refreshTokens RefreshToken[]
+}
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Song {
+  id            String         @id @default(uuid())
+  title         String
+  artistId      String
+  albumId       String
+  genreId       String
+  filePath      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  artist        Artist         @relation(fields: [artistId], references: [id])
+  album         Album          @relation(fields: [albumId], references: [id])
+  genre         Genre          @relation(fields: [genreId], references: [id])
+  likedSongs    LikedSong[]
+  playlistSongs PlaylistSong[]
+  downloads     Download[]
+  queues        Queue[]
+}
+
+model Artist {
+  id        String   @id @default(uuid())
+  name      String
+  bio       String?
+  imageUrl  String?
+  songs     Song[]
+  albums    Album[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Album {
+  id          String   @id @default(uuid())
+  title       String
+  artistId    String
+  releaseDate DateTime
+  coverUrl    String?
+  artist      Artist   @relation(fields: [artistId], references: [id])
+  songs       Song[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Genre {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  songs     Song[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Playlist {
+  id            String         @id @default(uuid())
+  name          String
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  playlistSongs PlaylistSong[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model PlaylistSong {
+  id         String   @id @default(uuid())
+  playlistId String
+  songId     String
+  position   Int
+  createdAt  DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  song       Song     @relation(fields: [songId], references: [id])
+
+  @@unique([playlistId, songId])
+  @@index([playlistId])
+  @@index([songId])
+}
+
+model LikedSong {
+  id        String   @id @default(uuid())
+  userId    String
+  songId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  song      Song     @relation(fields: [songId], references: [id])
+
+  @@unique([userId, songId])
+  @@index([userId])
+  @@index([songId])
+}
+
+model Download {
+  id           String   @id @default(uuid())
+  userId       String
+  songId       String
+  downloadedAt DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  song         Song     @relation(fields: [songId], references: [id])
+
+  @@index([userId])
+  @@index([songId])
+}
+
+model Queue {
+  id       String   @id @default(uuid())
+  userId   String
+  songId   String
+  position Int
+  queuedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  song     Song     @relation(fields: [songId], references: [id])
+
+  @@unique([userId, position])
+  @@index([userId])
+}
+
+model SearchHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  query      String
+  searchedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+enum Role {
+  USER
+  ADMIN
 }
