@@ -9,10 +9,10 @@ const AdminLogin = () => {
     console.log("Logging in with", email, password);
   };
 
-  const handleGoogleLogin = () => {
-    // Google login logic goes here
-    console.log("Logging in with Google");
-  };
+  // const handleGoogleLogin = () => {
+  //   // Google login logic goes here
+  //   console.log("Logging in with Google");
+  // };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col justify-center items-center p-6">
@@ -35,6 +35,10 @@ const AdminLogin = () => {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-4 mb-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
         />
+        <button
+          onClick={handleLogin}
+          className="w-full p-4 mb-4 rounded-lg bg-white text-black font-semibold hover:bg-green-600 transition duration-300"
+        >Login</button>
       </div>
     </div>
   );
