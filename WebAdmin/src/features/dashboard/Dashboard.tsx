@@ -2,6 +2,7 @@ import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement } from 'chart.js';
+import Sidebar from '../../components/layout/Sidebar';
 
 // Register chart components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement);
@@ -41,23 +42,12 @@ const Dashboard = () => {
         ],
     };
 
-    return (
-        <div className="min-h-screen bg-gray-900 text-white">
-            {/* Sidebar */}
-            <div className="flex min-h-screen">
-                <div className="w-64 bg-gray-800 p-6 flex flex-col border-r border-gray-700">
-                    <h2 className="text-xl font-semibold mb-6 flex items-center justify-center text-green-500">Musicky Admin</h2>
-                    <ul className="space-y-4">
-                        <li className="text-gray-400 hover:text-white cursor-pointer py-2 flex justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">แดชบอร์ด</li>
-                        <li className="text-gray-400 hover:text-white cursor-pointer py-2 flex justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">สถิติผู้ใช้</li>
-                        <li className="text-gray-400 hover:text-white cursor-pointer py-2 flex justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการผู้ใช้</li>
-                        <li className="text-gray-400 hover:text-white cursor-pointer py-2 flex justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการเพลง</li>
-                        <li className="text-gray-400 hover:text-white cursor-pointer py-2 flex justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการหมวดหมู่</li>
-                        <li className="text-gray-400 hover:text-white cursor-pointer py-2 flex justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการโฆษณา</li>
-                        <li className="text-gray-400 hover:text-white cursor-pointer py-2 flex justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">รายได้โฆษณา</li>
-                    </ul>
-                </div>
 
+    return (
+
+        <div className='flex min-h-screen'>
+            <Sidebar/>
+                <div className="flex-1 flex text-white">
                 {/* Content */}
                 <div className="flex-1 p-8 flex flex-col bg-gray-500">
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
