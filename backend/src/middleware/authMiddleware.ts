@@ -1,49 +1,91 @@
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 interface AuthPayload extends JwtPayload {
-  id?: string | number;
-  userId?: string | number;
+  sub?: string;
   role?: string;
   email?: string;
 }
 
-export const authMiddleware = (req: any, res: any, next: any) => {
+// เพิ่ม user type ใน Express Request
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        role: string;
+        email: string;
+      };
+    }
+  }
+}
+
+// ต้อง login — ถ้าไม่มี token ตีกลับ 401/403 ทันที
+export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 
-  // ตรวจสอบว่า Authorization header ถูกส่งมาหรือไม่
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(403).json({ message: "No token provided" });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(403).json({ success: false, message: "No token provided" });
+    return;
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
 
   try {
-    // ตรวจสอบและ decode token
     const decoded = jwt.verify(
       token,
       process.env.ACCESS_TOKEN_SECRET as string
     ) as AuthPayload;
 
-    // เลือก 'id' หรือ 'userId' หรือ 'sub' ถ้ามีใน decoded payload
-    const userId = decoded.id || decoded.userId || decoded.sub;
+    const userId = decoded.sub;
 
-    // ถ้าไม่พบ 'userId' หรือ 'id' ใน decoded payload
     if (!userId) {
-      console.error("Decoded token does not contain userId or id:", decoded);
-      return res.status(401).json({ message: "Unauthorized: Invalid token payload" });
+      res.status(401).json({ success: false, message: "Invalid token payload" });
+      return;
     }
 
-    // เพิ่มข้อมูล user ลงใน req.user
     req.user = {
       id: userId,
-      role: decoded.role,
-      email: decoded.email,
+      role: decoded.role ?? "USER",
+      email: decoded.email ?? "",
     };
 
     next();
   } catch (error) {
-    // แสดงข้อผิดพลาดในกรณีที่ token ไม่ถูกต้อง
-    console.error("Token verification failed:", error);
-    return res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ success: false, message: "Unauthorized" });
   }
+};
+
+// Optional login — ถ้ามี token ก็ decode ใส่ req.user แต่ถ้าไม่มีก็ผ่านได้
+// ใช้กับ search — ทุกคนค้นหาได้ แต่ถ้า login จะบันทึก history ด้วย
+export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    next();
+    return;
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET as string
+    ) as AuthPayload;
+
+    const userId = decoded.sub;
+
+    if (userId) {
+      req.user = {
+        id: userId,
+        role: decoded.role ?? "USER",
+        email: decoded.email ?? "",
+      };
+    }
+  } catch {
+    // token ไม่ valid — ไม่ต้องตีกลับ แค่ข้ามไป
+  }
+
+  next();
 };
