@@ -9,10 +9,10 @@ const AdminLogin = () => {
     console.log("Logging in with", email, password);
   };
 
-  const handleGoogleLogin = () => {
-    // Google login logic goes here
-    console.log("Logging in with Google");
-  };
+  // const handleGoogleLogin = () => {
+  //   // Google login logic goes here
+  //   console.log("Logging in with Google");
+  // };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col justify-center items-center p-6">
