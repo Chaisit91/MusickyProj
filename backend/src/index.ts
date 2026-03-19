@@ -1,41 +1,69 @@
-import express from 'express';
-import { prisma } from './lib/prisma';  // การเชื่อมต่อกับ Prisma
-import cors from 'cors';  // ใช้ CORS middleware
-import cookieParser from 'cookie-parser';  // ใช้ cookie-parser สำหรับจัดการคุกกี้
-import authRouter from './modules/auth/authRouter';  // นำเข้า authRouter
-import { authMiddleware } from './middleware/authMiddleware';  // นำเข้า authMiddleware
-import { roleMiddleware } from './middleware/roleMiddleware';  // นำเข้า roleMiddleware
-import { errorMiddleware } from './middleware/errorMiddleware';  // นำเข้า errorMiddleware
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// Routers
+import authRouter from "./modules/auth/authRouter";
+import artistRouter from "./modules/artist/artistRouter";
+import genreRouter from "./modules/genre/genreRouter";
+import albumRouter from "./modules/album/albumRouter";
+import songRouter from "./modules/song/songRouter";
+import likedSongRouter from "./modules/likedSong/likedSongRouter";
+import playlistRouter from "./modules/playlist/playlistRouter";
+import downloadRouter from "./modules/download/downloadRouter";
+import queueRouter from "./modules/queue/queueRouter";
+import searchRouter from "./modules/search/searchRouter";
+import { thaiTimeMiddleware } from "./middleware/thaiTimeMiddleware";
+
+// Middleware
+import { errorMiddleware } from "./middleware/errorMiddleware";
 
 const app = express();
 const port = process.env.PORT || 8080;
 
-// ใช้ middleware สำหรับ CORS
+// ── Global Middleware ──────────────────────────────────────────
 app.use(cors());
-
-// ใช้ express.json() เพื่อให้สามารถรับข้อมูลในรูปแบบ JSON ได้
 app.use(express.json());
-
-// ใช้ cookie-parser สำหรับจัดการคุกกี้
 app.use(cookieParser());
+app.use(thaiTimeMiddleware); 
 
-// Route สำหรับการลงทะเบียนและล็อกอิน
-app.use('/api/auth', authRouter);  // ใช้ authRouter สำหรับการทำงานเกี่ยวกับการเข้าสู่ระบบและการลงทะเบียน
+// ── Routes ────────────────────────────────────────────────────
+app.use("/api/auth", authRouter);
+app.use("/api/artists", artistRouter);
+app.use("/api/genres", genreRouter);
+app.use("/api/albums", albumRouter);
+app.use("/api/songs", songRouter);
+app.use("/api/liked-songs", likedSongRouter);
+app.use("/api/playlists", playlistRouter);
+app.use("/api/downloads", downloadRouter);
+app.use("/api/queue", queueRouter);
+app.use("/api/search", searchRouter);
 
-// ตัวอย่าง Route ที่ต้องใช้การตรวจสอบ Token ด้วย authMiddleware
-app.get('/protected', authMiddleware, (req, res) => {
-  res.status(200).json({ message: 'Protected route accessed!' });
+// ── 404 Handler ───────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found` });
 });
 
-// ตัวอย่าง Route ที่ต้องใช้การตรวจสอบ Role ด้วย roleMiddleware
-app.get('/admin', authMiddleware, roleMiddleware('ADMIN'), (req, res) => {
-  res.status(200).json({ message: 'Welcome Admin!' });
+// ── Global Error Handler ──────────────────────────────────────
+app.use(errorMiddleware);
+
+// ── Start Server ──────────────────────────────────────────────
+const server = app.listen(port, () => {
+  console.log(`🎵 Musicky API running on http://localhost:${port}`);
 });
 
-// ใช้ errorMiddleware ที่จัดการข้อผิดพลาดทั้งหมดในระบบ
-app.use(errorMiddleware);  // ใช้ errorMiddleware ที่เราสร้างไว้
-
-// เริ่มต้นการเชื่อมต่อและทำงานของเซิร์ฟเวอร์
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+// ── Process Error Handlers ────────────────────────────────────
+process.on("uncaughtException", (err) => {
+  console.error("💥 Uncaught Exception:", err);
+  process.exit(1);
 });
+
+process.on("unhandledRejection", (reason) => {
+  console.error("💥 Unhandled Rejection:", reason);
+  server.close(() => process.exit(1));
+});
+
+export default app;

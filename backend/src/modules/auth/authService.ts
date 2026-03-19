@@ -1,73 +1,230 @@
-import * as repo from "./authRepository"; // นำเข้า repo สำหรับติดต่อฐานข้อมูล
-import { hashPassword, comparePassword } from "../../utils/password"; // ฟังก์ชันสำหรับแฮชรหัสผ่านและเปรียบเทียบรหัสผ่าน
-import { generateAccessToken, generateRefreshToken } from "../../utils/jwt"; // ฟังก์ชันสำหรับสร้าง JWT
-import jwt from 'jsonwebtoken'; // นำเข้า jsonwebtoken สำหรับการยืนยัน JWT
+import { Request, Response } from "express";
+import * as AuthRepository from "./authRepository";
+import { hashPassword, comparePassword } from "../../utils/password";
+import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
 
-// Register service
-export const registerService = async (data: any, repo: any) => {
-  // แปลงอีเมลให้เป็นตัวพิมพ์เล็กก่อนตรวจสอบ
-  const email = data.email.toLowerCase();  // แปลงอีเมลให้เป็นตัวพิมพ์เล็ก
+export const register = async (req: Request, res: Response) => {
+  const { name, email, password, birthDate } = req.body;
 
-  // ตรวจสอบว่าอีเมลเป็น Gmail หรือไม่
-  if (!email.includes('@gmail.com')) {
-    throw new Error("Email must be a Gmail account");
+  if (!name || !email || !password) {
+    res.status(400).json({ success: false, message: "name, email and password are required" });
+    return;
   }
 
-  // ตรวจสอบว่าอีเมลนี้มีอยู่ในฐานข้อมูลหรือไม่
-  const exist = await repo.findByEmail(email);
-
-  if (exist) {
-    throw new Error("Email already exists");
+  const emailLower = (email as string).toLowerCase();
+  if (!emailLower.endsWith("@gmail.com")) {
+    res.status(400).json({ success: false, message: "Only @gmail.com email is allowed" });
+    return;
   }
 
-  // แฮชรหัสผ่าน
-  const hashed = await hashPassword(data.password);
+  const existing = await AuthRepository.findUserByEmail(emailLower);
+  if (existing) {
+    res.status(409).json({ success: false, message: "Email already in use" });
+    return;
+  }
 
-  // บันทึกผู้ใช้ใหม่ในฐานข้อมูล
-  return repo.createUser({
-    name: data.name,
-    email: email,  // เก็บอีเมลที่แปลงเป็นตัวพิมพ์เล็ก
-    password: hashed,
-    role: "USER",  // กำหนด role เป็น "USER" โดยค่าเริ่มต้น
+  const hashedPassword = await hashPassword(password as string);
+  const user = await AuthRepository.createUser({
+    name: name as string,
+    email: emailLower,
+    password: hashedPassword,
+    birthDate: birthDate ? new Date(birthDate as string) : undefined,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Register successful, please login",
+    data: { user },
   });
 };
 
-// Login service
-export const loginService = async (data: any, repo: any) => {
-  // ตรวจสอบอีเมลในฐานข้อมูล
-  const user = await repo.findByEmail(data.email);
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-  if (!user) {
-    throw new Error("Invalid credentials");
+  if (!email || !password) {
+    res.status(400).json({ success: false, message: "email and password are required" });
+    return;
   }
 
-  // เปรียบเทียบรหัสผ่านที่ป้อนกับรหัสผ่านที่เก็บไว้
-  const valid = await comparePassword(data.password, user.password);
+  const emailLower = (email as string).toLowerCase();
+  if (!emailLower.endsWith("@gmail.com")) {
+    res.status(400).json({ success: false, message: "Only @gmail.com email is allowed" });
+    return;
+  }
 
-  if (!valid) throw new Error("Invalid credentials");
+  const user = await AuthRepository.findUserByEmail(emailLower);
+  if (!user) {
+    res.status(401).json({ success: false, message: "Invalid email or password" });
+    return;
+  }
 
-  // สร้าง access token และ refresh token
-  const accessToken = generateAccessToken(user);
-  const refreshToken = generateRefreshToken(user);
+  if (!user.isActive) {
+    res.status(403).json({ success: false, message: "Account is disabled" });
+    return;
+  }
 
-  // อัปเดต `lastLogin` หลังจากผู้ใช้เข้าสู่ระบบสำเร็จ
-  await repo.updateLastLogin(user.id);
+  const isMatch = await comparePassword(password as string, user.password);
+  if (!isMatch) {
+    res.status(401).json({ success: false, message: "Invalid email or password" });
+    return;
+  }
 
-  return { accessToken, refreshToken };
+  await AuthRepository.updateLastLogin(user.id);
+
+  const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
+  const refreshToken = generateRefreshToken({ id: user.id, role: user.role, email: user.email });
+
+  await AuthRepository.saveRefreshToken(user.id, refreshToken);
+
+  res.json({
+    success: true,
+    data: {
+      accessToken,
+      refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    },
+  });
 };
 
-// LOGOUT (อัปเดต isActive เป็น false)
-export const logout = async (userIdFromUrl: string, token: string) => {
-  const decoded: any = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string);
-  const loggedInUserId = decoded.sub;
+export const adminLogin = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-  // ตรวจสอบว่าผู้ใช้ที่พยายามล็อกเอาท์คือผู้ใช้ที่ล็อกอินอยู่หรือไม่
-  if (userIdFromUrl !== loggedInUserId) {
-    throw new Error("You can only log out your own account");
+  if (!email || !password) {
+    res.status(400).json({ success: false, message: "email and password are required" });
+    return;
   }
 
-  // อัปเดตสถานะ isActive ของผู้ใช้เป็น false
-  await repo.deactivateUser(loggedInUserId);
+  const emailLower = (email as string).toLowerCase();
+  if (!emailLower.endsWith("@gmail.com")) {
+    res.status(400).json({ success: false, message: "Only @gmail.com email is allowed" });
+    return;
+  }
 
-  return { message: `Logged out successfully for user ID: ${userIdFromUrl}` };
+  const user = await AuthRepository.findUserByEmail(emailLower);
+  if (!user) {
+    res.status(401).json({ success: false, message: "Invalid email or password" });
+    return;
+  }
+
+  if (user.role !== "ADMIN") {
+    res.status(403).json({ success: false, message: "Access denied: Admins only" });
+    return;
+  }
+
+  if (!user.isActive) {
+    res.status(403).json({ success: false, message: "Account is disabled" });
+    return;
+  }
+
+  const isMatch = await comparePassword(password as string, user.password);
+  if (!isMatch) {
+    res.status(401).json({ success: false, message: "Invalid email or password" });
+    return;
+  }
+
+  await AuthRepository.updateLastLogin(user.id);
+
+  const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
+  const refreshToken = generateRefreshToken({ id: user.id, role: user.role, email: user.email });
+
+  await AuthRepository.saveRefreshToken(user.id, refreshToken);
+
+  res.json({
+    success: true,
+    data: {
+      accessToken,
+      refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    },
+  });
+};
+
+export const refresh = async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    res.status(400).json({ success: false, message: "refreshToken is required" });
+    return;
+  }
+
+  const tokenRecord = await AuthRepository.findRefreshToken(refreshToken as string);
+  if (!tokenRecord) {
+    res.status(401).json({ success: false, message: "Invalid refresh token" });
+    return;
+  }
+
+  if (tokenRecord.expiresAt < new Date()) {
+    await AuthRepository.deleteRefreshToken(refreshToken as string);
+    res.status(401).json({ success: false, message: "Refresh token expired, please login again" });
+    return;
+  }
+
+  if (!tokenRecord.user.isActive) {
+    res.status(403).json({ success: false, message: "Account is disabled" });
+    return;
+  }
+
+  await AuthRepository.deleteRefreshToken(refreshToken as string);
+
+  const newAccessToken = generateAccessToken({
+    id: tokenRecord.user.id,
+    role: tokenRecord.user.role,
+    email: tokenRecord.user.email,
+  });
+  const newRefreshToken = generateRefreshToken({
+    id: tokenRecord.user.id,
+    role: tokenRecord.user.role,
+    email: tokenRecord.user.email,
+  });
+
+  await AuthRepository.saveRefreshToken(tokenRecord.user.id, newRefreshToken);
+
+  res.json({
+    success: true,
+    data: {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    },
+  });
+};
+
+export const logout = async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const { refreshToken } = req.body;
+
+  if (refreshToken) {
+    await AuthRepository.deleteRefreshToken(refreshToken as string);
+  } else {
+    await AuthRepository.deleteAllRefreshTokensByUser(userId);
+  }
+
+  res.json({ success: true, message: "Logged out successfully" });
+};
+
+export const logoutAll = async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  await AuthRepository.deleteAllRefreshTokensByUser(userId);
+  res.json({ success: true, message: "Logged out from all devices" });
+};
+
+export const getMe = async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+
+  const user = await AuthRepository.findUserById(userId);
+  if (!user) {
+    res.status(404).json({ success: false, message: "User not found" });
+    return;
+  }
+
+  res.json({
+    success: true,
+    data: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      lastLogin: user.lastLogin,
+    },
+  });
 };

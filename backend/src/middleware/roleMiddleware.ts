@@ -1,23 +1,17 @@
-import { prisma } from '../lib/prisma';
+import { Request, Response, NextFunction } from "express";
 
+// อ่าน role จาก req.user ที่ authMiddleware decode ไว้แล้ว
+// ไม่ต้อง query DB ซ้ำทุก request
 export const roleMiddleware = (requiredRole: string) => {
-  return async (req: any, res: any, next: any) => {
-    if (!req.user?.id) {
-      return res.status(401).json({ message: "Unauthorized: No user found" });
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: "Unauthorized: No user found" });
+      return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: req.user.id,  // ไม่ต้องแปลงเป็น number ถ้า id เป็น string หรือ UUID
-      },
-    });
-
-    if (!user) {
-      return res.status(401).json({ message: "Unauthorized: No user" });
-    }
-
-    if (user.role !== requiredRole) {
-      return res.status(403).json({ message: "Forbidden: You are not an admin" });
+    if (req.user.role !== requiredRole) {
+      res.status(403).json({ success: false, message: "Forbidden: Insufficient permissions" });
+      return;
     }
 
     next();
