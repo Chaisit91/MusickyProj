@@ -11,7 +11,6 @@ export const search = async (req: Request, res: Response) => {
 
   const results = await SearchRepository.searchAll(q.trim());
 
-  // บันทึก search history ถ้า login อยู่
   if (req.user) {
     await SearchRepository.createSearchHistory({
       userId: req.user.id,
