@@ -22,6 +22,16 @@ export const searchAll = async (query: string) => {
   return { songs, artists, albums };
 };
 
+export const findSongsByLyrics = async (query: string) => {
+  return prisma.song.findMany({
+    where: {
+      lyrics: { contains: query, mode: "insensitive" },
+    },
+    include: { artist: true, album: true, genre: true },
+    take: 10,
+  });
+};
+
 export const findSearchHistoryByUser = async (userId: string) => {
   return prisma.searchHistory.findMany({
     where: { userId },
