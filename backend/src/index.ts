@@ -34,7 +34,10 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 // ── Global Middleware ──────────────────────────────────────────
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5713",
+  credentials: true,
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(thaiTimeMiddleware);
