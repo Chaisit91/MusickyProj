@@ -1,11 +1,10 @@
-import type { Song } from "./song";
 import type { User } from "./user";
 
-export interface LikedSong {
+export interface RefreshToken {
   id: string;
+  token: string;
   userId: string;
-  songId: string;
+  expiresAt: string;
   createdAt: string;
   user?: User;
-  song?: Song;
 }
