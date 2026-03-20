@@ -17,18 +17,8 @@ interface AuthState {
   error: string | null;
 }
 
-function parseUser(): User | null {
-  try {
-    const raw = localStorage.getItem("user");
-    if (!raw || raw === "undefined") return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
 const initialState: AuthState = {
-  user: parseUser(),
+  user: localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null,
   accessToken: localStorage.getItem("accessToken"),
   refreshToken: localStorage.getItem("refreshToken"),
   loading: false,
@@ -70,6 +60,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Login
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -87,6 +78,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      // Logout
       .addCase(logoutThunk.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
