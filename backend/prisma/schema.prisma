@@ -51,6 +51,7 @@ model Song {
   playlistSongs PlaylistSong[]
   downloads     Download[]
   queues        Queue[]
+  lyrics    String?
 }
 
 model Artist {
