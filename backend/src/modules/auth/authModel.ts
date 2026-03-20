@@ -2,7 +2,7 @@ export interface RegisterInput {
   name: string;
   email: string;
   password: string;
-  birthDate?: string;
+  birthDate: string; // วันเดือนปีเกิด เก็บเป็น ISO string
 }
 
 export interface LoginInput {

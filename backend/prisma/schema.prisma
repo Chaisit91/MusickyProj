@@ -23,6 +23,7 @@ model User {
   likedSongs    LikedSong[]
   refreshTokens RefreshToken[]
 }
+
 model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
@@ -34,15 +35,6 @@ model RefreshToken {
   @@index([userId])
   @@index([token])
 }
-model Ads {
-  id        String   @id @default(uuid())
-  title     String
-  imageUrl  String
-  linkUrl   String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model Song {
   id            String         @id @default(uuid())
@@ -51,6 +43,10 @@ model Song {
   albumId       String
   genreId       String
   filePath      String
+  duration      Int?           // เพิ่ม — ความยาวเพลง (วินาที)
+  playCount     Int            @default(0)  // เพิ่ม — จำนวนครั้งที่เปิด
+  year          Int?           // เพิ่ม — ปีที่ลงเพลง
+  lyrics        String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   artist        Artist         @relation(fields: [artistId], references: [id])
@@ -60,7 +56,6 @@ model Song {
   playlistSongs PlaylistSong[]
   downloads     Download[]
   queues        Queue[]
-  lyrics    String?
 }
 
 model Artist {
@@ -87,11 +82,14 @@ model Album {
 }
 
 model Genre {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  songs     Song[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?  // เพิ่ม — คำอธิบาย
+  imageUrl    String?  // เพิ่ม — รูปภาพ
+  color       String?  // เพิ่ม — สีกรณีไม่มีรูป
+  songs       Song[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Playlist {
@@ -164,6 +162,20 @@ model SearchHistory {
   user       User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model Ads {
+  id          String   @id @default(uuid())
+  title       String
+  imageUrl    String
+  linkUrl     String
+  adType      String   // เพิ่ม — "SPLASH" | "AFTER_SONG" | "AFTER_MULTIPLE"
+  adDuration  Int      @default(30)  // เพิ่ม — ความยาวโฆษณา (วินาที)
+  advertiser  String   // เพิ่ม — ผู้ลงโฆษณา
+  impressions Int      @default(0)   // เพิ่ม — ยอดแสดง
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum Role {

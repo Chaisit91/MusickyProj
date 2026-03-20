@@ -1,15 +1,11 @@
 import { prisma } from "../../lib/prisma";
 
 export const findUserByEmail = async (email: string) => {
-  return prisma.user.findUnique({
-    where: { email },
-  });
+  return prisma.user.findUnique({ where: { email } });
 };
 
 export const findUserById = async (id: string) => {
-  return prisma.user.findUnique({
-    where: { id },
-  });
+  return prisma.user.findUnique({ where: { id } });
 };
 
 export const createUser = async (data: {
@@ -45,7 +41,7 @@ export const updateLastLogin = async (id: string) => {
 
 export const saveRefreshToken = async (userId: string, token: string) => {
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
+  expiresAt.setDate(expiresAt.getDate() + 7); // หมดอายุใน 7 วัน
   return prisma.refreshToken.create({
     data: { userId, token, expiresAt },
   });

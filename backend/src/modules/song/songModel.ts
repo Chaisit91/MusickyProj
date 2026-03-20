@@ -4,6 +4,9 @@ export interface SongCreateInput {
   albumId: string;
   genreId: string;
   filePath: string;
+  duration?: number;
+  year?: number;
+  lyrics?: string;
 }
 
 export interface SongUpdateInput {
@@ -12,6 +15,9 @@ export interface SongUpdateInput {
   albumId?: string;
   genreId?: string;
   filePath?: string;
+  duration?: number;
+  year?: number;
+  lyrics?: string;
 }
 
 export interface SongFilterInput {

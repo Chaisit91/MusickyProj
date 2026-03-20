@@ -16,10 +16,19 @@ import playlistRouter from "./modules/playlist/playlistRouter";
 import downloadRouter from "./modules/download/downloadRouter";
 import queueRouter from "./modules/queue/queueRouter";
 import searchRouter from "./modules/search/searchRouter";
-import { thaiTimeMiddleware } from "./middleware/thaiTimeMiddleware";
+import userRouter from "./modules/user/userRouter";
+import adsRouter from "./modules/ads/adsRouter";
+
+// Admin Routers
+import dashboardRouter from "./modules/admin/dashboard/dashboardRouter";
+import adminUserRouter from "./modules/admin/users/adminUserRouter";
+import adminSongRouter from "./modules/admin/songs/adminSongRouter";
+import adminGenreRouter from "./modules/admin/genres/adminGenreRouter";
+import adminAdsRouter from "./modules/admin/ads/adminAdsRouter";
 
 // Middleware
 import { errorMiddleware } from "./middleware/errorMiddleware";
+import { thaiTimeMiddleware } from "./middleware/thaiTimeMiddleware";
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -28,7 +37,7 @@ const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
-app.use(thaiTimeMiddleware); 
+app.use(thaiTimeMiddleware);
 
 // ── Routes ────────────────────────────────────────────────────
 app.use("/api/auth", authRouter);
@@ -41,6 +50,15 @@ app.use("/api/playlists", playlistRouter);
 app.use("/api/downloads", downloadRouter);
 app.use("/api/queue", queueRouter);
 app.use("/api/search", searchRouter);
+app.use("/api/users", userRouter);
+app.use("/api/ads", adsRouter);
+
+// ── Admin Routes ──────────────────────────────────────────────
+app.use("/api/admin/dashboard", dashboardRouter);
+app.use("/api/admin/users", adminUserRouter);
+app.use("/api/admin/songs", adminSongRouter);
+app.use("/api/admin/genres", adminGenreRouter);
+app.use("/api/admin/ads", adminAdsRouter);
 
 // ── 404 Handler ───────────────────────────────────────────────
 app.use((req, res) => {

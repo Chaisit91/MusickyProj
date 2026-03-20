@@ -5,15 +5,13 @@ import { authMiddleware } from "../../middleware/authMiddleware";
 import { roleMiddleware } from "../../middleware/roleMiddleware";
 
 const router = Router();
+const admin = [authMiddleware, roleMiddleware("ADMIN")];
 
-// Public — mobile app ดึง ads ที่ active
 router.get("/active", asyncHandler(AdsService.getActiveAds));
-
-// ADMIN only
-router.get("/", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(AdsService.getAllAds));
-router.get("/:id", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(AdsService.getAdsById));
-router.post("/", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(AdsService.createAds));
-router.put("/:id", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(AdsService.updateAds));
-router.delete("/:id", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(AdsService.deleteAds));
+router.get("/", ...admin, asyncHandler(AdsService.getAllAds));
+router.get("/:id", ...admin, asyncHandler(AdsService.getAdsById));
+router.post("/", ...admin, asyncHandler(AdsService.createAds));
+router.put("/:id", ...admin, asyncHandler(AdsService.updateAds));
+router.delete("/:id", ...admin, asyncHandler(AdsService.deleteAds));
 
 export default router;

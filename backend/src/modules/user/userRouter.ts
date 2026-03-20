@@ -5,12 +5,12 @@ import { authMiddleware } from "../../middleware/authMiddleware";
 import { roleMiddleware } from "../../middleware/roleMiddleware";
 
 const router = Router();
+const admin = [authMiddleware, roleMiddleware("ADMIN")];
 
-// ADMIN only
-router.get("/", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(UserService.getAllUsers));
-router.get("/:id", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(UserService.getUserById));
-router.put("/:id/ban", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(UserService.banUser));
-router.put("/:id/unban", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(UserService.unbanUser));
-router.delete("/:id", authMiddleware, roleMiddleware("ADMIN"), asyncHandler(UserService.deleteUser));
+router.get("/", ...admin, asyncHandler(UserService.getAllUsers));
+router.get("/:id", ...admin, asyncHandler(UserService.getUserById));
+router.put("/:id/ban", ...admin, asyncHandler(UserService.banUser));
+router.put("/:id/unban", ...admin, asyncHandler(UserService.unbanUser));
+router.delete("/:id", ...admin, asyncHandler(UserService.deleteUser));
 
 export default router;

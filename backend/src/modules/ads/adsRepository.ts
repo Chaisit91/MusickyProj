@@ -2,16 +2,11 @@ import { prisma } from "../../lib/prisma";
 import { AdsCreateInput, AdsUpdateInput } from "./adsModel";
 
 export const findAllAds = async () => {
-  return prisma.ads.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  return prisma.ads.findMany({ orderBy: { createdAt: "desc" } });
 };
 
 export const findActiveAds = async () => {
-  return prisma.ads.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: "desc" },
-  });
+  return prisma.ads.findMany({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
 };
 
 export const findAdsById = async (id: string) => {

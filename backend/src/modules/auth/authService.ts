@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import * as AuthRepository from "./authRepository";
 import { hashPassword, comparePassword } from "../../utils/password";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
@@ -164,6 +165,7 @@ export const refresh = async (req: Request, res: Response) => {
     return;
   }
 
+  // Refresh Token Rotation — ลบเก่า ออกใหม่
   await AuthRepository.deleteRefreshToken(refreshToken as string);
 
   const newAccessToken = generateAccessToken({
