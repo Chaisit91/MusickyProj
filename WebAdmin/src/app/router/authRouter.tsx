@@ -1,18 +1,22 @@
-import React from 'react';
-import { Route, Routes } from 'react-router-dom';
-import AdminLogin from '../../features/auth/AdminLogin';
-import Dashboard from '../../features/dashboard/Dashboard';
-import Statistics from '../../features/dashboard/Statistics';
-import UserManagementPage from '../../features/dashboard/Usermanagement';
-
+import { Routes, Route, Navigate } from "react-router-dom";
+import AdminLogin from "../../features/auth/AdminLogin";
+import Dashboard from "../../features/dashboard/Dashboard";
+import AdminRoute from "../../guards/AdminRoute";
+import ForbiddenPage from "../../pages/ForbiddenPage";
+import NotFoundPage from "../../pages/NotFoundPage";
 
 const AuthRouter = () => {
   return (
     <Routes>
       <Route path="/login" element={<AdminLogin />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/statistics" element={<Statistics />} />
-      <Route path="/users" element={<UserManagementPage />} />
+      <Route path="/forbidden" element={<ForbiddenPage />} />
+      <Route path="/dashboard" element={
+        <AdminRoute>
+          <Dashboard />
+        </AdminRoute>
+      } />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

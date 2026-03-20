@@ -1,13 +1,7 @@
-import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import AuthRouter from './app/router/authRouter';
+import AuthRouter from "./app/router/authRouter";
 
-const RoutesComponent = () => {
-  return (
-    <Router>
-      <AuthRouter />
-    </Router>
-  );
-};
+function App() {
+  return <AuthRouter />;
+}
 
-export default RoutesComponent;
+export default App;
