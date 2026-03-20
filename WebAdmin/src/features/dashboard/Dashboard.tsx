@@ -11,13 +11,24 @@ import {
   Legend,
   LineElement,
   PointElement,
+  Filler,
 } from "chart.js";
 import { logoutThunk } from "../../store/auth.store";
 import type { AppDispatch, RootState } from "../../store/store";
 import TopBar from "../../components/layout/Topbar";
 import Sidebar from "../../components/layout/Sidebar";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+  Filler,
+);
 
 const Dashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -67,9 +78,8 @@ const Dashboard = () => {
         <Sidebar />
 
         <div className="flex-1 flex flex-col">
-          <TopBar lang="ไทย" onLangChange={() => { }} />
+          <TopBar lang="ไทย" onLangChange={() => {}} />
 
-          {/* Content */}
           <div className="flex-1 p-8 flex flex-col bg-gray-500">
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               <div className="bg-gray-800 p-6 rounded-lg shadow-lg">

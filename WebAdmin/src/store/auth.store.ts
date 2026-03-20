@@ -17,8 +17,19 @@ interface AuthState {
   error: string | null;
 }
 
+const getUserFromStorage = (): User | null => {
+  try {
+    const user = localStorage.getItem("user");
+    if (!user || user === "undefined" || user === "null") return null;
+    return JSON.parse(user);
+  } catch {
+    localStorage.removeItem("user");
+    return null;
+  }
+};
+
 const initialState: AuthState = {
-  user: localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")!) : null,
+  user: getUserFromStorage(),
   accessToken: localStorage.getItem("accessToken"),
   refreshToken: localStorage.getItem("refreshToken"),
   loading: false,
