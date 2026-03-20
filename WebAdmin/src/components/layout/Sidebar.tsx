@@ -25,11 +25,10 @@ const Sidebar = () => {
             </h2>
 
             <ul className="flex-1 flex flex-col gap-2">
-                <li onClick={() => handleNavigation('/dashboard')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">แดชบอร์ด</li>
-                <li onClick={() => handleNavigation('/statistics')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">สถิติผู้ใช้</li>
+                <li onClick={() => handleNavigation('/dashboard')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">สถิติผู้ใช้</li>
                 <li onClick={() => handleNavigation('/users')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการผู้ใช้</li>
                 <li onClick={() => handleNavigation('/songs')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการเพลง</li>
-                <li onClick={() => handleNavigation('/categories')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการหมวดหมู่</li>
+                <li onClick={() => handleNavigation('/Genres')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการหมวดหมู่</li>
                 <li onClick={() => handleNavigation('/ads')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการโฆษณา</li>
                 <li onClick={() => handleNavigation('/revenue')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">รายได้โฆษณา</li>
             </ul>
