@@ -63,16 +63,6 @@ const EditUserModal: React.FC<{ user: User | null; onClose: () => void; onSave: 
         </div>
         <div className="px-5 py-4 space-y-4">
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">ชื่อ-นามสกุล</label>
-            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">อีเมล</label>
-            <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
-          </div>
-          <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">สถานะบัญชี</label>
             <select value={form.isActive ? "active" : "banned"} onChange={(e) => setForm({ ...form, isActive: e.target.value === "active" })}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white">
