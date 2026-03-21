@@ -9,6 +9,10 @@ export interface Song {
   albumId: string;
   genreId: string;
   filePath: string;
+  duration?: number;
+  playCount: number;
+  year?: number;
+  lyrics?: string;
   createdAt: string;
   updatedAt: string;
   artist?: Artist;
@@ -22,6 +26,9 @@ export interface SongCreateInput {
   albumId: string;
   genreId: string;
   filePath: string;
+  duration?: number;
+  year?: number;
+  lyrics?: string;
 }
 
 export interface SongUpdateInput {
@@ -30,6 +37,9 @@ export interface SongUpdateInput {
   albumId?: string;
   genreId?: string;
   filePath?: string;
+  duration?: number;
+  year?: number;
+  lyrics?: string;
 }
 
 export interface SongFilterInput {

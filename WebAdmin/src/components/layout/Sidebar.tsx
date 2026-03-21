@@ -30,7 +30,7 @@ const Sidebar = () => {
                 <li onClick={() => handleNavigation('/songs')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการเพลง</li>
                 <li onClick={() => handleNavigation('/Genres')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการหมวดหมู่</li>
                 <li onClick={() => handleNavigation('/ads')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">จัดการโฆษณา</li>
-                <li onClick={() => handleNavigation('/revenue')} className="text-gray-400 hover:text-white cursor-pointer py-4 justify-between rounded-md w-full bg-gray-800 hover:bg-black transition duration-300 p-12">รายได้โฆษณา</li>
+                
             </ul>
 
             {/* User info + Logout */}

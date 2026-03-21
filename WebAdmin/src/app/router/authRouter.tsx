@@ -8,7 +8,6 @@ import UserManagementPage from "../../features/dashboard/Usermanagement";
 import SongManagementPage from "../../features/dashboard/Songmanagement";
 import GenreManagementPage from "../../features/dashboard/GenreManagement";
 import AdManagementPage from "../../features/dashboard/Admanagement";
-import RevenueReportPage from "../../features/dashboard/Revenuereport";
 
 
 const AuthRouter = () => {
@@ -46,11 +45,7 @@ const AuthRouter = () => {
           <AdManagementPage/>
         </AdminRoute>
       } />
-      <Route path="/revenue" element={
-        <AdminRoute>
-          <RevenueReportPage/>
-        </AdminRoute>
-      } />
+      
 
 
 

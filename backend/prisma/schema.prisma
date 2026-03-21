@@ -169,11 +169,12 @@ model Ads {
   title       String
   imageUrl    String
   linkUrl     String
-  adType      String   // เพิ่ม — "SPLASH" | "AFTER_SONG" | "AFTER_MULTIPLE"
-  adDuration  Int      @default(30)  // เพิ่ม — ความยาวโฆษณา (วินาที)
-  advertiser  String   // เพิ่ม — ผู้ลงโฆษณา
-  impressions Int      @default(0)   // เพิ่ม — ยอดแสดง
+  adType      String   
+  adDuration  Int      @default(30) 
+  impressions Int      @default(0)   
   isActive    Boolean  @default(true)
+  startDate   DateTime?   
+  endDate     DateTime?  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
