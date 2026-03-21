@@ -7,6 +7,11 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   lastLogin?: string;
+  _count?: {
+    playlists: number;
+    likedSongs: number;
+    downloads: number;
+  };
 }
 
 export interface UserUpdateInput {
