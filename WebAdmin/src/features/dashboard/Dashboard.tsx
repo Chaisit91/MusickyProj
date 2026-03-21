@@ -1,4 +1,4 @@
-import { Bar } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -7,16 +7,36 @@ import {
   Title,
   Tooltip,
   Legend,
+  LineElement,
+  PointElement,
+  Filler,
 } from "chart.js";
 import TopBar from "../../components/layout/Topbar";
 import Sidebar from "../../components/layout/Sidebar";
 import { useDashboard } from "../../hooks/useDashboard";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale, LinearScale, BarElement,
+  Title, Tooltip, Legend,
+  LineElement, PointElement, Filler,
+);
 
 const Dashboard = () => {
-  const { stats, activities, topSongs, loading } = useDashboard();
+  const { stats, activities, topSongs, userGrowth, loading } = useDashboard();
   const fmt = (n: number) => n?.toLocaleString() ?? "—";
+
+  const lineChartData = {
+    labels: userGrowth.map(u => u.label),
+    datasets: [
+      {
+        label: "ผู้ใช้ทั้งหมด",
+        data: userGrowth.map(u => u.count),
+        borderColor: "#34D399",
+        backgroundColor: "rgba(52, 211, 153, 0.2)",
+        fill: true,
+      },
+    ],
+  };
 
   const barChartData = {
     labels: topSongs.length ? topSongs.map(s => s.title) : ["—"],
@@ -56,10 +76,16 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Top 5 Songs */}
-            <div className="bg-gray-800 p-6 mt-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold mb-4">5 เพลงที่เล่นมากที่สุด</h3>
-              <Bar data={barChartData} />
+            {/* Charts */}
+            <div className="flex justify-between gap-2">
+              <div className="bg-gray-800 p-6 mt-6 rounded-lg shadow-lg w-full sm:w-[50%]">
+                <h3 className="text-xl font-semibold mb-4">การเติบโตของผู้ใช้</h3>
+                <Line data={lineChartData} />
+              </div>
+              <div className="bg-gray-800 p-6 mt-6 rounded-lg shadow-lg w-full sm:w-[50%]">
+                <h3 className="text-xl font-semibold mb-4">5 เพลงที่เล่นมากที่สุด</h3>
+                <Bar data={barChartData} />
+              </div>
             </div>
 
             {/* Recent Activities */}

@@ -23,10 +23,16 @@ interface TopSong {
   genre: { name: string };
 }
 
+interface UserGrowth {
+  label: string;
+  count: number;
+}
+
 export const useDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [topSongs, setTopSongs] = useState<TopSong[]>([]);
+  const [userGrowth, setUserGrowth] = useState<UserGrowth[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +44,7 @@ export const useDashboard = () => {
       setStats(res.data.data.stats);
       setActivities(res.data.data.activities);
       setTopSongs(res.data.data.topSongs);
+      setUserGrowth(res.data.data.userGrowth);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch dashboard");
     } finally {
@@ -49,5 +56,5 @@ export const useDashboard = () => {
     fetchDashboard();
   }, []);
 
-  return { stats, activities, topSongs, loading, error, refetch: fetchDashboard };
+  return { stats, activities, topSongs, userGrowth, loading, error, refetch: fetchDashboard };
 };

@@ -80,3 +80,29 @@ export const getTopSongs = async () => {
     include: { artist: true, album: true, genre: true },
   });
 };
+
+export const getUserGrowth = async () => {
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - (5 - i));
+    return { year: d.getFullYear(), month: d.getMonth() + 1 };
+  });
+
+  const results = await Promise.all(
+    months.map(({ year, month }) =>
+      prisma.user.count({
+        where: {
+          createdAt: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          },
+        },
+      })
+    )
+  );
+
+  return months.map(({ year, month }, i) => ({
+    label: `${month < 10 ? "0" + month : month}/${String(year).slice(2)}`,
+    count: results[i],
+  }));
+};
