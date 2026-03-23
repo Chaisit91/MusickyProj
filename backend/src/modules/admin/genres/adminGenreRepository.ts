@@ -41,7 +41,7 @@ export const createGenre = async (data: {
 export const updateGenre = async (id: string, data: {
   name?: string;
   description?: string;
-  imageUrl?: string;
+  imageUrl?: string | null; // ✅ รับ null ได้ — ใช้ตอนลบรูป
   color?: string;
 }) => {
   return prisma.genre.update({ where: { id }, data });

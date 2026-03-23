@@ -5,8 +5,15 @@ export const adminLoginApi = async (email: string, password: string) => {
   return res.data;
 };
 
-export const logoutApi = async (refreshToken: string) => {
-  const res = await api.post("/auth/logout", { refreshToken });
+//  ไม่ต้องส่ง refreshToken — browser ส่ง HttpOnly Cookie ให้อัตโนมัติ
+export const logoutApi = async () => {
+  const res = await api.post("/auth/logout");
+  return res.data;
+};
+
+//  silent refresh — browser ส่ง cookie ไปเอง ไม่ต้องส่ง body อะไร
+export const refreshApi = async () => {
+  const res = await api.post("/auth/refresh");
   return res.data;
 };
 

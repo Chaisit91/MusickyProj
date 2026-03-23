@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { adminLoginApi, logoutApi } from "../api/authApi";
+import { adminLoginApi, logoutApi, refreshApi } from "../api/authApi";
 
 interface User {
   id: string;
@@ -11,27 +11,15 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  accessToken: string | null; //  เก็บใน memory เท่านั้น ไม่มี localStorage
   loading: boolean;
   error: string | null;
 }
 
-const getUserFromStorage = (): User | null => {
-  try {
-    const user = localStorage.getItem("user");
-    if (!user || user === "undefined" || user === "null") return null;
-    return JSON.parse(user);
-  } catch {
-    localStorage.removeItem("user");
-    return null;
-  }
-};
-
+//  ไม่มี initialState จาก localStorage แล้ว — ทุกอย่างเริ่มที่ null
 const initialState: AuthState = {
-  user: getUserFromStorage(),
-  accessToken: localStorage.getItem("accessToken"),
-  refreshToken: localStorage.getItem("refreshToken"),
+  user: null,
+  accessToken: null,
   loading: false,
   error: null,
 };
@@ -50,13 +38,25 @@ export const loginThunk = createAsyncThunk(
 
 export const logoutThunk = createAsyncThunk(
   "auth/logout",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: AuthState };
-      const refreshToken = state.auth.refreshToken;
-      if (refreshToken) await logoutApi(refreshToken);
+      //  ไม่ต้องส่ง refreshToken — backend อ่านจาก HttpOnly Cookie เอง
+      await logoutApi();
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Logout failed");
+    }
+  }
+);
+
+//  silent refresh — เรียกตอน accessToken หมดอายุ (401) อัตโนมัติจาก axios interceptor
+export const refreshTokenThunk = createAsyncThunk(
+  "auth/refresh",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await refreshApi();
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Refresh failed");
     }
   }
 );
@@ -68,10 +68,13 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // ── Login ────────────────────────────────────────────────
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -80,26 +83,34 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        localStorage.setItem("accessToken", action.payload.accessToken);
-        localStorage.setItem("refreshToken", action.payload.refreshToken);
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
+        //  ไม่มี localStorage.setItem แล้ว
+        // refreshToken ถูก set เป็น HttpOnly Cookie โดย backend อัตโนมัติ
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Logout
+
+      // ── Logout ───────────────────────────────────────────────
       .addCase(logoutThunk.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
-        state.refreshToken = null;
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
+        //  ไม่ต้อง clear localStorage
+        // refreshToken Cookie ถูก clear โดย backend อัตโนมัติ
+      })
+
+      // ── Silent Refresh ───────────────────────────────────────
+      .addCase(refreshTokenThunk.fulfilled, (state, action: PayloadAction<any>) => {
+        //  ได้ accessToken ใหม่มาเก็บใน memory
+        state.accessToken = action.payload.accessToken;
+      })
+      .addCase(refreshTokenThunk.rejected, (state) => {
+        // refresh ไม่ได้ (cookie หมดอายุ หรือไม่มี) → clear state
+        state.user = null;
+        state.accessToken = null;
       });
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, setAccessToken } = authSlice.actions;
 export default authSlice.reducer;

@@ -46,6 +46,7 @@ export const useGenres = () => {
     description?: string;
     imageUrl?: string;
     color?: string;
+    imageFile?: File;
   }) => {
     await createGenreApi(data);
     await fetchGenres();
@@ -56,6 +57,8 @@ export const useGenres = () => {
     description?: string;
     imageUrl?: string;
     color?: string;
+    imageFile?: File;
+    removeImage?: boolean; // ✅ รับ flag ลบรูป
   }) => {
     await updateGenreApi(id, data);
     await fetchGenres();

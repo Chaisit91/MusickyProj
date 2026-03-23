@@ -28,7 +28,10 @@ export const getSongById = async (req: Request, res: Response) => {
 export const createSong = async (req: Request, res: Response) => {
   const { title, artistId, albumId, genreId, filePath, duration, year, lyrics } = req.body;
   if (!title || !artistId || !albumId || !genreId || !filePath) {
-    res.status(400).json({ success: false, message: "title, artistId, albumId, genreId and filePath are required" });
+    res.status(400).json({
+      success: false,
+      message: "title, artistId, albumId, genreId and filePath are required",
+    });
     return;
   }
   const song = await AdminSongRepository.createSong({

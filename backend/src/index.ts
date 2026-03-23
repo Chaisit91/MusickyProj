@@ -18,6 +18,7 @@ import queueRouter from "./modules/queue/queueRouter";
 import searchRouter from "./modules/search/searchRouter";
 import userRouter from "./modules/user/userRouter";
 import adsRouter from "./modules/ads/adsRouter";
+import uploadRouter from "./modules/upload/uploadRouter"; // ✅ upload API
 
 // Admin Routers
 import dashboardRouter from "./modules/admin/dashboard/dashboardRouter";
@@ -55,6 +56,7 @@ app.use("/api/queue", queueRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/users", userRouter);
 app.use("/api/ads", adsRouter);
+app.use("/api/upload", uploadRouter); 
 
 // ── Admin Routes ──────────────────────────────────────────────
 app.use("/api/admin/dashboard", dashboardRouter);

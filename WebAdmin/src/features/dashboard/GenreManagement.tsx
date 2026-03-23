@@ -25,55 +25,98 @@ const StatCard: React.FC<{ label: string; value: string | number; icon?: React.R
   </div>
 );
 
-const GenreModal: React.FC<{ mode: "add" | "edit"; genre: Partial<Genre>; onClose: () => void; onSave: (data: any) => void }> = ({ mode, genre, onClose, onSave }) => {
+const GenreModal: React.FC<{
+  mode: "add" | "edit";
+  genre: Partial<Genre>;
+  onClose: () => void;
+  onSave: (data: {
+    name: string;
+    description?: string;
+    color?: string;
+    imageUrl?: string;
+    imageFile?: File;
+    removeImage?: boolean;
+  }) => Promise<void>;
+}> = ({ mode, genre, onClose, onSave }) => {
   const [form, setForm] = useState({ ...genre });
-  const [imageUrl, setImageUrl] = useState(genre.imageUrl || "");
-  const [saved, setSaved] = useState(false);
+  const [imagePreview, setImagePreview] = useState(genre.imageUrl || "");
+  const [imageFile, setImageFile] = useState<File | undefined>(undefined);
+  const [removeImage, setRemoveImage] = useState(false); // ✅ track ว่าลบรูปไหม
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFile(file);
+    setRemoveImage(false); // ถ้าอัปโหลดใหม่ ไม่ต้องลบ
     const reader = new FileReader();
-    reader.onload = (ev) => { const url = ev.target?.result as string; setImageUrl(url); setForm({ ...form, imageUrl: url }); };
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
+  const handleRemoveImage = () => {
+    setImagePreview("");
+    setImageFile(undefined);
+    setRemoveImage(true); // ✅ บอกว่าต้องการลบรูป
+  };
+
+  const handleSave = async () => {
     if (!form.name) return;
-    onSave({ ...form, imageUrl });
-    setSaved(true);
-    setTimeout(() => { setSaved(false); onClose(); }, 1200);
+    setSaving(true);
+    try {
+      await onSave({
+        name: form.name,
+        description: form.description,
+        color: form.color,
+        imageUrl: imageFile || removeImage ? undefined : (imagePreview || undefined),
+        imageFile,
+        removeImage, // ✅ ส่ง flag ลบรูปไปด้วย
+      });
+      onClose();
+    } catch (err) {
+      console.error("Save failed:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && !saving && onClose()}>
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <p className="font-semibold text-gray-900 text-sm">{mode === "add" ? "เพิ่มหมวดหมู่ใหม่" : "แก้ไขหมวดหมู่"}</p>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={16} /></button>
+          <button onClick={onClose} disabled={saving} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"><X size={16} /></button>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">รูปภาพ</label>
-            {imageUrl && (
+            {imagePreview && (
               <div className="relative w-full h-28 rounded-lg overflow-hidden mb-2 bg-gray-100">
-                <img src={imageUrl} alt="preview" className="w-full h-full object-cover" onError={() => setImageUrl("")} />
-                <button onClick={() => { setImageUrl(""); setForm({ ...form, imageUrl: "" }); }}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"><X size={10} /></button>
+                <img src={imagePreview} alt="preview" className="w-full h-full object-cover"
+                  onError={handleRemoveImage} />
+                {/* ✅ กด X → handleRemoveImage แทน */}
+                <button onClick={handleRemoveImage}
+                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors">
+                  <X size={10} />
+                </button>
               </div>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <button onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-xs hover:border-gray-400 hover:text-gray-700 transition-colors mb-2">
+            <button onClick={() => fileInputRef.current?.click()} disabled={saving}
+              className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-xs hover:border-gray-400 hover:text-gray-700 transition-colors mb-2 disabled:opacity-50">
               <Upload size={13} />อัปโหลดรูปภาพ
             </button>
-            <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg">
-              <ImageIcon size={13} className="text-gray-400 flex-shrink-0" />
-              <input type="text" placeholder="หรือวาง URL รูปภาพ" value={imageUrl}
-                onChange={(e) => { setImageUrl(e.target.value); setForm({ ...form, imageUrl: e.target.value }); }}
-                className="flex-1 text-sm text-gray-900 placeholder-gray-300 focus:outline-none bg-transparent" />
-            </div>
+            {!imageFile && !removeImage && (
+              <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg">
+                <ImageIcon size={13} className="text-gray-400 flex-shrink-0" />
+                <input type="text" placeholder="หรือวาง URL รูปภาพ" value={imagePreview}
+                  onChange={(e) => { setImagePreview(e.target.value); setRemoveImage(false); }}
+                  className="flex-1 text-sm text-gray-900 placeholder-gray-300 focus:outline-none bg-transparent" />
+              </div>
+            )}
+            {imageFile && <p className="text-xs text-blue-500 mt-1">✓ เลือกไฟล์: {imageFile.name}</p>}
+            {removeImage && !imageFile && <p className="text-xs text-red-400 mt-1">✕ จะลบรูปภาพออก</p>}
           </div>
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">ชื่อหมวดหมู่ *</label>
@@ -98,12 +141,20 @@ const GenreModal: React.FC<{ mode: "add" | "edit"; genre: Partial<Genre>; onClos
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-          {saved ? <span className="text-xs text-green-600 font-medium">✓ บันทึกเรียบร้อยแล้ว</span> : <span />}
-          <div className="flex gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">ยกเลิก</button>
-            <button onClick={handleSave} className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium">บันทึกหมวดหมู่</button>
-          </div>
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+          <button onClick={onClose} disabled={saving} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">ยกเลิก</button>
+          <button onClick={handleSave} disabled={saving || !form.name}
+            className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 min-w-[100px]">
+            {saving ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                กำลังบันทึก...
+              </span>
+            ) : "บันทึกหมวดหมู่"}
+          </button>
         </div>
       </div>
     </div>
@@ -167,7 +218,17 @@ const GenreManagementPage: React.FC = () => {
     (g.description || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDelete = async () => { if (!deleteGenre) return; await deleteGenreApi(deleteGenre.id); setDeleteGenre(null); };
+  const handleDelete = async () => {
+    if (!deleteGenre) return;
+    await deleteGenreApi(deleteGenre.id);
+    setDeleteGenre(null);
+  };
+
+  const handleEditSave = async (data: any) => {
+    if (!editGenre) return;
+    await updateGenre(editGenre.id, data);
+    setEditGenre(null);
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -205,9 +266,30 @@ const GenreManagementPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {addModal && <GenreModal mode="add" genre={{ color: "#3b82f6" }} onClose={() => setAddModal(false)} onSave={createGenre} />}
-      {editGenre && <GenreModal mode="edit" genre={editGenre} onClose={() => setEditGenre(null)} onSave={(data) => { updateGenre(editGenre.id, data); setEditGenre(null); }} />}
-      {deleteGenre && <DeleteModal genre={deleteGenre} onClose={() => setDeleteGenre(null)} onConfirm={handleDelete} />}
+
+      {addModal && (
+        <GenreModal
+          mode="add"
+          genre={{ color: "#3b82f6" }}
+          onClose={() => setAddModal(false)}
+          onSave={createGenre}
+        />
+      )}
+      {editGenre && (
+        <GenreModal
+          mode="edit"
+          genre={editGenre}
+          onClose={() => setEditGenre(null)}
+          onSave={handleEditSave}
+        />
+      )}
+      {deleteGenre && (
+        <DeleteModal
+          genre={deleteGenre}
+          onClose={() => setDeleteGenre(null)}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   );
 };

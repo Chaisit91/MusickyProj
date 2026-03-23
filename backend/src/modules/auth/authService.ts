@@ -1,8 +1,23 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import * as AuthRepository from "./authRepository";
 import { hashPassword, comparePassword } from "../../utils/password";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
+
+// ── Cookie config ที่ใช้ซ้ำทุกที่ ให้ path ตรงกันเสมอ ──────────
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+  path: "/",
+};
+
+const REFRESH_COOKIE_CLEAR_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  path: "/",
+};
 
 export const register = async (req: Request, res: Response) => {
   const { name, email, password, birthDate } = req.body;
@@ -77,6 +92,7 @@ export const login = async (req: Request, res: Response) => {
 
   await AuthRepository.saveRefreshToken(user.id, refreshToken);
 
+  // Mobile ยังส่ง refreshToken ใน body เหมือนเดิม (ยังไม่ได้ทำ mobile)
   res.json({
     success: true,
     data: {
@@ -130,18 +146,22 @@ export const adminLogin = async (req: Request, res: Response) => {
 
   await AuthRepository.saveRefreshToken(user.id, refreshToken);
 
+  //  refreshToken → HttpOnly Cookie (JS อ่านไม่ได้)
+  res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
+
+  //  ส่งแค่ accessToken + user ใน body (ไม่ส่ง refreshToken)
   res.json({
     success: true,
     data: {
       accessToken,
-      refreshToken,
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     },
   });
 };
 
 export const refresh = async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
+  //  อ่าน refreshToken จาก Cookie
+  const refreshToken = req.cookies?.refreshToken;
 
   if (!refreshToken) {
     res.status(400).json({ success: false, message: "refreshToken is required" });
@@ -156,6 +176,8 @@ export const refresh = async (req: Request, res: Response) => {
 
   if (tokenRecord.expiresAt < new Date()) {
     await AuthRepository.deleteRefreshToken(refreshToken as string);
+    //  clear cookie ถ้า token หมดอายุ
+    res.clearCookie("refreshToken", REFRESH_COOKIE_CLEAR_OPTIONS);
     res.status(401).json({ success: false, message: "Refresh token expired, please login again" });
     return;
   }
@@ -165,7 +187,7 @@ export const refresh = async (req: Request, res: Response) => {
     return;
   }
 
-  // Refresh Token Rotation — ลบเก่า ออกใหม่
+  //  Refresh Token Rotation — ลบเก่า ออกใหม่
   await AuthRepository.deleteRefreshToken(refreshToken as string);
 
   const newAccessToken = generateAccessToken({
@@ -181,31 +203,45 @@ export const refresh = async (req: Request, res: Response) => {
 
   await AuthRepository.saveRefreshToken(tokenRecord.user.id, newRefreshToken);
 
+  //  set refreshToken ใหม่ใน Cookie (Rotation)
+  res.cookie("refreshToken", newRefreshToken, REFRESH_COOKIE_OPTIONS);
+
+  //  ส่งแค่ accessToken กลับ
   res.json({
     success: true,
-    data: {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    },
+    data: { accessToken: newAccessToken },
   });
 };
 
 export const logout = async (req: Request, res: Response) => {
   const userId = req.user!.id;
-  const { refreshToken } = req.body;
+
+  //  อ่าน refreshToken จาก Cookie
+  const refreshToken = req.cookies?.refreshToken;
 
   if (refreshToken) {
+    //  ลบ token นี้ออกจาก DB
     await AuthRepository.deleteRefreshToken(refreshToken as string);
   } else {
+    // ไม่มี cookie  ลบทั้งหมดของ user นี้
     await AuthRepository.deleteAllRefreshTokensByUser(userId);
   }
+
+  //  clear cookie ออกจาก browser ทันที → refreshToken หายไปเลย
+  res.clearCookie("refreshToken", REFRESH_COOKIE_CLEAR_OPTIONS);
 
   res.json({ success: true, message: "Logged out successfully" });
 };
 
 export const logoutAll = async (req: Request, res: Response) => {
   const userId = req.user!.id;
+
+  //  ลบ refreshToken ทุกอันของ user นี้ออกจาก DB
   await AuthRepository.deleteAllRefreshTokensByUser(userId);
+
+  //  clear cookie บน browser ที่กำลังใช้งานอยู่
+  res.clearCookie("refreshToken", REFRESH_COOKIE_CLEAR_OPTIONS);
+
   res.json({ success: true, message: "Logged out from all devices" });
 };
 
