@@ -30,7 +30,6 @@ export const createGenre = async (req: MulterRequest, res: Response) => {
     return;
   }
 
-  // ✅ ถ้ามีไฟล์รูป → upload ไป Cloudinary แล้วเอา url มาเก็บ
   let imageUrl: string | undefined = imageUrlFromBody;
   if (req.file) {
     imageUrl = await uploadImageToCloudinary(req.file.buffer, "genres");
@@ -48,13 +47,18 @@ export const updateGenre = async (req: MulterRequest, res: Response) => {
     return;
   }
 
-  const { name, description, color, imageUrl: imageUrlFromBody } = req.body;
+  const { name, description, color, imageUrl: imageUrlFromBody, removeImage } = req.body;
 
-  // ✅ ถ้ามีไฟล์ใหม่ → ลบเก่า + upload ใหม่
-  let imageUrl: string | undefined = undefined;
+  let imageUrl: string | null | undefined = undefined;
+
   if (req.file) {
+    // ✅ มีไฟล์ใหม่ → ลบเก่า + upload ใหม่
     if (existing.imageUrl) await deleteImageFromCloudinary(existing.imageUrl);
     imageUrl = await uploadImageToCloudinary(req.file.buffer, "genres");
+  } else if (removeImage === "true" || removeImage === true) {
+    // ✅ กดลบรูป → ลบออกจาก Cloudinary + set null ใน DB
+    if (existing.imageUrl) await deleteImageFromCloudinary(existing.imageUrl);
+    imageUrl = null;
   } else if (imageUrlFromBody && imageUrlFromBody !== existing.imageUrl) {
     imageUrl = imageUrlFromBody;
   }
@@ -63,7 +67,9 @@ export const updateGenre = async (req: MulterRequest, res: Response) => {
     name,
     description,
     color,
-    ...(imageUrl && { imageUrl }),
+    // ✅ ถ้า imageUrl เป็น null → set null ใน DB (ลบรูป)
+    // ถ้าเป็น undefined → ไม่เปลี่ยนแปลง
+    ...(imageUrl !== undefined && { imageUrl }),
   });
   res.json({ success: true, data: genre });
 };
