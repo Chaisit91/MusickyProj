@@ -1,4 +1,5 @@
 import { prisma } from "../../../lib/prisma";
+import { Role } from "@prisma/client";
 
 export const findAllUsers = async (search?: string, status?: string) => {
   return prisma.user.findMany({
@@ -50,6 +51,7 @@ export const updateUser = async (id: string, data: {
   name?: string;
   email?: string;
   isActive?: boolean;
+  role?: Role;
 }) => {
   return prisma.user.update({
     where: { id },

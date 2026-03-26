@@ -15,6 +15,7 @@ export const updateUserApi = async (id: string, data: {
   name?: string;
   email?: string;
   isActive?: boolean;
+  role?: string;
 }) => {
   return api.put(`/admin/users/${id}`, data);
 };

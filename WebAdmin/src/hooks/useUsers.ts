@@ -34,6 +34,7 @@ export const useUsers = (search?: string, status?: string) => {
     name?: string;
     email?: string;
     isActive?: boolean;
+    role?: string;
   }) => {
     await updateUserApi(id, data);
     await fetchUsers();

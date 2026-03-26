@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Role } from "@prisma/client";
 import * as AdminUserRepository from "./adminUserRepository";
 
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -27,8 +28,19 @@ export const updateUser = async (req: Request, res: Response) => {
     res.status(404).json({ success: false, message: "User not found" });
     return;
   }
-  const { name, email, isActive } = req.body;
-  const user = await AdminUserRepository.updateUser(id, { name, email, isActive });
+  const { name, email, isActive, role } = req.body;
+
+  if (role && !Object.values(Role).includes(role)) {
+    res.status(400).json({ success: false, message: "Invalid role. Must be USER or ADMIN" });
+    return;
+  }
+
+  const user = await AdminUserRepository.updateUser(id, {
+    name,
+    email,
+    isActive,
+    role: role as Role | undefined,
+  });
   res.json({ success: true, data: user });
 };
 
