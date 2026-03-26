@@ -18,7 +18,7 @@ export const getAdById = async (req: MulterRequest, res: Response) => {
 };
 
 export const createAd = async (req: MulterRequest, res: Response) => {
-  const { title, linkUrl, adType, adDuration, advertiser, imageUrl: imageUrlFromBody } = req.body;
+  const { title, linkUrl, adType, adDuration, advertiser, imageUrl: imageUrlFromBody, startDate, endDate } = req.body;
 
   if (!title || !linkUrl || !adType) {
     res.status(400).json({
@@ -45,6 +45,8 @@ export const createAd = async (req: MulterRequest, res: Response) => {
     adType,
     adDuration: adDuration ? Number(adDuration) : 30,
     advertiser: advertiser || "",
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
   });
   res.status(201).json({ success: true, data: ad });
 };
@@ -56,7 +58,7 @@ export const updateAd = async (req: MulterRequest, res: Response) => {
     return;
   }
 
-  const { title, linkUrl, adType, adDuration, isActive, advertiser, imageUrl: imageUrlFromBody } = req.body;
+  const { title, linkUrl, adType, adDuration, isActive, advertiser, imageUrl: imageUrlFromBody, startDate, endDate } = req.body;
 
   let imageUrl: string | undefined = undefined;
   if (req.file) {
@@ -74,6 +76,8 @@ export const updateAd = async (req: MulterRequest, res: Response) => {
     adDuration: adDuration ? Number(adDuration) : undefined,
     advertiser,
     isActive: isActive !== undefined ? isActive === "true" || isActive === true : undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
     ...(imageUrl && { imageUrl }),
   });
   res.json({ success: true, data: ad });
@@ -98,4 +102,19 @@ export const toggleAdStatus = async (req: MulterRequest, res: Response) => {
   }
   const ad = await AdminAdsRepository.toggleAds(req.params.id as string, !existing.isActive);
   res.json({ success: true, data: ad });
+};
+export const getAdsStats = async (req: MulterRequest, res: Response) => {
+  const [totalAds, activeAds, impressionsAgg] = await Promise.all([
+    AdminAdsRepository.countAds(),
+    AdminAdsRepository.countActiveAds(),
+    AdminAdsRepository.sumImpressions(),
+  ]);
+  res.json({
+    success: true,
+    data: {
+      totalAds,
+      activeAds,
+      totalImpressions: impressionsAgg,
+    },
+  });
 };

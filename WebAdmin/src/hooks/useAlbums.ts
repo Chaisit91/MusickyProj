@@ -37,6 +37,7 @@ export const useAlbums = (artistId?: string) => {
     artistId: string;
     releaseDate: string;
     coverUrl?: string;
+    coverFile?: File;
   }) => {
     await createAlbumApi(data);
     await fetchAlbums();
@@ -47,6 +48,7 @@ export const useAlbums = (artistId?: string) => {
     artistId?: string;
     releaseDate?: string;
     coverUrl?: string;
+    coverFile?: File;
   }) => {
     await updateAlbumApi(id, data);
     await fetchAlbums();

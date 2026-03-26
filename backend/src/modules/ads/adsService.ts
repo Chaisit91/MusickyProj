@@ -43,3 +43,18 @@ export const deleteAds = async (req: Request, res: Response) => {
   await AdsRepository.deleteAds(id);
   res.json({ success: true, message: "Ad deleted" });
 };
+export const getAdsStats = async (req: Request, res: Response) => {
+  const stats = await AdsRepository.getAdsStats();
+  res.json({ success: true, data: stats });
+};
+
+export const toggleAds = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const existing = await AdsRepository.findAdsById(id);
+  if (!existing) {
+    res.status(404).json({ success: false, message: "Ad not found" });
+    return;
+  }
+  const ads = await AdsRepository.toggleAds(id);
+  res.json({ success: true, data: ads });
+};

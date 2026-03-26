@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, Plus, Pencil, Trash2, Music, X } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import { useSongs } from "../../hooks/useSongs";
 import type { Song } from "../../types/song";
+import api from "../../api/axios";
 
 const StatCard: React.FC<{ label: string; value: string | number; icon?: React.ReactNode }> = ({ label, value, icon }) => (
   <div className="bg-gray-800 rounded-xl px-5 py-4 flex items-center gap-4 flex-1 min-w-0">
@@ -18,55 +19,101 @@ const StatCard: React.FC<{ label: string; value: string | number; icon?: React.R
 const SongModal: React.FC<{ mode: "add" | "edit"; song: any; onClose: () => void; onSave: (data: any) => void }> = ({ mode, song, onClose, onSave }) => {
   const [form, setForm] = useState({ ...song });
   const [saved, setSaved] = useState(false);
+  const [artists, setArtists] = useState<{ id: string; name: string }[]>([]);
+  const [albums, setAlbums] = useState<{ id: string; title: string }[]>([]);
+  const [genres, setGenres] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      api.get("/artists"),
+      api.get("/albums"),
+      api.get("/genres"),
+    ]).then(([artistsRes, albumsRes, genresRes]) => {
+      setArtists(artistsRes.data.data);
+      setAlbums(albumsRes.data.data);
+      setGenres(genresRes.data.data);
+    }).catch(() => {});
+  }, []);
 
   const handleSave = () => {
-    if (!form.title || !form.filePath) return;
+    if (!form.title || !form.filePath || !form.artistId || !form.albumId || !form.genreId) return;
     onSave(form);
     setSaved(true);
     setTimeout(() => { setSaved(false); onClose(); }, 1200);
   };
 
+  const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white";
+  const labelCls = "text-xs font-medium text-gray-500 mb-1.5 block";
+
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
           <p className="font-semibold text-gray-900 text-sm">{mode === "add" ? "เพิ่มเพลงใหม่" : "แก้ไขเพลง"}</p>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={16} /></button>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
+
+          {/* ชื่อเพลง + File Path */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">ชื่อเพลง *</label>
-              <input type="text" value={form.title || ""} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
+              <label className={labelCls}>ชื่อเพลง *</label>
+              <input type="text" value={form.title || ""} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputCls} />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">File Path *</label>
-              <input type="text" placeholder="songs/filename.mp3" value={form.filePath || ""}
-                onChange={(e) => setForm({ ...form, filePath: e.target.value })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
+              <label className={labelCls}>File Path *</label>
+              <input type="text" placeholder="songs/filename.mp3" value={form.filePath || ""} onChange={(e) => setForm({ ...form, filePath: e.target.value })} className={inputCls} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">ความยาว (วินาที)</label>
-              <input type="number" value={form.duration || ""} onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">ปีที่ลงเพลง</label>
-              <input type="number" value={form.year || new Date().getFullYear()} onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
-            </div>
-          </div>
+
+          {/* ศิลปิน */}
           <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">เนื้อเพลง</label>
+            <label className={labelCls}>ศิลปิน *</label>
+            <select value={form.artistId || form.artist?.id || ""} onChange={(e) => setForm({ ...form, artistId: e.target.value })} className={inputCls}>
+              <option value="">เลือกศิลปิน</option>
+              {artists.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </div>
+
+          {/* อัลบั้ม */}
+          <div>
+            <label className={labelCls}>อัลบั้ม *</label>
+            <select value={form.albumId || form.album?.id || ""} onChange={(e) => setForm({ ...form, albumId: e.target.value })} className={inputCls}>
+              <option value="">เลือกอัลบั้ม</option>
+              {albums.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}
+            </select>
+          </div>
+
+          {/* หมวดหมู่ */}
+          <div>
+            <label className={labelCls}>หมวดหมู่ *</label>
+            <select value={form.genreId || form.genre?.id || ""} onChange={(e) => setForm({ ...form, genreId: e.target.value })} className={inputCls}>
+              <option value="">เลือกหมวดหมู่</option>
+              {genres.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
+          </div>
+
+          {/* ความยาว + ปี */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>ความยาว (วินาที)</label>
+              <input type="number" value={form.duration || ""} onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>ปีที่ลงเพลง</label>
+              <input type="number" value={form.year || new Date().getFullYear()} onChange={(e) => setForm({ ...form, year: Number(e.target.value) })} className={inputCls} />
+            </div>
+          </div>
+
+          {/* เนื้อเพลง */}
+          <div>
+            <label className={labelCls}>เนื้อเพลง</label>
             <textarea value={form.lyrics || ""} onChange={(e) => setForm({ ...form, lyrics: e.target.value })} rows={3}
               placeholder="เนื้อเพลง (ถ้ามี)"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none" />
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
           {saved ? <span className="text-xs text-green-600 font-medium">✓ บันทึกเรียบร้อยแล้ว</span> : <span />}
           <div className="flex gap-2">
             <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">ยกเลิก</button>
@@ -186,7 +233,7 @@ const SongManagementPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {addModal && <SongModal mode="add" song={{ title: "", filePath: "", duration: 0, year: new Date().getFullYear() }} onClose={() => setAddModal(false)} onSave={createSong} />}
+      {addModal && <SongModal mode="add" song={{ title: "", filePath: "", artistId: "", albumId: "", genreId: "", duration: 0, year: new Date().getFullYear() }} onClose={() => setAddModal(false)} onSave={createSong} />}
       {editSong && <SongModal mode="edit" song={editSong} onClose={() => setEditSong(null)} onSave={(data) => { updateSong(data.id, data); setEditSong(null); }} />}
       {deleteSong && <DeleteModal song={deleteSong} onClose={() => setDeleteSong(null)} onConfirm={handleDelete} />}
     </div>

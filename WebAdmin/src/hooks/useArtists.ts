@@ -33,6 +33,7 @@ export const useArtists = () => {
     name: string;
     bio?: string;
     imageUrl?: string;
+    imageFile?: File;
   }) => {
     await createArtistApi(data);
     await fetchArtists();
@@ -42,6 +43,7 @@ export const useArtists = () => {
     name?: string;
     bio?: string;
     imageUrl?: string;
+    imageFile?: File;
   }) => {
     await updateArtistApi(id, data);
     await fetchArtists();

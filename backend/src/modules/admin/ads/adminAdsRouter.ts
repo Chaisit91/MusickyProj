@@ -9,6 +9,7 @@ const router = Router();
 
 router.use(authMiddleware, roleMiddleware("ADMIN"));
 
+router.get("/stats", asyncHandler(AdminAdsService.getAdsStats)); // เพิ่มบรรทัดนี้
 router.get("/", asyncHandler(AdminAdsService.getAllAds));
 router.get("/:id", asyncHandler(AdminAdsService.getAdById));
 router.post("/", upload.single("image"), asyncHandler(AdminAdsService.createAd));

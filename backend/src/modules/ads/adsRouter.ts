@@ -8,10 +8,12 @@ const router = Router();
 const admin = [authMiddleware, roleMiddleware("ADMIN")];
 
 router.get("/active", asyncHandler(AdsService.getActiveAds));
+router.get("/stats", ...admin, asyncHandler(AdsService.getAdsStats));      // เพิ่ม
 router.get("/", ...admin, asyncHandler(AdsService.getAllAds));
 router.get("/:id", ...admin, asyncHandler(AdsService.getAdsById));
 router.post("/", ...admin, asyncHandler(AdsService.createAds));
 router.put("/:id", ...admin, asyncHandler(AdsService.updateAds));
+router.patch("/:id/toggle", ...admin, asyncHandler(AdsService.toggleAds)); // เพิ่ม
 router.delete("/:id", ...admin, asyncHandler(AdsService.deleteAds));
 
 export default router;

@@ -8,46 +8,22 @@ import UserManagementPage from "../../features/dashboard/Usermanagement";
 import SongManagementPage from "../../features/dashboard/Songmanagement";
 import GenreManagementPage from "../../features/dashboard/GenreManagement";
 import AdManagementPage from "../../features/dashboard/Admanagement";
-
+import ArtistManagementPage from "../../features/dashboard/ArtistManagement";
+import AlbumManagementPage from "../../features/dashboard/AlbumManagement";
 
 const AuthRouter = () => {
   return (
     <Routes>
       <Route path="/login" element={<AdminLogin />} />
       <Route path="/forbidden" element={<ForbiddenPage />} />
-      <Route path="/dashboard" element={
-        <AdminRoute>
-          <Dashboard />
-        </AdminRoute>
-      } />
-      <Route path="/users" element={
-        <AdminRoute>
-          <UserManagementPage />
-        </AdminRoute>
-      } />
-      <Route path="/songs" element={
-        <AdminRoute>
-          <SongManagementPage />
-        </AdminRoute>
-      } />
-      <Route path="/songs" element={
-        <AdminRoute>
-          <SongManagementPage />
-        </AdminRoute>
-      } />
-      <Route path="/Genres" element={
-        <AdminRoute>
-          <GenreManagementPage/>
-        </AdminRoute>
-      } />
-      <Route path="/ads" element={
-        <AdminRoute>
-          <AdManagementPage/>
-        </AdminRoute>
-      } />
-      
 
-
+      <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
+      <Route path="/users" element={<AdminRoute><UserManagementPage /></AdminRoute>} />
+      <Route path="/artists" element={<AdminRoute><ArtistManagementPage /></AdminRoute>} />
+      <Route path="/albums" element={<AdminRoute><AlbumManagementPage /></AdminRoute>} />
+      <Route path="/songs" element={<AdminRoute><SongManagementPage /></AdminRoute>} />
+      <Route path="/Genres" element={<AdminRoute><GenreManagementPage /></AdminRoute>} />
+      <Route path="/ads" element={<AdminRoute><AdManagementPage /></AdminRoute>} />
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFoundPage />} />

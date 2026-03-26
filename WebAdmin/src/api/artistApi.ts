@@ -12,16 +12,38 @@ export const createArtistApi = async (data: {
   name: string;
   bio?: string;
   imageUrl?: string;
+  imageFile?: File;
 }) => {
-  return api.post("/artists", data);
+  const formData = new FormData();
+  formData.append("name", data.name);
+  if (data.bio) formData.append("bio", data.bio);
+  if (data.imageFile) {
+    formData.append("image", data.imageFile);
+  } else if (data.imageUrl) {
+    formData.append("imageUrl", data.imageUrl);
+  }
+  return api.post("/artists", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const updateArtistApi = async (id: string, data: {
   name?: string;
   bio?: string;
   imageUrl?: string;
+  imageFile?: File;
 }) => {
-  return api.put(`/artists/${id}`, data);
+  const formData = new FormData();
+  if (data.name) formData.append("name", data.name);
+  if (data.bio !== undefined) formData.append("bio", data.bio);
+  if (data.imageFile) {
+    formData.append("image", data.imageFile);
+  } else if (data.imageUrl !== undefined) {
+    formData.append("imageUrl", data.imageUrl);
+  }
+  return api.put(`/artists/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const deleteArtistApi = async (id: string) => {

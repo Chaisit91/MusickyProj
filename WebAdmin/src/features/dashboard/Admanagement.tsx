@@ -35,6 +35,40 @@ const StatCard: React.FC<{ label: string; value: string | number; icon: React.Re
   </div>
 );
 
+// แปลง string ไทย dd/mm/yyyy หรือ ISO → yyyy-mm-dd สำหรับ date input
+const toDateInputValue = (val?: string | Date | null): string => {
+  if (!val) return "";
+  try {
+    if (typeof val === "string" && val.includes("/")) {
+      const [datePart] = val.split(" ");
+      const [dd, mm, yyyy] = datePart.split("/");
+      const yearAD = parseInt(yyyy) - 543;
+      return `${yearAD}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+    }
+    return new Date(val).toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
+};
+
+// แปลง string ไทย dd/mm/yyyy หรือ ISO → dd/mm/yyyy สำหรับแสดงผล
+const formatDate = (d?: string | null): string => {
+  if (!d) return "—";
+  try {
+    if (typeof d === "string" && d.includes("/")) {
+      return d.split(" ")[0]; // ตัดเวลาออก เอาแค่วันที่
+    }
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "—";
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return "—";
+  }
+};
+
 const AdModal: React.FC<{ mode: "add" | "edit"; ad: Partial<Ad>; onClose: () => void; onSave: (data: any) => void }> = ({ mode, ad, onClose, onSave }) => {
   const [form, setForm] = useState({ ...ad });
   const [saved, setSaved] = useState(false);
@@ -124,12 +158,12 @@ const AdModal: React.FC<{ mode: "add" | "edit"; ad: Partial<Ad>; onClose: () => 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>วันเริ่มต้น</label>
-              <input type="date" value={form.startDate ? form.startDate.split("T")[0] : ""}
+              <input type="date" value={toDateInputValue(form.startDate)}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>วันสิ้นสุด</label>
-              <input type="date" value={form.endDate ? form.endDate.split("T")[0] : ""}
+              <input type="date" value={toDateInputValue(form.endDate)}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })} className={inputCls} />
             </div>
           </div>
@@ -171,8 +205,6 @@ const DeleteModal: React.FC<{ ad: Ad; onClose: () => void; onConfirm: () => void
   </div>
 );
 
-const formatDate = (d?: string) => d ? new Date(d).toLocaleDateString("th-TH") : "—";
-
 const AdManagementPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [addModal, setAddModal] = useState(false);
@@ -182,7 +214,7 @@ const AdManagementPage: React.FC = () => {
 
   const filtered = ads.filter((a: Ad) => {
     const q = search.toLowerCase();
-    return a.title.toLowerCase().includes(q) || a.advertiser.toLowerCase().includes(q);
+    return a.title.toLowerCase().includes(q) || (a.advertiser || "").toLowerCase().includes(q);
   });
 
   const handleDelete = async () => { if (!deleteAd) return; await deleteAds(deleteAd.id); setDeleteAd(null); };

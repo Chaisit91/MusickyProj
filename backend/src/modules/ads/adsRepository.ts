@@ -40,3 +40,25 @@ export const updateAds = async (id: string, data: AdsUpdateInput) => {
 export const deleteAds = async (id: string) => {
   return prisma.ads.delete({ where: { id } });
 };
+
+export const getAdsStats = async () => {
+  const [totalAds, activeAds, impressionsAgg] = await Promise.all([
+    prisma.ads.count(),
+    prisma.ads.count({ where: { isActive: true } }),
+    prisma.ads.aggregate({ _sum: { impressions: true } }),
+  ]);
+  return {
+    totalAds,
+    activeAds,
+    totalImpressions: impressionsAgg._sum.impressions ?? 0,
+  };
+};
+
+export const toggleAds = async (id: string) => {
+  const ads = await prisma.ads.findUnique({ where: { id } });
+  if (!ads) return null;
+  return prisma.ads.update({
+    where: { id },
+    data: { isActive: !ads.isActive },
+  });
+};
