@@ -20,6 +20,22 @@ interface Artist {
   imageUrl?: string;
 }
 
+// แปลง string ไทย dd/mm/yyyy หรือ ISO → yyyy-mm-dd สำหรับ date input
+const toDateInputValue = (val?: string | null): string => {
+  if (!val) return "";
+  try {
+    if (typeof val === "string" && val.includes("/")) {
+      const [datePart] = val.split(" ");
+      const [dd, mm, yyyy] = datePart.split("/");
+      const yearAD = parseInt(yyyy) - 543;
+      return `${yearAD}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+    }
+    return new Date(val).toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
+};
+
 const StatCard: React.FC<{ label: string; value: string | number; icon?: React.ReactNode }> = ({ label, value, icon }) => (
   <div className="bg-gray-800 rounded-xl px-5 py-4 flex items-center gap-4 flex-1 min-w-0">
     {icon && <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-gray-300">{icon}</div>}
@@ -40,7 +56,7 @@ const AlbumModal: React.FC<{
   const [form, setForm] = useState({
     title: album.title || "",
     artistId: album.artistId || "",
-    releaseDate: album.releaseDate ? album.releaseDate.split("T")[0] : "",
+    releaseDate: toDateInputValue(album.releaseDate),
   });
   const [imagePreview, setImagePreview] = useState(album.coverUrl || "");
   const [coverFile, setCoverFile] = useState<File | undefined>(undefined);
@@ -205,7 +221,7 @@ const AlbumCard: React.FC<{ album: Album; onEdit: (a: Album) => void; onDelete: 
     </div>
     <div className="px-3 py-2.5">
       <p className="text-gray-300 text-xs truncate">{album.artist?.name || "—"}</p>
-      <p className="text-gray-500 text-xs mt-0.5">{album.releaseDate ? new Date(album.releaseDate).getFullYear() : "—"}</p>
+      <p className="text-gray-500 text-xs mt-0.5">{toDateInputValue(album.releaseDate).split("-")[0] || "—"}</p>
     </div>
   </div>
 );
