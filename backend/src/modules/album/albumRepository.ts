@@ -31,8 +31,10 @@ export const findAlbumsByArtist = async (artistId: string) => {
 export const createAlbum = async (data: AlbumCreateInput) => {
   return prisma.album.create({
     data: {
-      ...data,
+      title: data.title,
+      artistId: data.artistId,
       releaseDate: new Date(data.releaseDate),
+      ...(data.coverUrl && { coverUrl: data.coverUrl }),
     },
     include: { artist: true },
   });
@@ -42,8 +44,10 @@ export const updateAlbum = async (id: string, data: AlbumUpdateInput) => {
   return prisma.album.update({
     where: { id },
     data: {
-      ...data,
-      releaseDate: data.releaseDate ? new Date(data.releaseDate) : undefined,
+      ...(data.title && { title: data.title }),
+      ...(data.artistId && { artistId: data.artistId }),
+      ...(data.releaseDate && { releaseDate: new Date(data.releaseDate) }),
+      ...(data.coverUrl !== undefined && { coverUrl: data.coverUrl }),
     },
     include: { artist: true },
   });
