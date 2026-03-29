@@ -92,7 +92,6 @@ export const login = async (req: Request, res: Response) => {
 
   await AuthRepository.saveRefreshToken(user.id, refreshToken);
 
-  // Mobile ยังส่ง refreshToken ใน body เหมือนเดิม (ยังไม่ได้ทำ mobile)
   res.json({
     success: true,
     data: {

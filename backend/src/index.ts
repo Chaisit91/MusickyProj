@@ -19,6 +19,7 @@ import searchRouter from "./modules/search/searchRouter";
 import userRouter from "./modules/user/userRouter";
 import adsRouter from "./modules/ads/adsRouter";
 import uploadRouter from "./modules/upload/uploadRouter"; // ✅ upload API
+import playHistoryRouter from "./modules/playHistory/playHistoryRouter";
 
 // Admin Routers
 import dashboardRouter from "./modules/admin/dashboard/dashboardRouter";
@@ -56,7 +57,8 @@ app.use("/api/queue", queueRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/users", userRouter);
 app.use("/api/ads", adsRouter);
-app.use("/api/upload", uploadRouter); 
+app.use("/api/upload", uploadRouter);
+app.use("/api/play-history", playHistoryRouter);
 
 // ── Admin Routes ──────────────────────────────────────────────
 app.use("/api/admin/dashboard", dashboardRouter);

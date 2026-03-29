@@ -28,11 +28,14 @@ interface TopBarProps {
 }
 
 export default function TopBar({
-  username = "Somsak",
+  username = "User",
   onPremiumPress,
   onBellPress,
   onAvatarPress,
 }: TopBarProps) {
+  // Show first character of name as avatar initial
+  const initial = username.charAt(0).toUpperCase();
+
   return (
     <View
       style={{
@@ -80,11 +83,17 @@ export default function TopBar({
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: "#8B7355",
+              backgroundColor: "#5b4fcf",
               borderWidth: 2,
               borderColor: "#444",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          />
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+              {initial}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>

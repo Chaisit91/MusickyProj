@@ -33,18 +33,6 @@ const GoogleIcon = () => (
   </View>
 );
 
-// ─── Phone Icon ───────────────────────────────────────────────────────────────
-const PhoneIcon = () => (
-  <View style={{ marginRight: 10 }}>
-    <Svg width={22} height={22} viewBox="0 0 24 24">
-      <Path
-        fill="#ffffff"
-        d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"
-      />
-    </Svg>
-  </View>
-);
-
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function WelcomeScreen() {
   const logoAnim = useRef(new Animated.Value(0)).current;
@@ -103,7 +91,7 @@ export default function WelcomeScreen() {
           paddingBottom: 20,
         }}
       >
-        <Text className="text-gray-400 text-lg font-light tracking-wide text-center mb-96">
+        <Text className="text-gray-400 text-lg font-light tracking-wide text-center mb-16">
           Just keep
         </Text>
       </Animated.View>
@@ -114,28 +102,17 @@ export default function WelcomeScreen() {
           opacity: buttonsAnim,
           paddingHorizontal: 20,
           paddingBottom: 40,
+          marginBottom: 160,
         }}
       >
-        {/* Sign Up */}
+        {/* Register */}
         <TouchableOpacity
           className="bg-[#d4d4d4] rounded-full py-4 items-center mb-3"
           activeOpacity={0.85}
-          onPress={() => router.push("/home")}  // ← เพิ่ม
+          onPress={() => router.push("/register")}
         >
           <Text className="text-black font-semibold text-base tracking-wide">
-            Sign up
-          </Text>
-        </TouchableOpacity>
-
-        {/* Continue with Phone Number */}
-        <TouchableOpacity
-          className="border border-gray-600 rounded-full py-4 flex-row items-center justify-center mb-3"
-          activeOpacity={0.85}
-          onPress={() => router.push("/home")}  // ← เพิ่ม
-        >
-          <PhoneIcon />
-          <Text className="text-white font-medium text-base">
-            Continue with Phone Number
+            Register
           </Text>
         </TouchableOpacity>
 
@@ -143,7 +120,7 @@ export default function WelcomeScreen() {
         <TouchableOpacity
           className="border border-gray-600 rounded-full py-4 flex-row items-center justify-center mb-4"
           activeOpacity={0.85}
-          onPress={() => router.push("/home")}  // ← เพิ่ม
+          onPress={() => router.push("/register")}
         >
           <GoogleIcon />
           <Text className="text-white font-medium text-base">
@@ -153,11 +130,11 @@ export default function WelcomeScreen() {
 
         {/* Log In */}
         <TouchableOpacity
-          className="items-center py-2"
-          activeOpacity={0.7}
-          onPress={() => router.push("/home")}  // ← เพิ่ม
+          className="border border-gray-600 rounded-full py-4 items-center"
+          activeOpacity={0.85}
+          onPress={() => router.push("/login")}
         >
-          <Text className="text-gray-300 text-base font-medium">Log in</Text>
+          <Text className="text-gray-300 text-base font-semibold tracking-wide">Log in</Text>
         </TouchableOpacity>
       </Animated.View>
     </View>

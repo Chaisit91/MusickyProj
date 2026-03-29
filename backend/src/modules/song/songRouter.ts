@@ -8,6 +8,7 @@ const router = Router();
 
 // Public — ?artistId=&albumId=&genreId=&search=
 router.get("/", asyncHandler(SongService.getAllSongs));
+router.get("/trending", asyncHandler(SongService.getTrendingSongs));
 router.get("/:id", asyncHandler(SongService.getSongById));
 
 // ADMIN only

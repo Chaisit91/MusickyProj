@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import * as SongRepository from "./songRepository";
 
+export const getTrendingSongs = async (req: Request, res: Response) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+  const songs = await SongRepository.findTrendingSongs(limit);
+  res.json({ success: true, data: songs });
+};
+
 export const getAllSongs = async (req: Request, res: Response) => {
   const { artistId, albumId, genreId, search } = req.query;
   const songs = await SongRepository.findAllSongs({

@@ -22,6 +22,7 @@ model User {
   searchHistory SearchHistory[]
   likedSongs    LikedSong[]
   refreshTokens RefreshToken[]
+  playHistory   PlayHistory[]
 }
 
 model RefreshToken {
@@ -56,6 +57,7 @@ model Song {
   playlistSongs PlaylistSong[]
   downloads     Download[]
   queues        Queue[]
+  playHistory   PlayHistory[]
 }
 
 model Artist {
@@ -178,6 +180,18 @@ model Ads {
   endDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model PlayHistory {
+  id       String   @id @default(uuid())
+  userId   String
+  songId   String
+  playedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song     Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([songId])
 }
 
 enum Role {
