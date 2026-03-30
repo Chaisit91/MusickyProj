@@ -1,12 +1,21 @@
 import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import "../../global.css";
-import { AuthProvider, useAuth } from "../context/AuthContext";
+import { Provider } from "react-redux";
+import { store } from "../store/store";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { restoreSession } from "../store/authSlice";
 
 function RootLayoutNav() {
-  const { isLoggedIn, isLoading } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isLoggedIn, isLoading } = useAppSelector((state) => state.auth);
   const router = useRouter();
   const segments = useSegments();
+
+  // Restore session from AsyncStorage on app start
+  useEffect(() => {
+    dispatch(restoreSession());
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -16,10 +25,8 @@ function RootLayoutNav() {
     const isOnPublicRoute = publicRoutes.includes(currentRoute as string);
 
     if (isLoggedIn && isOnPublicRoute) {
-      // Already logged in → go to home
       router.replace("/home");
     } else if (!isLoggedIn && !isOnPublicRoute) {
-      // Not logged in → go to login
       router.replace("/login");
     }
   }, [isLoggedIn, isLoading, segments]);
@@ -29,8 +36,8 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
+    <Provider store={store}>
       <RootLayoutNav />
-    </AuthProvider>
+    </Provider>
   );
 }

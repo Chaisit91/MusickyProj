@@ -13,7 +13,8 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
-import { useAuth } from "../context/AuthContext";
+import { useAppDispatch } from "../store/hooks";
+import { loginThunk } from "../store/authSlice";
 import axios from "axios";
 
 // ─── Dot badge (same as WelcomeScreen) ───────────────────────────────────────
@@ -52,7 +53,7 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     Animated.parallel([
@@ -70,15 +71,14 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await login({ email: email.trim(), password });
+      const result = await dispatch(loginThunk({ email: email.trim(), password }));
+      if (loginThunk.rejected.match(result)) {
+        setError(result.payload as string);
+      }
       // _layout.tsx จัดการ redirect ไป /home อัตโนมัติเมื่อ isLoggedIn = true
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        if (err.response) {
-          setError(err.response.data?.message ?? "Login failed");
-        } else {
-          setError(`Cannot reach server (${err.message})`);
-        }
+        setError(`Cannot reach server (${err.message})`);
       } else {
         setError("Unexpected error occurred");
       }

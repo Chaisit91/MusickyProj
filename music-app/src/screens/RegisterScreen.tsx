@@ -16,27 +16,10 @@ import { router } from "expo-router";
 import { registerApi } from "../api/authApi";
 import axios from "axios";
 
-// ─── react-hook-form + Zod ────────────────────────────────────────────────────
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-
-// ─── Reusable Field Schemas ───────────────────────────────────────────────────
-const nameField            = z.string().min(2, "Name must be at least 2 characters");
-const emailField           = z.email("Invalid email").refine((v) => v.endsWith("@gmail.com"), "Only @gmail.com");
-const passwordField        = z.string().min(6, "Password must be at least 6 characters");
-const confirmPasswordField = z.string().min(1, "Please confirm your password");
-
-// ─── Zod Schema ───────────────────────────────────────────────────────────────
-const registerSchema = z.object({
-  name:            nameField,
-  email:           emailField,
-  password:        passwordField,
-  confirmPassword: confirmPasswordField,
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+import { registerSchema } from "../schema/authSchema";
 
 
 

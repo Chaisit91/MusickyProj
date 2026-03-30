@@ -17,7 +17,8 @@ import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import TopBar from "../Components/Topbar";
 import BottomNav, { TabName } from "../Components/Bottomnav";
-import { useAuth } from "../context/AuthContext";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { logoutThunk } from "../store/authSlice";
 import {
   getFeaturingSongs,
   getRecentlyPlayed,
@@ -286,7 +287,9 @@ const SectionHeader = ({
 const categories = ["For you", "Relax", "Workout", "Travel", "Party"];
 
 export default function HomeScreen() {
-  const { user, logout } = useAuth();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const logout = () => dispatch(logoutThunk());
   const [activeCategory, setActiveCategory] = useState("For you");
   const [activeTab, setActiveTab] = useState<TabName>("Home");
   const [showLogout, setShowLogout] = useState(false);
