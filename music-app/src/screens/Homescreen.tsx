@@ -17,8 +17,11 @@ import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import TopBar from "../Components/Topbar";
 import BottomNav, { TabName } from "../Components/Bottomnav";
+import CategoryContent, { CategoryName } from "../Components/Categorycontent";
+import MiniPlayer from "../Components/MiniPlayer";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logoutThunk } from "../store/authSlice";
+import { playSong } from "../store/playerSlice";
 import {
   getFeaturingSongs,
   getRecentlyPlayed,
@@ -198,10 +201,7 @@ const LogoutModal = ({
         }}
         onPress={() => {}}
       >
-        {/* Handle */}
         <View style={{ width: 40, height: 4, backgroundColor: "#333", borderRadius: 2, alignSelf: "center", marginBottom: 20 }} />
-
-        {/* Avatar */}
         <View style={{ alignItems: "center", marginBottom: 16 }}>
           <View
             style={{
@@ -221,11 +221,7 @@ const LogoutModal = ({
           <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>{username}</Text>
           <Text style={{ color: "#888", fontSize: 13, marginTop: 4 }}>{email}</Text>
         </View>
-
-        {/* Divider */}
         <View style={{ height: 1, backgroundColor: "#2a2a2a", marginVertical: 16 }} />
-
-        {/* Logout Button */}
         <TouchableOpacity
           onPress={onLogout}
           activeOpacity={0.85}
@@ -247,8 +243,6 @@ const LogoutModal = ({
           </Svg>
           <Text style={{ color: "#ff4444", fontWeight: "600", fontSize: 15 }}>Log out</Text>
         </TouchableOpacity>
-
-        {/* Cancel */}
         <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={{ alignItems: "center", marginTop: 12, paddingVertical: 10 }}>
           <Text style={{ color: "#666", fontSize: 14 }}>Cancel</Text>
         </TouchableOpacity>
@@ -283,17 +277,21 @@ const SectionHeader = ({
   </View>
 );
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
-const categories = ["For you", "Relax", "Workout", "Travel", "Party"];
+// ─── Category Pills ───────────────────────────────────────────────────────────
+// Defined outside component so it's stable
+const CATEGORIES: CategoryName[] = ["For you", "Relax", "Workout", "Travel", "Party"];
 
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const logout = () => dispatch(logoutThunk());
-  const [activeCategory, setActiveCategory] = useState("For you");
+
+  const [activeCategory, setActiveCategory] = useState<CategoryName>("For you");
   const [activeTab, setActiveTab] = useState<TabName>("Home");
   const [showLogout, setShowLogout] = useState(false);
 
+  // "For you" data
   const [featuringSongs, setFeaturingSongs] = useState<Song[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistoryItem[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
@@ -326,12 +324,10 @@ export default function HomeScreen() {
     }
   }, []);
 
-  // โหลด songs + genres ครั้งเดียวตอนเปิด
   useEffect(() => {
     loadStaticData();
   }, [loadStaticData]);
 
-  // โหลด recently played ทุกครั้งที่กลับมาหน้านี้
   useFocusEffect(
     useCallback(() => {
       loadRecent();
@@ -349,9 +345,9 @@ export default function HomeScreen() {
   };
 
   const handleSongPress = async (song: Song) => {
+    dispatch(playSong({ song, queue: featuringSongs.length > 0 ? featuringSongs : [song] }));
     try {
       await recordPlay(song.id);
-      // Refresh recently played after recording
       const updated = await getRecentlyPlayed(5);
       setRecentlyPlayed(updated);
     } catch {
@@ -363,6 +359,14 @@ export default function HomeScreen() {
     setShowLogout(false);
     await logout();
   };
+
+  const handleTabPress = (tab: TabName) => {
+    setActiveTab(tab);
+    if (tab === "Search") router.push("/search");
+  };
+
+  // ── Determine if we show "For you" or a mood category ─────────────────────
+  const isForYou = activeCategory === "For you";
 
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
@@ -388,7 +392,7 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingBottom: 16 }}
         >
-          {categories.map((cat) => (
+          {CATEGORIES.map((cat) => (
             <TouchableOpacity
               key={cat}
               onPress={() => setActiveCategory(cat)}
@@ -415,119 +419,139 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* ── Featuring Today ── */}
-        <SectionHeader title="Featuring Today" />
-        {loadingFeaturing ? (
-          <ActivityIndicator color="#fff" style={{ marginBottom: 28 }} />
-        ) : featuringSongs.length === 0 ? (
-          <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 28, fontSize: 13 }}>
-            No songs available yet
-          </Text>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-            style={{ marginBottom: 28 }}
-          >
-            {featuringSongs.slice(0, 5).map((song, i) => (
-              <TouchableOpacity
-                key={song.id}
-                onPress={() => handleSongPress(song)}
-                activeOpacity={0.8}
-                style={{
-                  width: width * 0.55,
-                  height: 160,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  justifyContent: "flex-end",
-                  backgroundColor: colorFor(i),
-                }}
+        {/* ════════════════════════════════════════════════════════════════════
+            "FOR YOU" content  (original home content)
+        ════════════════════════════════════════════════════════════════════ */}
+        {isForYou ? (
+          <>
+            {/* ── Featuring Today ── */}
+            <SectionHeader title="Featuring Today" />
+            {loadingFeaturing ? (
+              <ActivityIndicator color="#fff" style={{ marginBottom: 28 }} />
+            ) : featuringSongs.length === 0 ? (
+              <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 28, fontSize: 13 }}>
+                No songs available yet
+              </Text>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                style={{ marginBottom: 28 }}
               >
-                {song.album.coverUrl ? (
-                  <Image
-                    source={{ uri: song.album.coverUrl }}
-                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-                    resizeMode="cover"
+                {featuringSongs.slice(0, 5).map((song, i) => (
+                  <TouchableOpacity
+                    key={song.id}
+                    onPress={() => handleSongPress(song)}
+                    activeOpacity={0.8}
+                    style={{
+                      width: width * 0.55,
+                      height: 160,
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      justifyContent: "flex-end",
+                      backgroundColor: colorFor(i),
+                    }}
+                  >
+                    {song.album.coverUrl ? (
+                      <Image
+                        source={{ uri: song.album.coverUrl }}
+                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "row", flexWrap: "wrap" }}>
+                        {[colorFor(i), colorFor(i + 1), colorFor(i + 2), colorFor(i + 3)].map((c, idx) => (
+                          <View key={idx} style={{ width: "50%", height: "50%", backgroundColor: c }} />
+                        ))}
+                      </View>
+                    )}
+                    <View style={{ backgroundColor: "rgba(0,0,0,0.6)", padding: 12 }}>
+                      <Text style={{ color: "#ccc", fontSize: 11 }}>{song.genre.name}</Text>
+                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900", letterSpacing: 0.5 }} numberOfLines={1}>
+                        {song.title}
+                      </Text>
+                      <Text style={{ color: "#aaa", fontSize: 11 }} numberOfLines={1}>
+                        {song.artist.name}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* ── Recently Played ── */}
+            <SectionHeader
+              title="Recently Played"
+              onSeeMore={() => router.push("/recently-played")}
+            />
+            {loadingRecent ? (
+              <ActivityIndicator color="#fff" style={{ marginBottom: 28 }} />
+            ) : recentlyPlayed.length === 0 ? (
+              <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 28, fontSize: 13 }}>
+                Play a song to see your history
+              </Text>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+                style={{ marginBottom: 28 }}
+              >
+                {recentlyPlayed.map((item, i) => (
+                  <AlbumCard
+                    key={item.id}
+                    song={item.song}
+                    index={i}
+                    onPress={() => handleSongPress(item.song)}
                   />
-                ) : (
-                  <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "row", flexWrap: "wrap" }}>
-                    {[colorFor(i), colorFor(i + 1), colorFor(i + 2), colorFor(i + 3)].map((c, idx) => (
-                      <View key={idx} style={{ width: "50%", height: "50%", backgroundColor: c }} />
-                    ))}
-                  </View>
-                )}
-                <View style={{ backgroundColor: "rgba(0,0,0,0.6)", padding: 12 }}>
-                  <Text style={{ color: "#ccc", fontSize: 11 }}>{song.genre.name}</Text>
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900", letterSpacing: 0.5 }} numberOfLines={1}>
-                    {song.title}
-                  </Text>
-                  <Text style={{ color: "#aaa", fontSize: 11 }} numberOfLines={1}>
-                    {song.artist.name}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
+                ))}
+              </ScrollView>
+            )}
 
-        {/* ── Recently Played ── */}
-        <SectionHeader
-          title="Recently Played"
-          onSeeMore={() => router.push("/recently-played")}
-        />
-        {loadingRecent ? (
-          <ActivityIndicator color="#fff" style={{ marginBottom: 28 }} />
-        ) : recentlyPlayed.length === 0 ? (
-          <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 28, fontSize: 13 }}>
-            Play a song to see your history
-          </Text>
+            {/* ── Mixes For You (Genres) ── */}
+            <SectionHeader title="Mixes for you" />
+            {loadingGenres ? (
+              <ActivityIndicator color="#fff" style={{ marginBottom: 110 }} />
+            ) : genres.length === 0 ? (
+              <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 110, fontSize: 13 }}>
+                No genres available yet
+              </Text>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20 }}
+                style={{ marginBottom: 110 }}
+              >
+                {genres.map((genre) => (
+                  <GenreMixCard
+                    key={genre.id}
+                    genre={genre}
+                    onPress={() => {}}
+                  />
+                ))}
+              </ScrollView>
+            )}
+          </>
         ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            style={{ marginBottom: 28 }}
-          >
-            {recentlyPlayed.map((item, i) => (
-              <AlbumCard
-                key={item.id}
-                song={item.song}
-                index={i}
-                onPress={() => handleSongPress(item.song)}
-              />
-            ))}
-          </ScrollView>
-        )}
-
-        {/* ── Mixes For You (Genres) ── */}
-        <SectionHeader title="Mixes for you" />
-        {loadingGenres ? (
-          <ActivityIndicator color="#fff" style={{ marginBottom: 110 }} />
-        ) : genres.length === 0 ? (
-          <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 110, fontSize: 13 }}>
-            No genres available yet
-          </Text>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            style={{ marginBottom: 110 }}
-          >
-            {genres.map((genre) => (
-              <GenreMixCard
-                key={genre.id}
-                genre={genre}
-                onPress={() => {}}
-              />
-            ))}
-          </ScrollView>
+          /* ════════════════════════════════════════════════════════════════════
+              MOOD categories: Relax / Workout / Travel / Party
+          ════════════════════════════════════════════════════════════════════ */
+          <View style={{ paddingBottom: 110 }}>
+            <CategoryContent
+              category={activeCategory}
+              onSongPress={handleSongPress}
+            />
+          </View>
         )}
       </ScrollView>
 
+      {/* ── MiniPlayer ── */}
+      <MiniPlayer />
+
       {/* ── BottomNav ── */}
-      <BottomNav activeTab={activeTab} onTabPress={(tab) => setActiveTab(tab)} />
+      <BottomNav activeTab={activeTab} onTabPress={handleTabPress} />
 
       {/* ── Logout Modal ── */}
       <LogoutModal
