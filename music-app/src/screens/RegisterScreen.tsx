@@ -16,6 +16,30 @@ import { router } from "expo-router";
 import { registerApi } from "../api/authApi";
 import axios from "axios";
 
+// ─── react-hook-form + Zod ────────────────────────────────────────────────────
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+// ─── Reusable Field Schemas ───────────────────────────────────────────────────
+const nameField            = z.string().min(2, "Name must be at least 2 characters");
+const emailField           = z.email("Invalid email").refine((v) => v.endsWith("@gmail.com"), "Only @gmail.com");
+const passwordField        = z.string().min(6, "Password must be at least 6 characters");
+const confirmPasswordField = z.string().min(1, "Please confirm your password");
+
+// ─── Zod Schema ───────────────────────────────────────────────────────────────
+const registerSchema = z.object({
+  name:            nameField,
+  email:           emailField,
+  password:        passwordField,
+  confirmPassword: confirmPasswordField,
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+
+
 // ─── Dot badge ───────────────────────────────────────────────────────────────
 const Dots = () => (
   <View className="flex-row items-center ml-2" style={{ gap: 4 }}>
@@ -42,18 +66,66 @@ const EyeIcon = ({ visible }: { visible: boolean }) => (
   </Svg>
 );
 
+// ─── Password Strength Indicator ──────────────────────────────────────────────
+const PasswordStrength = ({ password }: { password: string }) => {
+  if (!password) return null;
+
+  let strength = 0;
+  if (password.length >= 6) strength++;
+  if (password.length >= 10) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+  const label = strength <= 1 ? "Weak" : strength <= 3 ? "Fair" : "Strong";
+  const color = strength <= 1 ? "#ff4444" : strength <= 3 ? "#f5a623" : "#4caf50";
+
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 6 }}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1,
+            height: 3,
+            borderRadius: 2,
+            backgroundColor: i <= strength ? color : "#2a2a2a",
+          }}
+        />
+      ))}
+      <Text style={{ color, fontSize: 11, marginLeft: 4 }}>{label}</Text>
+    </View>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function RegisterScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // ── react-hook-form setup ────────────────────────────────────────────────
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // ── useWatch: watch password in real-time for strength indicator ─────────
+  const watchedPassword = useWatch({ control, name: "password" });
 
   useEffect(() => {
     Animated.parallel([
@@ -62,93 +134,24 @@ export default function RegisterScreen() {
     ]).start();
   }, []);
 
-  const handleRegister = async () => {
-    setError("");
-
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      setError("Please fill in all required fields");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-
+  // ── Submit handler ───────────────────────────────────────────────────────
+  const onSubmit = async (data: z.infer<typeof registerSchema>) => {
+    setServerError("");
     setLoading(true);
     try {
-      await registerApi({ name: name.trim(), email: email.trim(), password });
-      // Registration successful → go to login
+      await registerApi({ name: data.name.trim(), email: data.email.trim(), password: data.password });
       router.replace("/login");
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const msg = err.response?.data?.message ?? "Registration failed";
-        setError(msg);
+        setServerError(msg);
       } else {
-        setError("Unable to connect to server");
+        setServerError("Unable to connect to server");
       }
     } finally {
       setLoading(false);
     }
   };
-
-  const InputField = ({
-    label,
-    value,
-    onChangeText,
-    placeholder,
-    secureTextEntry,
-    onToggleSecure,
-    keyboardType,
-    autoCapitalize,
-  }: {
-    label: string;
-    value: string;
-    onChangeText: (t: string) => void;
-    placeholder: string;
-    secureTextEntry?: boolean;
-    onToggleSecure?: () => void;
-    keyboardType?: "default" | "email-address";
-    autoCapitalize?: "none" | "words";
-  }) => (
-    <View style={{ marginBottom: 16 }}>
-      <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>{label}</Text>
-      <View style={{ position: "relative" }}>
-        <TextInput
-          style={{
-            backgroundColor: "#1e1e1e",
-            borderRadius: 12,
-            paddingHorizontal: 16,
-            paddingVertical: 14,
-            paddingRight: onToggleSecure ? 48 : 16,
-            color: "#fff",
-            fontSize: 15,
-            borderWidth: 1,
-            borderColor: "#2a2a2a",
-          }}
-          placeholder={placeholder}
-          placeholderTextColor="#555"
-          value={value}
-          onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry}
-          keyboardType={keyboardType ?? "default"}
-          autoCapitalize={autoCapitalize ?? "none"}
-          autoCorrect={false}
-        />
-        {onToggleSecure && (
-          <TouchableOpacity
-            onPress={onToggleSecure}
-            style={{ position: "absolute", right: 14, top: 0, bottom: 0, justifyContent: "center" }}
-          >
-            <EyeIcon visible={!secureTextEntry} />
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
 
   return (
     <KeyboardAvoidingView
@@ -161,9 +164,8 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View
-          style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
-        >
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+
           {/* ── Logo ── */}
           <View className="flex-row mt-16 items-center">
             <Text className="text-white text-4xl font-bold">Musicky</Text>
@@ -171,59 +173,184 @@ export default function RegisterScreen() {
           </View>
 
           {/* ── Title ── */}
-          <Text
-            style={{ color: "#fff", fontSize: 28, fontWeight: "700", marginTop: 40, marginBottom: 8 }}
-          >
+          <Text style={{ color: "#fff", fontSize: 28, fontWeight: "700", marginTop: 40, marginBottom: 8 }}>
             Create account
           </Text>
           <Text style={{ color: "#888", fontSize: 14, marginBottom: 32 }}>
             Join Musicky today
           </Text>
 
-          {/* ── Fields ── */}
-          <InputField
-            label="Name"
-            value={name}
-            onChangeText={setName}
-            placeholder="Your name"
-            autoCapitalize="words"
-          />
+          {/* ── Name ── */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>Name</Text>
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={{
+                    backgroundColor: "#1e1e1e",
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    color: "#fff",
+                    fontSize: 15,
+                    borderWidth: 1,
+                    borderColor: errors.name ? "#ff4444" : "#2a2a2a",
+                  }}
+                  placeholder="Your name"
+                  placeholderTextColor="#555"
+                  value={value}
+                  onChangeText={onChange}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                />
+              )}
+            />
+            {errors.name && (
+              <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{errors.name.message}</Text>
+            )}
+          </View>
 
-          <InputField
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="your@gmail.com"
-            keyboardType="email-address"
-          />
+          {/* ── Email ── */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>Email</Text>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={{
+                    backgroundColor: "#1e1e1e",
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    color: "#fff",
+                    fontSize: 15,
+                    borderWidth: 1,
+                    borderColor: errors.email ? "#ff4444" : "#2a2a2a",
+                  }}
+                  placeholder="your@gmail.com"
+                  placeholderTextColor="#555"
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              )}
+            />
+            {errors.email && (
+              <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{errors.email.message}</Text>
+            )}
+          </View>
 
-          <InputField
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="At least 6 characters"
-            secureTextEntry={!showPassword}
-            onToggleSecure={() => setShowPassword((v) => !v)}
-          />
+          {/* ── Password ── */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>Password</Text>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <View style={{ position: "relative" }}>
+                  <TextInput
+                    style={{
+                      backgroundColor: "#1e1e1e",
+                      borderRadius: 12,
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      paddingRight: 48,
+                      color: "#fff",
+                      fontSize: 15,
+                      borderWidth: 1,
+                      borderColor: errors.password ? "#ff4444" : "#2a2a2a",
+                    }}
+                    placeholder="At least 6 characters"
+                    placeholderTextColor="#555"
+                    value={value}
+                    onChangeText={onChange}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword((v) => !v)}
+                    style={{ position: "absolute", right: 14, top: 0, bottom: 0, justifyContent: "center" }}
+                  >
+                    <EyeIcon visible={showPassword} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+            {/* useWatch — real-time password strength */}
+            <PasswordStrength password={watchedPassword} />
+            {errors.password && (
+              <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{errors.password.message}</Text>
+            )}
+          </View>
 
-          <InputField
-            label="Confirm Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Repeat your password"
-            secureTextEntry={!showConfirm}
-            onToggleSecure={() => setShowConfirm((v) => !v)}
-          />
+          {/* ── Confirm Password ── */}
+          <View style={{ marginBottom: 8 }}>
+            <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>Confirm Password</Text>
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, value } }) => (
+                <View style={{ position: "relative" }}>
+                  <TextInput
+                    style={{
+                      backgroundColor: "#1e1e1e",
+                      borderRadius: 12,
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      paddingRight: 48,
+                      color: "#fff",
+                      fontSize: 15,
+                      borderWidth: 1,
+                      borderColor: errors.confirmPassword ? "#ff4444" : "#2a2a2a",
+                    }}
+                    placeholder="Repeat your password"
+                    placeholderTextColor="#555"
+                    value={value}
+                    onChangeText={onChange}
+                    secureTextEntry={!showConfirm}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirm((v) => !v)}
+                    style={{ position: "absolute", right: 14, top: 0, bottom: 0, justifyContent: "center" }}
+                  >
+                    <EyeIcon visible={showConfirm} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+            {errors.confirmPassword && (
+              <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>
+                {errors.confirmPassword.message}
+              </Text>
+            )}
+          </View>
 
-          {/* ── Note: only @gmail.com ── */}
-          <Text style={{ color: "#555", fontSize: 12, marginBottom: 20, marginTop: -8 }}>
-            * Only @gmail.com addresses are accepted
-          </Text>
+          {/* ── Quick-fill demo (setValue) ── */}
+          <TouchableOpacity
+            onPress={() => {
+              setValue("name", "Test User", { shouldValidate: true });
+              setValue("email", "test@gmail.com", { shouldValidate: true });
+              setValue("password", "Test1234!", { shouldValidate: true });
+              setValue("confirmPassword", "Test1234!", { shouldValidate: true });
+            }}
+            style={{ alignSelf: "flex-end", marginBottom: 16 }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ color: "#555", fontSize: 12 }}>Fill test data</Text>
+          </TouchableOpacity>
 
-          {/* ── Error ── */}
-          {error ? (
+          {/* ── Server Error ── */}
+          {serverError ? (
             <Text style={{ color: "#ff4444", fontSize: 13, marginBottom: 16, textAlign: "center" }}>
-              {error}
+              {serverError}
             </Text>
           ) : null}
 
@@ -237,7 +364,7 @@ export default function RegisterScreen() {
               marginBottom: 12,
               opacity: loading ? 0.7 : 1,
             }}
-            onPress={handleRegister}
+            onPress={handleSubmit(onSubmit)}
             activeOpacity={0.85}
             disabled={loading}
           >
@@ -266,6 +393,7 @@ export default function RegisterScreen() {
           >
             <Text style={{ color: "#555", fontSize: 13 }}>← Back</Text>
           </TouchableOpacity>
+
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
