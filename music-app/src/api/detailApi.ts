@@ -18,3 +18,12 @@ export const getAlbumSongs = async (albumId: string): Promise<Song[]> => {
   });
   return data.data as Song[];
 };
+
+// ─── Songs by genre ───────────────────────────────────────────────────────────
+
+export const getGenreSongs = async (genreId: string): Promise<Song[]> => {
+  const { data } = await apiClient.get("/songs", {
+    params: { genreId, limit: 50 },
+  });
+  return data.data as Song[];
+};

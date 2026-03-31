@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import Svg, { Path, Circle } from "react-native-svg";
 import { getFeaturingSongs, Song } from "../api/homeApi";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { togglePlay } from "../store/playerSlice";
 
 const { width } = Dimensions.get("window");
 
@@ -18,6 +20,12 @@ const { width } = Dimensions.get("window");
 const PlayIcon = ({ size = 22 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
     <Path fill="#ffffff" d="M8 5v14l11-7z" />
+  </Svg>
+);
+
+const PauseIcon = ({ size = 22 }: { size?: number }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Path fill="#ffffff" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
   </Svg>
 );
 
@@ -120,16 +128,29 @@ const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 
 const FeaturedPlaylistCard = ({
   songs,
-  config,
   onSongPress,
 }: {
   songs: Song[];
-  config: CategoryConfig;
+  config?: CategoryConfig;
   onSongPress: (song: Song) => void;
 }) => {
+  const dispatch = useAppDispatch();
+  const currentSong = useAppSelector((s) => s.player.currentSong);
+  const isPlaying = useAppSelector((s) => s.player.isPlaying);
+
   const [liked, setLiked] = useState(false);
   const featuredSong = songs[0];
   const listSongs = songs.slice(1, 5);
+  const coverUri = featuredSong.coverUrl || featuredSong.album.coverUrl;
+  const isFeaturedPlaying = currentSong?.id === featuredSong.id && isPlaying;
+
+  const handleFeaturedPlay = () => {
+    if (currentSong?.id === featuredSong.id) {
+      dispatch(togglePlay());
+    } else {
+      onSongPress(featuredSong);
+    }
+  };
 
   return (
     <View
@@ -138,138 +159,83 @@ const FeaturedPlaylistCard = ({
         marginBottom: 28,
         borderRadius: 16,
         overflow: "hidden",
-        backgroundColor: config.bgGradientColors[0],
+        backgroundColor: "#181825",
         borderWidth: 1,
-        borderColor: config.accentColor + "22",
+        borderColor: "#ffffff14",
       }}
     >
-      {/* Featured Song Row */}
-      {featuredSong && (
-        <TouchableOpacity
-          onPress={() => onSongPress(featuredSong)}
-          activeOpacity={0.85}
-          style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 14 }}
-        >
-          {/* Cover */}
-          <View
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 10,
-              overflow: "hidden",
-              backgroundColor: colorFor(0),
-            }}
-          >
-            {featuredSong.album.coverUrl ? (
-              <Image
-                source={{ uri: featuredSong.album.coverUrl }}
-                style={{ width: 72, height: 72 }}
-                resizeMode="cover"
-              />
-            ) : (
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: colorFor(0),
-                }}
-              >
-                <Text style={{ color: "#fff", fontSize: 9, fontWeight: "700", textAlign: "center", padding: 4 }}>
-                  {featuredSong.album.title}
-                </Text>
-              </View>
-            )}
-          </View>
+      {/* ── Featured row ── */}
+      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 14 }}>
+        {/* Cover */}
+        <View style={{ width: 88, height: 88, borderRadius: 10, overflow: "hidden", backgroundColor: colorFor(0) }}>
+          {coverUri ? (
+            <Image source={{ uri: coverUri }} style={{ width: 88, height: 88 }} resizeMode="cover" />
+          ) : (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ color: "#fff", fontSize: 9, fontWeight: "700", textAlign: "center", padding: 4 }}>
+                {featuredSong.album.title}
+              </Text>
+            </View>
+          )}
+        </View>
 
-          {/* Info */}
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: "#fff", fontSize: 17, fontWeight: "800", letterSpacing: 0.3 }} numberOfLines={1}>
-              {featuredSong.title}
-            </Text>
-            <Text style={{ color: "#888", fontSize: 12, marginTop: 3 }} numberOfLines={1}>
-              {featuredSong.artist.name}
-            </Text>
-            <Text style={{ color: config.accentColor + "cc", fontSize: 11, marginTop: 2 }}>
-              {config.playlistCount}
-            </Text>
-          </View>
-
-          {/* Actions */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+        {/* Info + actions */}
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "800", letterSpacing: 0.2 }} numberOfLines={1}>
+            {featuredSong.title}
+          </Text>
+          <Text style={{ color: "#aaa", fontSize: 12, marginTop: 3 }} numberOfLines={1}>
+            {songs.length} songs
+          </Text>
+          {/* action row */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 12 }}>
             <TouchableOpacity onPress={() => setLiked((v) => !v)} activeOpacity={0.7}>
               <HeartIcon filled={liked} />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7}>
               <MoreIcon />
             </TouchableOpacity>
-            {/* Play button */}
             <TouchableOpacity
-              onPress={() => onSongPress(featuredSong)}
+              onPress={handleFeaturedPlay}
               activeOpacity={0.85}
               style={{
-                width: 42,
-                height: 42,
-                borderRadius: 21,
-                backgroundColor: config.accentColor,
-                alignItems: "center",
-                justifyContent: "center",
+                width: 44, height: 44, borderRadius: 22,
+                backgroundColor: "#2e2e3e",
+                alignItems: "center", justifyContent: "center",
+                borderWidth: 1,
+                borderColor: "#ffffff22",
               }}
             >
-              <PlayIcon size={18} />
+              {isFeaturedPlaying ? <PauseIcon size={18} /> : <PlayIcon size={20} />}
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      )}
+        </View>
+      </View>
 
       {/* Divider */}
       <View style={{ height: 1, backgroundColor: "#ffffff10", marginHorizontal: 16 }} />
 
-      {/* List Songs */}
+      {/* ── Song list ── */}
       {listSongs.map((song, i) => (
         <TouchableOpacity
           key={song.id}
           onPress={() => onSongPress(song)}
           activeOpacity={0.75}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 11,
-            gap: 12,
-          }}
+          style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}
         >
-          {/* Small cover */}
-          <View
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 6,
-              overflow: "hidden",
-              backgroundColor: colorFor(i + 1),
-            }}
-          >
-            {song.album.coverUrl ? (
+          <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: colorFor(i + 1) }}>
+            {(song.coverUrl || song.album.coverUrl) ? (
               <Image
-                source={{ uri: song.album.coverUrl }}
-                style={{ width: 42, height: 42 }}
+                source={{ uri: (song.coverUrl || song.album.coverUrl)! }}
+                style={{ width: 44, height: 44 }}
                 resizeMode="cover"
               />
             ) : (
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: colorFor(i + 1),
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text style={{ color: "#ffffff60", fontSize: 8, textAlign: "center" }}>♪</Text>
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#ffffff60", fontSize: 14 }}>♪</Text>
               </View>
             )}
           </View>
-
-          {/* Info */}
           <View style={{ flex: 1 }}>
             <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
               {song.title}
@@ -278,27 +244,23 @@ const FeaturedPlaylistCard = ({
               {song.artist.name}
             </Text>
           </View>
-
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <MoreIcon />
           </TouchableOpacity>
         </TouchableOpacity>
       ))}
 
-      {/* See All */}
-      <View style={{ alignItems: "center", paddingVertical: 14 }}>
+      {/* ── See All ── */}
+      <View style={{ alignItems: "flex-end", paddingHorizontal: 16, paddingVertical: 14 }}>
         <TouchableOpacity
           activeOpacity={0.8}
           style={{
-            paddingHorizontal: 28,
-            paddingVertical: 9,
-            borderRadius: 20,
-            borderWidth: 1,
-            borderColor: config.accentColor + "55",
-            backgroundColor: config.accentColor + "18",
+            paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20,
+            borderWidth: 1, borderColor: "#ffffff28",
+            backgroundColor: "#ffffff0c",
           }}
         >
-          <Text style={{ color: config.accentColor, fontSize: 13, fontWeight: "600" }}>See All</Text>
+          <Text style={{ color: "#ccc", fontSize: 13, fontWeight: "500" }}>See All</Text>
         </TouchableOpacity>
       </View>
     </View>

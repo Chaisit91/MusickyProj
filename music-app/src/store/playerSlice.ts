@@ -142,12 +142,21 @@ const playerSlice = createSlice({
     setQueue(state, action: PayloadAction<Song[]>) {
       state.queue = action.payload;
     },
+
+    stopSong(state) {
+      state.currentSong = null;
+      state.isPlaying = false;
+      state.progressSeconds = 0;
+      state.queue = [];
+      state.currentIndex = 0;
+    },
   },
 });
 
 export const {
   playSong,
   togglePlay,
+  stopSong,
   nextSong,
   prevSong,
   setProgress,

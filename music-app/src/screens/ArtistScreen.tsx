@@ -15,6 +15,8 @@ import { recordPlay, Song } from "../api/homeApi";
 import { getArtistSongs } from "../api/detailApi";
 import { useAppDispatch } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
+import MiniPlayer from "../Components/MiniPlayer";
+import BottomNav, { TabName } from "../Components/Bottomnav";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 280;
@@ -129,6 +131,13 @@ export default function ArtistScreen() {
   const [loading, setLoading] = useState(true);
   const [followed, setFollowed] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabName>("Search");
+
+  const handleTabPress = (tab: TabName) => {
+    setActiveTab(tab);
+    if (tab === "Home") router.replace("/home");
+    if (tab === "Search") router.replace("/search");
+  };
 
   useEffect(() => {
     getArtistSongs(artistId)
@@ -267,9 +276,11 @@ export default function ArtistScreen() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  backgroundColor: "#fff",
+                  backgroundColor: "#2e2e3e",
                   alignItems: "center",
                   justifyContent: "center",
+                  borderWidth: 1,
+                  borderColor: "#ffffff22",
                 }}
               >
                 <PlayIcon size={22} />
@@ -316,8 +327,11 @@ export default function ArtistScreen() {
           ))
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 110 }} />
       </ScrollView>
+
+      <MiniPlayer />
+      <BottomNav activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 }

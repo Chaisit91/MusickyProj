@@ -110,8 +110,20 @@ export const addRecentSearch = async (item: RecentSearchItem) => {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const ArtistCircle = ({ artist, index }: { artist: Artist; index: number }) => (
-  <View style={{ alignItems: "center", marginRight: 16, width: 64 }}>
+const ArtistCircle = ({
+  artist,
+  index,
+  onPress,
+}: {
+  artist: Artist;
+  index: number;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.8}
+    style={{ alignItems: "center", marginRight: 16, width: 64 }}
+  >
     <View
       style={{
         width: 56,
@@ -135,17 +147,21 @@ const ArtistCircle = ({ artist, index }: { artist: Artist; index: number }) => (
     <Text style={{ color: "#ccc", fontSize: 11, textAlign: "center" }} numberOfLines={2}>
       {artist.name}
     </Text>
-  </View>
+  </TouchableOpacity>
 );
 
 const GenreCard = ({
   genre,
   index,
+  onPress,
 }: {
   genre: Genre;
   index: number;
+  onPress: () => void;
 }) => (
-  <View
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.8}
     style={{
       width: CARD_WIDTH,
       height: 100,
@@ -163,7 +179,6 @@ const GenreCard = ({
         resizeMode="cover"
       />
     ) : null}
-    {/* dark overlay */}
     <View style={{ backgroundColor: "rgba(0,0,0,0.35)", position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
     <Text
       style={{
@@ -180,7 +195,7 @@ const GenreCard = ({
     >
       {genre.name.toUpperCase()}
     </Text>
-  </View>
+  </TouchableOpacity>
 );
 
 const RecentItem = ({
@@ -703,7 +718,12 @@ export default function SearchScreen() {
               contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, paddingTop: 12 }}
             >
               {artists.map((artist, i) => (
-                <ArtistCircle key={artist.id} artist={artist} index={i} />
+                <ArtistCircle
+                  key={artist.id}
+                  artist={artist}
+                  index={i}
+                  onPress={() => handleSelectArtist(artist)}
+                />
               ))}
             </ScrollView>
           )}
@@ -719,13 +739,39 @@ export default function SearchScreen() {
               {/* Left column */}
               <View style={{ flex: 1 }}>
                 {leftGenres.map((genre, i) => (
-                  <GenreCard key={genre.id} genre={genre} index={i * 2} />
+                  <GenreCard
+                    key={genre.id}
+                    genre={genre}
+                    index={i * 2}
+                    onPress={() => router.push({
+                      pathname: "/genre/[id]",
+                      params: {
+                        id: genre.id,
+                        name: encodeURIComponent(genre.name),
+                        color: encodeURIComponent(genre.color ?? ""),
+                        imageUrl: genre.imageUrl ? encodeURIComponent(genre.imageUrl) : "",
+                      },
+                    })}
+                  />
                 ))}
               </View>
               {/* Right column */}
               <View style={{ flex: 1 }}>
                 {rightGenres.map((genre, i) => (
-                  <GenreCard key={genre.id} genre={genre} index={i * 2 + 1} />
+                  <GenreCard
+                    key={genre.id}
+                    genre={genre}
+                    index={i * 2 + 1}
+                    onPress={() => router.push({
+                      pathname: "/genre/[id]",
+                      params: {
+                        id: genre.id,
+                        name: encodeURIComponent(genre.name),
+                        color: encodeURIComponent(genre.color ?? ""),
+                        imageUrl: genre.imageUrl ? encodeURIComponent(genre.imageUrl) : "",
+                      },
+                    })}
+                  />
                 ))}
               </View>
             </View>
