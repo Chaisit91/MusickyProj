@@ -43,18 +43,11 @@ export const createSong = async (req: Request, res: Response) => {
     return;
   }
 
-  // --- กำหนด audio source + auto-detect duration ---
+  // --- กำหนด audio source ---
   let filePath: string;
-  let autoDuration: number | undefined;
 
   if (files?.audioFile?.[0]) {
-    const buf = files.audioFile[0].buffer;
-    try {
-      const { parseBuffer } = await import("music-metadata");
-      const meta = await parseBuffer(buf, { mimeType: "audio/mpeg" });
-      if (meta.format.duration) autoDuration = Math.round(meta.format.duration);
-    } catch { /* fallback to manual */ }
-    filePath = await uploadAudioToCloudinary(buf);
+    filePath = await uploadAudioToCloudinary(files.audioFile[0].buffer);
   } else if (filePathBody) {
     filePath = filePathBody;
   } else {
@@ -71,6 +64,7 @@ export const createSong = async (req: Request, res: Response) => {
     coverUrl = await uploadImageToCloudinary(files.coverImage[0].buffer, "songs");
   }
 
+  // duration ถูก auto-detect จาก WebAdmin (HTML5 Audio API) และส่งมาเป็น field ปกติ
   const song = await AdminSongRepository.createSong({
     title,
     artistId,
@@ -78,7 +72,7 @@ export const createSong = async (req: Request, res: Response) => {
     genreId,
     filePath,
     coverUrl,
-    duration: autoDuration ?? (duration ? Number(duration) : undefined),
+    duration: duration ? Number(duration) : undefined,
     year: year ? Number(year) : undefined,
     lyrics,
   });
@@ -97,21 +91,14 @@ export const updateSong = async (req: Request, res: Response) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
   const { title, artistId, albumId, genreId, filePath: filePathBody, duration, year, lyrics, deleteCover } = req.body;
 
-  // --- อัปเดต audio source + auto-detect duration ถ้ามีการส่งมาใหม่ ---
+  // --- อัปเดต audio source ถ้ามีการส่งมาใหม่ ---
   let filePath: string | undefined;
-  let autoDuration: number | undefined;
 
   if (files?.audioFile?.[0]) {
-    const buf = files.audioFile[0].buffer;
     if (existing.filePath?.includes("cloudinary.com")) {
       await deleteAudioFromCloudinary(existing.filePath);
     }
-    try {
-      const { parseBuffer } = await import("music-metadata");
-      const meta = await parseBuffer(buf, { mimeType: "audio/mpeg" });
-      if (meta.format.duration) autoDuration = Math.round(meta.format.duration);
-    } catch { /* fallback */ }
-    filePath = await uploadAudioToCloudinary(buf);
+    filePath = await uploadAudioToCloudinary(files.audioFile[0].buffer);
   } else if (filePathBody) {
     filePath = filePathBody;
   }
@@ -138,7 +125,7 @@ export const updateSong = async (req: Request, res: Response) => {
     ...(filePath && { filePath }),
     ...(coverUrl !== undefined && { coverUrl: coverUrl ?? undefined }),
     ...(deleteCover === "true" && { coverUrl: null }),
-    ...(autoDuration !== undefined ? { duration: autoDuration } : duration !== undefined ? { duration: Number(duration) } : {}),
+    ...(duration !== undefined && { duration: Number(duration) }),
     ...(year && { year: Number(year) }),
     ...(lyrics !== undefined && { lyrics }),
   });

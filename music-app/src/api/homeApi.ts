@@ -54,6 +54,7 @@ export const getAllPlayHistory = async (): Promise<PlayHistoryItem[]> => {
 };
 
 export const recordPlay = async (songId: string): Promise<void> => {
+  if (!songId) return;
   await apiClient.post("/play-history", { songId });
 };
 
