@@ -11,7 +11,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import Svg, { Path, Circle, Rect } from "react-native-svg";
+import Svg, { Path, Rect } from "react-native-svg";
 import { router } from "expo-router";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
@@ -19,7 +19,7 @@ import {
   removeFromQueue,
   togglePlay,
   addToQueue,
-  cycleRepeat,
+  setRepeatMode,
 } from "../store/playerSlice";
 import { Song } from "../api/homeApi";
 import { searchAll } from "../api/searchApi";
@@ -263,7 +263,7 @@ const AddSongsModal = ({
 
 export default function QueueScreen() {
   const dispatch = useAppDispatch();
-  const { currentSong, queue, currentIndex, isPlaying, repeatMode } = useAppSelector((s) => s.player);
+  const { currentSong, queue, currentIndex, repeatMode } = useAppSelector((s) => s.player);
   const [showAddModal, setShowAddModal] = useState(false);
 
   if (!currentSong) {
@@ -333,10 +333,7 @@ export default function QueueScreen() {
         <View style={{ flexDirection: "row", gap: 8 }}>
           {/* เล่นตามลำดับ */}
           <TouchableOpacity
-            onPress={() => {
-              if (repeatMode !== "none") dispatch(cycleRepeat());
-              if (repeatMode === "one") dispatch(cycleRepeat()); // one → none needs 2 cycles
-            }}
+            onPress={() => dispatch(setRepeatMode("none"))}
             activeOpacity={0.7}
             style={{
               flex: 1,
@@ -353,14 +350,9 @@ export default function QueueScreen() {
             <Text style={{ color: repeatMode === "none" ? "#fff" : "#444", fontSize: 11, fontWeight: "600" }}>ตามลำดับ</Text>
           </TouchableOpacity>
 
-          {/* วนทุกเพลง (repeat all) */}
+          {/* คิวไหล (repeat all) */}
           <TouchableOpacity
-            onPress={() => {
-              if (repeatMode === "none") dispatch(cycleRepeat());       // none → all
-              else if (repeatMode === "one") { dispatch(cycleRepeat()); dispatch(cycleRepeat()); } // one → none → all? no...
-              // Actually cycleRepeat goes none→all→one→none
-              // So for "all": if none → cycle once, if one → cycle twice
-            }}
+            onPress={() => dispatch(setRepeatMode("all"))}
             activeOpacity={0.7}
             style={{
               flex: 1,
@@ -379,11 +371,7 @@ export default function QueueScreen() {
 
           {/* วนเพลงนี้ (repeat one) */}
           <TouchableOpacity
-            onPress={() => {
-              if (repeatMode === "all") dispatch(cycleRepeat()); // all → one
-              else if (repeatMode === "none") { dispatch(cycleRepeat()); dispatch(cycleRepeat()); } // none → all → one? No...
-              // none→all→one cycle. For one: if none → cycle 2x, if all → cycle 1x
-            }}
+            onPress={() => dispatch(setRepeatMode("one"))}
             activeOpacity={0.7}
             style={{
               flex: 1,

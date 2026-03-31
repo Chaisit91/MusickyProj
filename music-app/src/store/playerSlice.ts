@@ -123,6 +123,10 @@ const playerSlice = createSlice({
       state.repeatMode = modes[(idx + 1) % modes.length];
     },
 
+    setRepeatMode(state, action: PayloadAction<"none" | "all" | "one">) {
+      state.repeatMode = action.payload;
+    },
+
     addToQueue(state, action: PayloadAction<Song>) {
       state.queue.push(action.payload);
     },
@@ -153,6 +157,7 @@ export const {
   setVolume,
   toggleShuffle,
   cycleRepeat,
+  setRepeatMode,
   addToQueue,
   removeFromQueue,
   setQueue,
