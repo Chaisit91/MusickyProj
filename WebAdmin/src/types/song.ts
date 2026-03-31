@@ -9,6 +9,7 @@ export interface Song {
   albumId: string;
   genreId: string;
   filePath: string;
+  coverUrl?: string;
   duration?: number;
   playCount: number;
   year?: number;

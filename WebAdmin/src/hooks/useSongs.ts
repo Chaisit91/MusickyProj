@@ -42,31 +42,13 @@ export const useSongs = (search?: string, genreId?: string) => {
     fetchSongs();
   }, [fetchSongs]);
 
-  const createSong = async (data: {
-    title: string;
-    artistId: string;
-    albumId: string;
-    genreId: string;
-    filePath: string;
-    duration?: number;
-    year?: number;
-    lyrics?: string;
-  }) => {
-    await createSongApi(data);
+  const createSong = async (formData: FormData) => {
+    await createSongApi(formData);
     await fetchSongs();
   };
 
-  const updateSong = async (id: string, data: {
-    title?: string;
-    artistId?: string;
-    albumId?: string;
-    genreId?: string;
-    filePath?: string;
-    duration?: number;
-    year?: number;
-    lyrics?: string;
-  }) => {
-    await updateSongApi(id, data);
+  const updateSong = async (id: string, formData: FormData) => {
+    await updateSongApi(id, formData);
     await fetchSongs();
   };
 

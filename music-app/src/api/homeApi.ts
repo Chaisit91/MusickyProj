@@ -25,6 +25,8 @@ export interface Song {
   duration: number | null;
   playCount: number;
   filePath: string;
+  coverUrl: string | null;
+  lyrics: string | null;
   artist: Artist;
   album: Album;
   genre: Genre;

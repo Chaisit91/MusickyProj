@@ -15,30 +15,17 @@ export const getSongByIdApi = async (id: string) => {
   return api.get(`/admin/songs/${id}`);
 };
 
-export const createSongApi = async (data: {
-  title: string;
-  artistId: string;
-  albumId: string;
-  genreId: string;
-  filePath: string;
-  duration?: number;
-  year?: number;
-  lyrics?: string;
-}) => {
-  return api.post("/admin/songs", data);
+// ส่งเป็น FormData เพื่อรองรับ audioFile + coverImage
+export const createSongApi = async (data: FormData) => {
+  return api.post("/admin/songs", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
-export const updateSongApi = async (id: string, data: {
-  title?: string;
-  artistId?: string;
-  albumId?: string;
-  genreId?: string;
-  filePath?: string;
-  duration?: number;
-  year?: number;
-  lyrics?: string;
-}) => {
-  return api.put(`/admin/songs/${id}`, data);
+export const updateSongApi = async (id: string, data: FormData) => {
+  return api.put(`/admin/songs/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const deleteSongApi = async (id: string) => {

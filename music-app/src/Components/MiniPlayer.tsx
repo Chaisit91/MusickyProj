@@ -81,9 +81,9 @@ export default function MiniPlayer() {
           backgroundColor: "#333",
         }}
       >
-        {currentSong.album.coverUrl ? (
+        {(currentSong.coverUrl || currentSong.album.coverUrl) ? (
           <Image
-            source={{ uri: currentSong.album.coverUrl }}
+            source={{ uri: (currentSong.coverUrl || currentSong.album.coverUrl)! }}
             style={{ width: 44, height: 44 }}
             resizeMode="cover"
           />

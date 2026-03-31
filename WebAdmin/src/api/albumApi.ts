@@ -28,7 +28,9 @@ export const createAlbumApi = async (data: {
   } else if (data.coverUrl) {
     formData.append("coverUrl", data.coverUrl);
   }
-  return api.post("/albums", formData);
+  return api.post("/albums", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const updateAlbumApi = async (id: string, data: {
@@ -47,7 +49,9 @@ export const updateAlbumApi = async (id: string, data: {
   } else if (data.coverUrl !== undefined) {
     formData.append("coverUrl", data.coverUrl);
   }
-  return api.put(`/albums/${id}`, formData);
+  return api.put(`/albums/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const deleteAlbumApi = async (id: string) => {

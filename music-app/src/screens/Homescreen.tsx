@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   StatusBar,
   Dimensions,
@@ -33,6 +34,8 @@ import {
 } from "../api/homeApi";
 
 const { width } = Dimensions.get("window");
+const CARD_WIDTH = width - 64; // เห็น card ถัดไปโผล่ทางขวา ~20px
+const CARD_GAP = 12;
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const PlayIcon = () => (
@@ -68,16 +71,16 @@ const AlbumCard = ({
         width: 80,
         height: 80,
         borderRadius: 8,
-        backgroundColor: song.album.coverUrl ? "transparent" : colorFor(index),
+        backgroundColor: (song.coverUrl || song.album.coverUrl) ? "transparent" : colorFor(index),
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 6,
         overflow: "hidden",
       }}
     >
-      {song.album.coverUrl ? (
+      {(song.coverUrl || song.album.coverUrl) ? (
         <Image
-          source={{ uri: song.album.coverUrl }}
+          source={{ uri: (song.coverUrl || song.album.coverUrl)! }}
           style={{ width: 80, height: 80 }}
           resizeMode="cover"
         />
@@ -293,6 +296,7 @@ export default function HomeScreen() {
 
   // "For you" data
   const [featuringSongs, setFeaturingSongs] = useState<Song[]>([]);
+  const [featActiveIndex, setFeatActiveIndex] = useState(0);
   const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistoryItem[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
 
@@ -354,6 +358,7 @@ export default function HomeScreen() {
       // silent fail
     }
   };
+
 
   const handleLogout = async () => {
     setShowLogout(false);
@@ -433,51 +438,75 @@ export default function HomeScreen() {
                 No songs available yet
               </Text>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
-                style={{ marginBottom: 28 }}
-              >
-                {featuringSongs.slice(0, 5).map((song, i) => (
-                  <TouchableOpacity
-                    key={song.id}
-                    onPress={() => handleSongPress(song)}
-                    activeOpacity={0.8}
-                    style={{
-                      width: width * 0.55,
-                      height: 160,
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      justifyContent: "flex-end",
-                      backgroundColor: colorFor(i),
-                    }}
-                  >
-                    {song.album.coverUrl ? (
-                      <Image
-                        source={{ uri: song.album.coverUrl }}
-                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "row", flexWrap: "wrap" }}>
-                        {[colorFor(i), colorFor(i + 1), colorFor(i + 2), colorFor(i + 3)].map((c, idx) => (
-                          <View key={idx} style={{ width: "50%", height: "50%", backgroundColor: c }} />
-                        ))}
+              <View style={{ marginBottom: 28 }}>
+                <FlatList
+                  data={featuringSongs.slice(0, 5)}
+                  keyExtractor={(item) => item.id}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  snapToInterval={CARD_WIDTH + CARD_GAP}
+                  snapToAlignment="start"
+                  decelerationRate={0.92}
+                  contentContainerStyle={{ paddingLeft: 20, paddingRight: 20 }}
+                  ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
+                  onScroll={(e) => {
+                    const idx = Math.round(e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_GAP));
+                    setFeatActiveIndex(idx);
+                  }}
+                  scrollEventThrottle={16}
+                  renderItem={({ item: song, index: i }) => (
+                    <TouchableOpacity
+                      onPress={() => handleSongPress(song)}
+                      activeOpacity={0.8}
+                      style={{
+                        width: CARD_WIDTH,
+                        height: 200,
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        justifyContent: "flex-end",
+                        backgroundColor: colorFor(i),
+                      }}
+                    >
+                      {(song.coverUrl || song.album.coverUrl) ? (
+                        <Image
+                          source={{ uri: (song.coverUrl || song.album.coverUrl)! }}
+                          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "row", flexWrap: "wrap" }}>
+                          {[colorFor(i), colorFor(i + 1), colorFor(i + 2), colorFor(i + 3)].map((c, idx) => (
+                            <View key={idx} style={{ width: "50%", height: "50%", backgroundColor: c }} />
+                          ))}
+                        </View>
+                      )}
+                      <View style={{ backgroundColor: "rgba(0,0,0,0.55)", padding: 14 }}>
+                        <Text style={{ color: "#ccc", fontSize: 11 }}>{song.genre.name}</Text>
+                        <Text style={{ color: "#fff", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 }} numberOfLines={1}>
+                          {song.title}
+                        </Text>
+                        <Text style={{ color: "#aaa", fontSize: 12, marginTop: 2 }} numberOfLines={1}>
+                          {song.artist.name}
+                        </Text>
                       </View>
-                    )}
-                    <View style={{ backgroundColor: "rgba(0,0,0,0.6)", padding: 12 }}>
-                      <Text style={{ color: "#ccc", fontSize: 11 }}>{song.genre.name}</Text>
-                      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900", letterSpacing: 0.5 }} numberOfLines={1}>
-                        {song.title}
-                      </Text>
-                      <Text style={{ color: "#aaa", fontSize: 11 }} numberOfLines={1}>
-                        {song.artist.name}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                    </TouchableOpacity>
+                  )}
+                />
+                {/* Pagination dots */}
+                <View style={{ flexDirection: "row", justifyContent: "center", gap: 6, marginTop: 12 }}>
+                  {featuringSongs.slice(0, 5).map((_, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        width: featActiveIndex === i ? 18 : 6,
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: featActiveIndex === i ? "#fff" : "#444",
+                      }}
+                    />
+                  ))}
+                </View>
+              </View>
             )}
 
             {/* ── Recently Played ── */}

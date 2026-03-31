@@ -7,7 +7,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export type UploadFolder = "artists" | "albums" | "genres" | "ads";
+export type UploadFolder = "artists" | "albums" | "genres" | "ads" | "songs";
 
 export const uploadImageToCloudinary = (
   buffer: Buffer,
@@ -16,12 +16,11 @@ export const uploadImageToCloudinary = (
   return new Promise((resolve, reject) => {
     const baseFolder = process.env.CLOUDINARY_FOLDER || "musickyproj";
 
-    // ✅ debug log
-    console.log("=== uploadImageToCloudinary ===")
-    console.log("CLOUDINARY_FOLDER env:", process.env.CLOUDINARY_FOLDER)
-    console.log("baseFolder:", baseFolder)
-    console.log("folder param:", folder)
-    console.log("full path:", `${baseFolder}/${folder}`)
+    console.log("=== uploadImageToCloudinary ===");
+    console.log("CLOUDINARY_FOLDER env:", process.env.CLOUDINARY_FOLDER);
+    console.log("baseFolder:", baseFolder);
+    console.log("folder param:", folder);
+    console.log("full path:", `${baseFolder}/${folder}`);
 
     const uploadStream = cloudinary.uploader.upload_stream(
       {
@@ -31,10 +30,39 @@ export const uploadImageToCloudinary = (
       },
       (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
         if (error || !result) {
-          console.error("Cloudinary upload error:", error)
+          console.error("Cloudinary upload error:", error);
           return reject(error);
         }
-        console.log("Cloudinary upload success:", result.secure_url)
+        console.log("Cloudinary upload success:", result.secure_url);
+        resolve(result.secure_url);
+      }
+    );
+
+    Readable.from(buffer).pipe(uploadStream);
+  });
+};
+
+// อัปโหลดไฟล์ MP3 ไปยัง Cloudinary
+// Cloudinary ใช้ resource_type: "video" สำหรับทั้ง audio และ video
+export const uploadAudioToCloudinary = (buffer: Buffer): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const baseFolder = process.env.CLOUDINARY_FOLDER || "musickyproj";
+
+    console.log("=== uploadAudioToCloudinary ===");
+    console.log("full path:", `${baseFolder}/songs/audio`);
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `${baseFolder}/songs/audio`,
+        resource_type: "video", // Cloudinary ใช้ "video" สำหรับ audio ด้วย
+        format: "mp3",
+      },
+      (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
+        if (error || !result) {
+          console.error("Cloudinary audio upload error:", error);
+          return reject(error);
+        }
+        console.log("Cloudinary audio upload success:", result.secure_url);
         resolve(result.secure_url);
       }
     );
@@ -49,6 +77,18 @@ export const deleteImageFromCloudinary = async (imageUrl: string): Promise<void>
     if (!matches) return;
     const publicId = matches[1];
     await cloudinary.uploader.destroy(publicId);
+  } catch {
+    // ไม่ throw เพื่อไม่ให้กระทบ flow หลัก
+  }
+};
+
+// ลบไฟล์ audio จาก Cloudinary (resource_type: video)
+export const deleteAudioFromCloudinary = async (audioUrl: string): Promise<void> => {
+  try {
+    const matches = audioUrl.match(/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i);
+    if (!matches) return;
+    const publicId = matches[1];
+    await cloudinary.uploader.destroy(publicId, { resource_type: "video" });
   } catch {
     // ไม่ throw เพื่อไม่ให้กระทบ flow หลัก
   }

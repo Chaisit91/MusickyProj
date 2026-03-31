@@ -37,6 +37,7 @@ export const createSong = async (data: {
   albumId: string;
   genreId: string;
   filePath: string;
+  coverUrl?: string;
   duration?: number;
   year?: number;
   lyrics?: string;
@@ -53,6 +54,7 @@ export const updateSong = async (id: string, data: {
   albumId?: string;
   genreId?: string;
   filePath?: string;
+  coverUrl?: string | null;
   duration?: number;
   year?: number;
   lyrics?: string;

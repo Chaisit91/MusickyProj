@@ -44,6 +44,7 @@ model Song {
   albumId       String
   genreId       String
   filePath      String
+  coverUrl      String?        // รูปปกเพลง (Cloudinary URL)
   duration      Int?           // เพิ่ม — ความยาวเพลง (วินาที)
   playCount     Int            @default(0)  // เพิ่ม — จำนวนครั้งที่เปิด
   year          Int?           // เพิ่ม — ปีที่ลงเพลง

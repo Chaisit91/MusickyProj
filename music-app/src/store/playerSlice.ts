@@ -1,16 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Song } from "../api/homeApi";
 
-// ─── State ────────────────────────────────────────────────────────────────────
-
 interface PlayerState {
   currentSong: Song | null;
   queue: Song[];
   currentIndex: number;
   isPlaying: boolean;
   progressSeconds: number;
+  durationSeconds: number;   // duration จริงจาก audio (AudioController อัปเดต)
+  seekRequest: number | null; // เมื่อผู้ใช้ seek → AudioController จะ seek แล้ว clear
   isShuffle: boolean;
   repeatMode: "none" | "all" | "one";
+  volume: number; // 0.0 – 1.0
 }
 
 const initialState: PlayerState = {
@@ -19,26 +20,26 @@ const initialState: PlayerState = {
   currentIndex: 0,
   isPlaying: false,
   progressSeconds: 0,
+  durationSeconds: 0,
+  seekRequest: null,
   isShuffle: false,
   repeatMode: "none",
+  volume: 1.0,
 };
-
-// ─── Slice ────────────────────────────────────────────────────────────────────
 
 const playerSlice = createSlice({
   name: "player",
   initialState,
   reducers: {
-    playSong(
-      state,
-      action: PayloadAction<{ song: Song; queue?: Song[]; index?: number }>
-    ) {
+    playSong(state, action: PayloadAction<{ song: Song; queue?: Song[]; index?: number }>) {
       const { song, queue, index } = action.payload;
       state.currentSong = song;
       state.queue = queue ?? [song];
       state.currentIndex = index ?? 0;
       state.isPlaying = true;
       state.progressSeconds = 0;
+      state.durationSeconds = song.duration ?? 0;
+      state.seekRequest = null;
     },
 
     togglePlay(state) {
@@ -55,8 +56,9 @@ const playerSlice = createSlice({
       } else {
         next = state.currentIndex + 1;
         if (next >= state.queue.length) {
-          next = state.repeatMode === "all" ? 0 : state.currentIndex;
-          if (state.repeatMode === "none") {
+          if (state.repeatMode === "all") {
+            next = 0;
+          } else {
             state.isPlaying = false;
             return;
           }
@@ -65,13 +67,15 @@ const playerSlice = createSlice({
       state.currentIndex = next;
       state.currentSong = state.queue[next];
       state.progressSeconds = 0;
+      state.durationSeconds = state.queue[next].duration ?? 0;
+      state.seekRequest = null;
       state.isPlaying = true;
     },
 
     prevSong(state) {
       if (state.queue.length === 0) return;
-      // If >3 seconds in, restart current song
       if (state.progressSeconds > 3) {
+        state.seekRequest = 0;
         state.progressSeconds = 0;
         return;
       }
@@ -80,15 +84,37 @@ const playerSlice = createSlice({
       state.currentIndex = prev;
       state.currentSong = state.queue[prev];
       state.progressSeconds = 0;
+      state.durationSeconds = state.queue[prev].duration ?? 0;
+      state.seekRequest = null;
       state.isPlaying = true;
     },
 
+    // AudioController เรียกเพื่ออัปเดต progress จาก audio จริง
     setProgress(state, action: PayloadAction<number>) {
       state.progressSeconds = Math.max(0, action.payload);
     },
 
+    // AudioController เรียกเพื่ออัปเดต duration จาก audio จริง
+    setDuration(state, action: PayloadAction<number>) {
+      state.durationSeconds = action.payload;
+    },
+
+    // ผู้ใช้ seek → AudioController จะอ่าน seekRequest แล้ว seek ไฟล์จริง
+    seekTo(state, action: PayloadAction<number>) {
+      state.seekRequest = action.payload;
+      state.progressSeconds = action.payload;
+    },
+
+    clearSeekRequest(state) {
+      state.seekRequest = null;
+    },
+
     toggleShuffle(state) {
       state.isShuffle = !state.isShuffle;
+    },
+
+    setVolume(state, action: PayloadAction<number>) {
+      state.volume = Math.max(0, Math.min(1, action.payload));
     },
 
     cycleRepeat(state) {
@@ -121,6 +147,10 @@ export const {
   nextSong,
   prevSong,
   setProgress,
+  setDuration,
+  seekTo,
+  clearSeekRequest,
+  setVolume,
   toggleShuffle,
   cycleRepeat,
   addToQueue,

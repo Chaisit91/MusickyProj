@@ -104,8 +104,8 @@ const QueueRow = ({
         backgroundColor: colorFor(index),
       }}
     >
-      {song.album.coverUrl ? (
-        <Image source={{ uri: song.album.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+      {(song.coverUrl || song.album.coverUrl) ? (
+        <Image source={{ uri: (song.coverUrl || song.album.coverUrl)! }} style={{ width: 44, height: 44 }} resizeMode="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#ffffff60" }}>♪</Text>
@@ -200,8 +200,8 @@ export default function QueueScreen() {
             backgroundColor: "#1a1a3e",
           }}
         >
-          {currentSong.album.coverUrl ? (
-            <Image source={{ uri: currentSong.album.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+          {(currentSong.coverUrl || currentSong.album.coverUrl) ? (
+            <Image source={{ uri: (currentSong.coverUrl || currentSong.album.coverUrl)! }} style={{ width: 44, height: 44 }} resizeMode="cover" />
           ) : (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: "#ffffff30" }}>♪</Text>

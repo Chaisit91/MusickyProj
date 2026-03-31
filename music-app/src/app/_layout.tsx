@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import { store } from "../store/store";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { restoreSession } from "../store/authSlice";
+import AudioController from "../Components/AudioController";
 
 function RootLayoutNav() {
   const dispatch = useAppDispatch();
@@ -31,7 +32,12 @@ function RootLayoutNav() {
     }
   }, [isLoggedIn, isLoading, segments]);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      <AudioController />
+      <Stack screenOptions={{ headerShown: false }} />
+    </>
+  );
 }
 
 export default function RootLayout() {
