@@ -174,6 +174,7 @@ export default function YourLibraryScreen() {
   const likedSongs = useAppSelector((s) => s.library.likedSongs);
   const followedArtists = useAppSelector((s) => s.library.followedArtists);
   const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+  const playlists = useAppSelector((s) => s.library.playlists);
   const [recentItems, setRecentItems] = useState<PlayHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabName>("Your Library");
@@ -234,7 +235,7 @@ export default function YourLibraryScreen() {
             <LibraryCard
               icon={<PlaylistIcon />}
               label="Playlists"
-              count="0 playlists"
+              count={`${playlists.length} playlists`}
               onPress={() => router.push("/playlists")}
             />
             <LibraryCard

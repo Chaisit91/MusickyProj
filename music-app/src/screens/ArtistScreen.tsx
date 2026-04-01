@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
 import { toggleFollowArtist, toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
 import MiniPlayer from "../Components/MiniPlayer";
+import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 import BottomNav, { TabName } from "../Components/Bottomnav";
 
 const { width } = Dimensions.get("window");
@@ -90,6 +91,7 @@ const SongRow = ({
   onLike,
   isDownloaded,
   onDownload,
+  onMore,
 }: {
   song: Song;
   index: number;
@@ -98,6 +100,7 @@ const SongRow = ({
   onLike: () => void;
   isDownloaded: boolean;
   onDownload: () => void;
+  onMore: () => void;
 }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -144,6 +147,10 @@ const SongRow = ({
     <TouchableOpacity onPress={onDownload} activeOpacity={0.7} style={{ padding: 6 }}>
       <DownloadSmallIcon downloaded={isDownloaded} />
     </TouchableOpacity>
+
+    <TouchableOpacity onPress={onMore} activeOpacity={0.7} style={{ padding: 6 }}>
+      <MoreIcon />
+    </TouchableOpacity>
   </TouchableOpacity>
 );
 
@@ -168,6 +175,7 @@ export default function ArtistScreen() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>("Search");
 
   const handleTabPress = (tab: TabName) => {
@@ -367,6 +375,7 @@ export default function ArtistScreen() {
               onLike={() => dispatch(toggleLikeSong(song))}
               isDownloaded={downloadedSongs.some((s) => s.id === song.id)}
               onDownload={() => dispatch(toggleDownload(song))}
+              onMore={() => setSelectedSong(song)}
             />
           ))
         )}
@@ -376,6 +385,7 @@ export default function ArtistScreen() {
 
       <MiniPlayer />
       <BottomNav activeTab={activeTab} onTabPress={handleTabPress} />
+      <AddToPlaylistSheet song={selectedSong} onClose={() => setSelectedSong(null)} />
     </View>
   );
 }

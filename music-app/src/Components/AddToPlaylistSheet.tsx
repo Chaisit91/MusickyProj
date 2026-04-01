@@ -12,9 +12,9 @@ import {
 import Svg, { Path } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
-  createPlaylist,
-  addSongToPlaylist,
-  removeSongFromPlaylist,
+  createPlaylistThunk,
+  addSongToPlaylistThunk,
+  removeSongFromPlaylistThunk,
 } from "../store/librarySlice";
 import { Song } from "../api/homeApi";
 
@@ -60,20 +60,21 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
     if (!playlist) return;
     const isIn = playlist.songs.some((s) => s.id === song.id);
     if (isIn) {
-      dispatch(removeSongFromPlaylist({ playlistId, songId: song.id }));
+      dispatch(removeSongFromPlaylistThunk({ playlistId, songId: song.id }));
     } else {
-      dispatch(addSongToPlaylist({ playlistId, song }));
+      dispatch(addSongToPlaylistThunk({ playlistId, song }));
     }
   };
 
-  const handleCreateAndAdd = () => {
+  const handleCreateAndAdd = async () => {
     const title = newTitle.trim();
     if (!title) return;
-    const newId = Date.now().toString();
-    dispatch(createPlaylist({ id: newId, title }));
-    dispatch(addSongToPlaylist({ playlistId: newId, song }));
     setNewTitle("");
     setShowCreate(false);
+    const result = await dispatch(createPlaylistThunk(title));
+    if (createPlaylistThunk.fulfilled.match(result)) {
+      dispatch(addSongToPlaylistThunk({ playlistId: result.payload.id, song }));
+    }
   };
 
   return (

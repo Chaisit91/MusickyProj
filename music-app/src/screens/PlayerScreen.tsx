@@ -22,6 +22,7 @@ import {
   setVolume,
 } from "../store/playerSlice";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
+import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 
 const { width } = Dimensions.get("window");
 const ART_SIZE = width - 64;
@@ -177,6 +178,7 @@ export default function PlayerScreen() {
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const [activeTab, setActiveTab] = useState<"player" | "lyrics">("player");
+  const [showPlaylistSheet, setShowPlaylistSheet] = useState(false);
 
   const duration = durationSeconds > 0 ? durationSeconds : (currentSong?.duration ?? 0);
 
@@ -215,7 +217,7 @@ export default function PlayerScreen() {
         <View style={{ alignItems: "center" }}>
           <Text style={{ color: "#888", fontSize: 11, letterSpacing: 1 }}>NOW PLAYING</Text>
         </View>
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => setShowPlaylistSheet(true)} activeOpacity={0.7}>
           <MoreVertIcon />
         </TouchableOpacity>
       </View>
@@ -522,6 +524,10 @@ export default function PlayerScreen() {
           )}
         </ScrollView>
       )}
+      <AddToPlaylistSheet
+        song={showPlaylistSheet ? currentSong : null}
+        onClose={() => setShowPlaylistSheet(false)}
+      />
     </View>
   );
 }

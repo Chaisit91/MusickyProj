@@ -33,7 +33,11 @@ export default function AudioControllerImpl() {
 
   // ── โหลดเพลงใหม่เมื่อ currentSong เปลี่ยน ───────────────────────────────────
   useEffect(() => {
-    if (!currentSong) return;
+    if (!currentSong) {
+      player.pause();
+      initializedRef.current = false;
+      return;
+    }
 
     console.log("AudioController: loading", currentSong.filePath);
     initializedRef.current = false;

@@ -13,10 +13,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
 import { recordPlay, Song } from "../api/homeApi";
 import { getGenreSongs } from "../api/detailApi";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
+import { toggleLikeSong, toggleDownload } from "../store/librarySlice";
 import MiniPlayer from "../Components/MiniPlayer";
 import BottomNav, { TabName } from "../Components/Bottomnav";
+import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 220;
@@ -49,16 +51,43 @@ const MoreIcon = () => (
   </Svg>
 );
 
+const HeartIcon = ({ filled }: { filled: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path
+      fill={filled ? "#e84393" : "none"}
+      stroke={filled ? "#e84393" : "#666"}
+      strokeWidth={2}
+      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+    />
+  </Svg>
+);
+
+const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path fill={downloaded ? "#4fc3f7" : "#555"} d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+  </Svg>
+);
+
 // ─── Song Row ─────────────────────────────────────────────────────────────────
 
 const SongRow = ({
   song,
   index,
   onPress,
+  isLiked,
+  onLike,
+  isDownloaded,
+  onDownload,
+  onMore,
 }: {
   song: Song;
   index: number;
   onPress: () => void;
+  isLiked: boolean;
+  onLike: () => void;
+  isDownloaded: boolean;
+  onDownload: () => void;
+  onMore: () => void;
 }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -80,7 +109,13 @@ const SongRow = ({
         {song.artist.name} · {song.album.title}
       </Text>
     </View>
-    <TouchableOpacity activeOpacity={0.7} style={{ padding: 6 }}>
+    <TouchableOpacity onPress={onLike} activeOpacity={0.7} style={{ padding: 6 }}>
+      <HeartIcon filled={isLiked} />
+    </TouchableOpacity>
+    <TouchableOpacity onPress={onDownload} activeOpacity={0.7} style={{ padding: 6 }}>
+      <DownloadIcon downloaded={isDownloaded} />
+    </TouchableOpacity>
+    <TouchableOpacity onPress={onMore} activeOpacity={0.7} style={{ padding: 6 }}>
       <MoreIcon />
     </TouchableOpacity>
   </TouchableOpacity>
@@ -102,9 +137,12 @@ export default function GenreScreen() {
   const genreImageUrl = params.imageUrl ? decodeURIComponent(params.imageUrl) : null;
 
   const dispatch = useAppDispatch();
+  const likedSongs = useAppSelector((s) => s.library.likedSongs);
+  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabName>("Search");
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
   const handleTabPress = (tab: TabName) => {
     setActiveTab(tab);
@@ -121,6 +159,7 @@ export default function GenreScreen() {
 
   const handleSongPress = async (song: Song) => {
     dispatch(playSong({ song, queue: songs.length > 0 ? songs : [song] }));
+    router.push("/player");
     try {
       await recordPlay(song.id);
     } catch {
@@ -226,7 +265,17 @@ export default function GenreScreen() {
           </Text>
         ) : (
           songs.map((song, i) => (
-            <SongRow key={song.id} song={song} index={i} onPress={() => handleSongPress(song)} />
+            <SongRow
+              key={song.id}
+              song={song}
+              index={i}
+              onPress={() => handleSongPress(song)}
+              isLiked={likedSongs.some((s) => s.id === song.id)}
+              onLike={() => dispatch(toggleLikeSong(song))}
+              isDownloaded={downloadedSongs.some((s) => s.id === song.id)}
+              onDownload={() => dispatch(toggleDownload(song))}
+              onMore={() => setSelectedSong(song)}
+            />
           ))
         )}
 
@@ -235,6 +284,7 @@ export default function GenreScreen() {
 
       <MiniPlayer />
       <BottomNav activeTab={activeTab} onTabPress={handleTabPress} />
+      <AddToPlaylistSheet song={selectedSong} onClose={() => setSelectedSong(null)} />
     </View>
   );
 }

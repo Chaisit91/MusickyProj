@@ -16,6 +16,7 @@ import { getAlbumSongs } from "../api/detailApi";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
+import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 300;
@@ -85,6 +86,7 @@ const SongRow = ({
   onLike,
   isDownloaded,
   onDownload,
+  onMore,
 }: {
   song: Song;
   index: number;
@@ -94,6 +96,7 @@ const SongRow = ({
   onLike: () => void;
   isDownloaded: boolean;
   onDownload: () => void;
+  onMore: () => void;
 }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -145,6 +148,9 @@ const SongRow = ({
     <TouchableOpacity onPress={onDownload} activeOpacity={0.7} style={{ padding: 6 }}>
       <DownloadIcon downloaded={isDownloaded} />
     </TouchableOpacity>
+    <TouchableOpacity onPress={onMore} activeOpacity={0.7} style={{ padding: 6 }}>
+      <MoreIcon />
+    </TouchableOpacity>
   </TouchableOpacity>
 );
 
@@ -170,6 +176,7 @@ export default function AlbumScreen() {
   const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
   useEffect(() => {
     dispatch(loadLibrary());
@@ -345,12 +352,15 @@ export default function AlbumScreen() {
               isDownloaded={downloadedSongs.some((s) => s.id === song.id)}
               onDownload={() => dispatch(toggleDownload(song))}
               onPress={() => handleSongPress(song)}
+              onMore={() => setSelectedSong(song)}
             />
           ))
         )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <AddToPlaylistSheet song={selectedSong} onClose={() => setSelectedSong(null)} />
     </View>
   );
 }

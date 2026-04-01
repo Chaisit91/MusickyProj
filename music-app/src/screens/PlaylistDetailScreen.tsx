@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,15 @@ import {
   StatusBar,
   Image,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { toggleDownload, toggleLikeSong, loadLibrary } from "../store/librarySlice";
 import { playSong } from "../store/playerSlice";
+import {
+  toggleLikeSong,
+  toggleDownload,
+  removeSongFromPlaylistThunk,
+} from "../store/librarySlice";
 import { recordPlay, Song } from "../api/homeApi";
 import MiniPlayer from "../Components/MiniPlayer";
 import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
@@ -24,9 +28,9 @@ const BackIcon = () => (
   </Svg>
 );
 
-const DownloadedIcon = () => (
-  <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Path fill="#4fc3f7" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+const PlayIcon = () => (
+  <Svg width={22} height={22} viewBox="0 0 24 24">
+    <Path fill="#000" d="M8 5v14l11-7z" />
   </Svg>
 );
 
@@ -41,6 +45,15 @@ const HeartIcon = ({ filled }: { filled: boolean }) => (
   </Svg>
 );
 
+const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path
+      fill={downloaded ? "#4fc3f7" : "#555"}
+      d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
+    />
+  </Svg>
+);
+
 const MoreIcon = () => (
   <Svg width={18} height={18} viewBox="0 0 24 24">
     <Circle cx={5} cy={12} r={2} fill="#666" />
@@ -49,9 +62,9 @@ const MoreIcon = () => (
   </Svg>
 );
 
-const PlayIcon = () => (
-  <Svg width={22} height={22} viewBox="0 0 24 24">
-    <Path fill="#000" d="M8 5v14l11-7z" />
+const MusicNoteIcon = () => (
+  <Svg width={32} height={32} viewBox="0 0 24 24">
+    <Path fill="#ffffff40" d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
   </Svg>
 );
 
@@ -65,23 +78,39 @@ const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function DownloadsScreen() {
+export default function PlaylistDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
-  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+
+  const playlist = useAppSelector((s) =>
+    s.library.playlists.find((p) => p.id === id)
+  );
   const likedSongs = useAppSelector((s) => s.library.likedSongs);
+  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
-  useEffect(() => {
-    dispatch(loadLibrary());
-  }, []);
+  if (!playlist) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#111", alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ color: "#555" }}>Playlist not found</Text>
+      </View>
+    );
+  }
 
-  const handlePlay = async (song: Song) => {
-    dispatch(playSong({ song, queue: downloadedSongs }));
+  const songs = playlist.songs;
+
+  const handlePlay = async (song: Song, queue: Song[]) => {
+    dispatch(playSong({ song, queue }));
     try { await recordPlay(song.id); } catch { /* silent */ }
   };
 
   const handlePlayAll = () => {
-    if (downloadedSongs.length > 0) handlePlay(downloadedSongs[0]);
+    if (songs.length > 0) handlePlay(songs[0], songs);
+  };
+
+  const handleRemoveFromPlaylist = (songId: string) => {
+    dispatch(removeSongFromPlaylistThunk({ playlistId: playlist.id, songId }));
   };
 
   return (
@@ -89,19 +118,8 @@ export default function DownloadsScreen() {
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* ── Hero header ── */}
-      <View
-        style={{
-          paddingTop: 56,
-          paddingBottom: 24,
-          paddingHorizontal: 20,
-          backgroundColor: "#0a2a3d",
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          activeOpacity={0.8}
-          style={{ marginBottom: 20, alignSelf: "flex-start" }}
-        >
+      <View style={{ paddingTop: 56, paddingBottom: 24, paddingHorizontal: 20, backgroundColor: "#1a1a3e" }}>
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.8} style={{ marginBottom: 20, alignSelf: "flex-start" }}>
           <BackIcon />
         </TouchableOpacity>
 
@@ -111,27 +129,29 @@ export default function DownloadsScreen() {
             width: 140,
             height: 140,
             borderRadius: 12,
-            backgroundColor: "#4fc3f7",
+            overflow: "hidden",
+            backgroundColor: "#2a2a4a",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 16,
             alignSelf: "center",
           }}
         >
-          <Svg width={64} height={64} viewBox="0 0 24 24">
-            <Path fill="#fff" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-          </Svg>
+          {playlist.coverUrl ? (
+            <Image source={{ uri: playlist.coverUrl }} style={{ width: 140, height: 140 }} resizeMode="cover" />
+          ) : (
+            <MusicNoteIcon />
+          )}
         </View>
 
         <Text style={{ color: "#fff", fontSize: 22, fontWeight: "900", textAlign: "center" }}>
-          Downloads
+          {playlist.title}
         </Text>
         <Text style={{ color: "#ffffff80", fontSize: 13, textAlign: "center", marginTop: 4 }}>
-          {downloadedSongs.length} songs · offline
+          {songs.length} {songs.length === 1 ? "song" : "songs"}
         </Text>
 
-        {/* Play button */}
-        {downloadedSongs.length > 0 && (
+        {songs.length > 0 && (
           <TouchableOpacity
             onPress={handlePlayAll}
             activeOpacity={0.85}
@@ -151,54 +171,27 @@ export default function DownloadsScreen() {
         )}
       </View>
 
-      {/* ── Song List ── */}
-      {downloadedSongs.length === 0 ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 16, paddingHorizontal: 40 }}>
-          <View
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: "#1e1e1e",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Svg width={36} height={36} viewBox="0 0 24 24">
-              <Path fill="#4fc3f7" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-            </Svg>
-          </View>
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", textAlign: "center" }}>
-            No downloads yet
-          </Text>
-          <Text style={{ color: "#555", fontSize: 13, textAlign: "center", lineHeight: 20 }}>
-            Tap the download icon on any song to save it here
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.replace("/search")}
-            activeOpacity={0.8}
-            style={{
-              marginTop: 8,
-              paddingHorizontal: 28,
-              paddingVertical: 12,
-              borderRadius: 24,
-              backgroundColor: "#fff",
-            }}
-          >
-            <Text style={{ color: "#000", fontSize: 14, fontWeight: "700" }}>Find Songs</Text>
-          </TouchableOpacity>
+      {/* ── Song list ── */}
+      {songs.length === 0 ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12 }}>
+          <Svg width={48} height={48} viewBox="0 0 24 24">
+            <Path fill="none" stroke="#333" strokeWidth={1.5} d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+          </Svg>
+          <Text style={{ color: "#555", fontSize: 14 }}>No songs yet</Text>
+          <Text style={{ color: "#444", fontSize: 12 }}>Tap ••• on any song to add it here</Text>
         </View>
       ) : (
         <FlatList
-          data={downloadedSongs}
+          data={songs}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 110, paddingTop: 8 }}
+          contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
           renderItem={({ item, index }) => {
-            const cover = item.coverUrl || item.album.coverUrl;
+            const cover = item.coverUrl || item.album?.coverUrl;
             const isLiked = likedSongs.some((s) => s.id === item.id);
+            const isDownloaded = downloadedSongs.some((s) => s.id === item.id);
             return (
               <TouchableOpacity
-                onPress={() => handlePlay(item)}
+                onPress={() => handlePlay(item, songs)}
                 activeOpacity={0.75}
                 style={{
                   flexDirection: "row",
@@ -208,15 +201,8 @@ export default function DownloadsScreen() {
                   gap: 12,
                 }}
               >
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 6,
-                    overflow: "hidden",
-                    backgroundColor: colorFor(index),
-                  }}
-                >
+                {/* Cover */}
+                <View style={{ width: 48, height: 48, borderRadius: 6, overflow: "hidden", backgroundColor: colorFor(index) }}>
                   {cover ? (
                     <Image source={{ uri: cover }} style={{ width: 48, height: 48 }} resizeMode="cover" />
                   ) : (
@@ -226,33 +212,27 @@ export default function DownloadsScreen() {
                   )}
                 </View>
 
+                {/* Info */}
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
                     {item.title}
                   </Text>
                   <Text style={{ color: "#666", fontSize: 12, marginTop: 2 }} numberOfLines={1}>
-                    {item.artist.name} · {item.album.title}
+                    {item.artist?.name} · {item.album?.title}
                   </Text>
                 </View>
 
                 {/* Like */}
-                <TouchableOpacity
-                  onPress={() => dispatch(toggleLikeSong(item))}
-                  activeOpacity={0.7}
-                  style={{ padding: 6 }}
-                >
+                <TouchableOpacity onPress={() => dispatch(toggleLikeSong(item))} activeOpacity={0.7} style={{ padding: 6 }}>
                   <HeartIcon filled={isLiked} />
                 </TouchableOpacity>
 
-                {/* Remove download */}
-                <TouchableOpacity
-                  onPress={() => dispatch(toggleDownload(item))}
-                  activeOpacity={0.7}
-                  style={{ padding: 6 }}
-                >
-                  <DownloadedIcon />
+                {/* Download */}
+                <TouchableOpacity onPress={() => dispatch(toggleDownload(item))} activeOpacity={0.7} style={{ padding: 6 }}>
+                  <DownloadIcon downloaded={isDownloaded} />
                 </TouchableOpacity>
 
+                {/* More */}
                 <TouchableOpacity onPress={() => setSelectedSong(item)} activeOpacity={0.7} style={{ padding: 6 }}>
                   <MoreIcon />
                 </TouchableOpacity>

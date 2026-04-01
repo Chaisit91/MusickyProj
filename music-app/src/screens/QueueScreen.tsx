@@ -58,6 +58,12 @@ const PlayIcon = ({ size = 14 }: { size?: number }) => (
   </Svg>
 );
 
+const PauseIcon = ({ size = 14 }: { size?: number }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Path fill="#fff" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+  </Svg>
+);
+
 const PlusIcon = () => (
   <Svg width={18} height={18} viewBox="0 0 24 24">
     <Path fill="#fff" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
@@ -263,7 +269,7 @@ const AddSongsModal = ({
 
 export default function QueueScreen() {
   const dispatch = useAppDispatch();
-  const { currentSong, queue, currentIndex, repeatMode } = useAppSelector((s) => s.player);
+  const { currentSong, queue, currentIndex, repeatMode, isPlaying } = useAppSelector((s) => s.player);
   const [showAddModal, setShowAddModal] = useState(false);
 
   if (!currentSong) {
@@ -323,7 +329,7 @@ export default function QueueScreen() {
           activeOpacity={0.7}
           style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#fff", alignItems: "center", justifyContent: "center" }}
         >
-          <PlayIcon size={16} />
+          {isPlaying ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
         </TouchableOpacity>
       </TouchableOpacity>
 

@@ -14,7 +14,7 @@ import {
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { createPlaylist, deletePlaylist, loadLibrary, Playlist } from "../store/librarySlice";
+import { createPlaylistThunk, deletePlaylistThunk, loadLibrary, Playlist } from "../store/librarySlice";
 import MiniPlayer from "../Components/MiniPlayer";
 import BottomNav, { TabName } from "../Components/Bottomnav";
 
@@ -135,13 +135,13 @@ export default function PlaylistsScreen() {
   const handleCreate = () => {
     const title = newTitle.trim();
     if (!title) return;
-    dispatch(createPlaylist({ id: Date.now().toString(), title }));
+    dispatch(createPlaylistThunk(title));
     setNewTitle("");
     setShowCreate(false);
   };
 
   const handleDelete = (id: string) => {
-    dispatch(deletePlaylist(id));
+    dispatch(deletePlaylistThunk(id));
     setSelectedId(null);
   };
 
@@ -249,7 +249,7 @@ export default function PlaylistsScreen() {
             <PlaylistCard
               playlist={item}
               index={index}
-              onPress={() => {}}
+              onPress={() => router.push({ pathname: "/playlist/[id]", params: { id: item.id } })}
               onLongPress={() => setSelectedId(item.id)}
             />
           )}

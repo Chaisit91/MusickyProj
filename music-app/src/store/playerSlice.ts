@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Song } from "../api/homeApi";
+import { logoutThunk } from "./authSlice";
 
 interface PlayerState {
   currentSong: Song | null;
@@ -150,6 +151,9 @@ const playerSlice = createSlice({
       state.queue = [];
       state.currentIndex = 0;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(logoutThunk.fulfilled, () => initialState);
   },
 });
 
