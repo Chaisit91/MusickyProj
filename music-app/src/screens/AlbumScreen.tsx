@@ -13,8 +13,9 @@ import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
 import { recordPlay, Song } from "../api/homeApi";
 import { getAlbumSongs } from "../api/detailApi";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
+import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 300;
@@ -67,6 +68,12 @@ const MoreIcon = () => (
   </Svg>
 );
 
+const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path fill={downloaded ? "#4fc3f7" : "#555"} d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+  </Svg>
+);
+
 // ─── Song Row ─────────────────────────────────────────────────────────────────
 
 const SongRow = ({
@@ -74,11 +81,19 @@ const SongRow = ({
   index,
   showIndex,
   onPress,
+  isLiked,
+  onLike,
+  isDownloaded,
+  onDownload,
 }: {
   song: Song;
   index: number;
   showIndex: boolean;
   onPress: () => void;
+  isLiked: boolean;
+  onLike: () => void;
+  isDownloaded: boolean;
+  onDownload: () => void;
 }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -124,8 +139,11 @@ const SongRow = ({
       </Text>
     </View>
 
-    <TouchableOpacity activeOpacity={0.7} style={{ padding: 6 }}>
-      <MoreIcon />
+    <TouchableOpacity onPress={onLike} activeOpacity={0.7} style={{ padding: 6 }}>
+      <HeartIcon filled={isLiked} />
+    </TouchableOpacity>
+    <TouchableOpacity onPress={onDownload} activeOpacity={0.7} style={{ padding: 6 }}>
+      <DownloadIcon downloaded={isDownloaded} />
     </TouchableOpacity>
   </TouchableOpacity>
 );
@@ -148,15 +166,19 @@ export default function AlbumScreen() {
   const type = (params.type ?? "album") as "album" | "playlist";
   const artistName = params.artistName ? decodeURIComponent(params.artistName) : "";
 
+  const likedSongs = useAppSelector((s) => s.library.likedSongs);
+  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState(false);
 
   useEffect(() => {
+    dispatch(loadLibrary());
     getAlbumSongs(albumId)
       .then(setSongs)
       .finally(() => setLoading(false));
   }, [albumId]);
+
+  const isAlbumLiked = songs.length > 0 && likedSongs.some((s) => s.id === songs[0].id);
 
   const handleSongPress = async (song: Song) => {
     dispatch(playSong({ song, queue: songs.length > 0 ? songs : [song] }));
@@ -272,8 +294,8 @@ export default function AlbumScreen() {
 
           {/* Action row */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-            <TouchableOpacity onPress={() => setLiked((v) => !v)} activeOpacity={0.7} style={{ padding: 4 }}>
-              <HeartIcon filled={liked} />
+            <TouchableOpacity onPress={() => songs[0] && dispatch(toggleLikeSong(songs[0]))} activeOpacity={0.7} style={{ padding: 4 }}>
+              <HeartIcon filled={isAlbumLiked} />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7} style={{ padding: 4 }}>
               <ShareIcon />
@@ -318,6 +340,10 @@ export default function AlbumScreen() {
               song={song}
               index={i}
               showIndex={showIndex}
+              isLiked={likedSongs.some((s) => s.id === song.id)}
+              onLike={() => dispatch(toggleLikeSong(song))}
+              isDownloaded={downloadedSongs.some((s) => s.id === song.id)}
+              onDownload={() => dispatch(toggleDownload(song))}
               onPress={() => handleSongPress(song)}
             />
           ))

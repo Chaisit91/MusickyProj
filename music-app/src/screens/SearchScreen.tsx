@@ -17,8 +17,9 @@ import BottomNav, { TabName } from "../Components/Bottomnav";
 import MiniPlayer from "../Components/MiniPlayer";
 import { Artist, Genre, Song } from "../api/homeApi";
 import { getTrendingArtists, getBrowseGenres, searchAll, SearchResult } from "../api/searchApi";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
+import { toggleLikeSong, toggleDownload } from "../store/librarySlice";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -75,6 +76,26 @@ const CloseIcon = () => (
 const TrendIcon = () => (
   <Svg width={18} height={18} viewBox="0 0 24 24">
     <Path fill="#aaa" d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+  </Svg>
+);
+
+const HeartIcon = ({ filled }: { filled: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path
+      fill={filled ? "#e84393" : "none"}
+      stroke={filled ? "#e84393" : "#555"}
+      strokeWidth={2}
+      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+    />
+  </Svg>
+);
+
+const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path
+      fill={downloaded ? "#4fc3f7" : "#555"}
+      d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
+    />
   </Svg>
 );
 
@@ -278,7 +299,12 @@ const SearchResultItem = ({
   query: string;
   onPress: (song: Song) => void;
 }) => {
-  // Highlight matching text
+  const dispatch = useAppDispatch();
+  const likedSongs = useAppSelector((s) => s.library.likedSongs);
+  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+  const isLiked = likedSongs.some((s) => s.id === song.id);
+  const isDownloaded = downloadedSongs.some((s) => s.id === song.id);
+
   const lower = query.toLowerCase();
   const titleMatch = song.title.toLowerCase().includes(lower);
   const artistMatch = song.artist.name.toLowerCase().includes(lower);
@@ -326,7 +352,20 @@ const SearchResultItem = ({
           เพลง • {song.artist.name}
         </Text>
       </View>
-      <PlayIcon color="#555" />
+      <TouchableOpacity
+        onPress={(e) => { e.stopPropagation(); dispatch(toggleLikeSong(song)); }}
+        activeOpacity={0.7}
+        style={{ padding: 6 }}
+      >
+        <HeartIcon filled={isLiked} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={(e) => { e.stopPropagation(); dispatch(toggleDownload(song)); }}
+        activeOpacity={0.7}
+        style={{ padding: 6 }}
+      >
+        <DownloadIcon downloaded={isDownloaded} />
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 };
@@ -528,6 +567,7 @@ export default function SearchScreen() {
   const handleTabPress = (tab: TabName) => {
     setActiveTab(tab);
     if (tab === "Home") router.replace("/home");
+    if (tab === "Your Library") router.replace("/your-library");
   };
 
   const isActive = isFocused || query.length > 0;

@@ -13,8 +13,9 @@ import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
 import { recordPlay, Song } from "../api/homeApi";
 import { getArtistSongs } from "../api/detailApi";
-import { useAppDispatch } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
+import { toggleFollowArtist, toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
 import MiniPlayer from "../Components/MiniPlayer";
 import BottomNav, { TabName } from "../Components/Bottomnav";
 
@@ -26,6 +27,7 @@ const FALLBACK_COLORS = [
   "#003366", "#1a472a", "#4a0000", "#2d2d2d",
 ];
 const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
+
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -58,16 +60,44 @@ const MoreIcon = () => (
   </Svg>
 );
 
+const HeartSmallIcon = ({ filled }: { filled: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path
+      fill={filled ? "#e84393" : "none"}
+      stroke={filled ? "#e84393" : "#666"}
+      strokeWidth={2}
+      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+    />
+  </Svg>
+);
+
+const DownloadSmallIcon = ({ downloaded }: { downloaded: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path
+      fill={downloaded ? "#4fc3f7" : "#555"}
+      d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"
+    />
+  </Svg>
+);
+
 // ─── Song Row ─────────────────────────────────────────────────────────────────
 
 const SongRow = ({
   song,
   index,
   onPress,
+  isLiked,
+  onLike,
+  isDownloaded,
+  onDownload,
 }: {
   song: Song;
   index: number;
   onPress: () => void;
+  isLiked: boolean;
+  onLike: () => void;
+  isDownloaded: boolean;
+  onDownload: () => void;
 }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -107,8 +137,12 @@ const SongRow = ({
       </Text>
     </View>
 
-    <TouchableOpacity activeOpacity={0.7} style={{ padding: 6 }}>
-      <MoreIcon />
+    <TouchableOpacity onPress={onLike} activeOpacity={0.7} style={{ padding: 6 }}>
+      <HeartSmallIcon filled={isLiked} />
+    </TouchableOpacity>
+
+    <TouchableOpacity onPress={onDownload} activeOpacity={0.7} style={{ padding: 6 }}>
+      <DownloadSmallIcon downloaded={isDownloaded} />
     </TouchableOpacity>
   </TouchableOpacity>
 );
@@ -127,9 +161,12 @@ export default function ArtistScreen() {
   const artistImageUrl = params.imageUrl ? decodeURIComponent(params.imageUrl) : null;
 
   const dispatch = useAppDispatch();
+  const followedArtists = useAppSelector((s) => s.library.followedArtists);
+  const likedSongs = useAppSelector((s) => s.library.likedSongs);
+  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+  const followed = followedArtists.some((a) => a.id === artistId);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
-  const [followed, setFollowed] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [activeTab, setActiveTab] = useState<TabName>("Search");
 
@@ -137,9 +174,11 @@ export default function ArtistScreen() {
     setActiveTab(tab);
     if (tab === "Home") router.replace("/home");
     if (tab === "Search") router.replace("/search");
+    if (tab === "Your Library") router.replace("/your-library");
   };
 
   useEffect(() => {
+    dispatch(loadLibrary());
     getArtistSongs(artistId)
       .then(setSongs)
       .finally(() => setLoading(false));
@@ -203,7 +242,7 @@ export default function ArtistScreen() {
             activeOpacity={0.8}
             style={{
               position: "absolute",
-              top: 52,
+              top: 24,
               left: 16,
               width: 36,
               height: 36,
@@ -246,7 +285,8 @@ export default function ArtistScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             {/* Follow */}
             <TouchableOpacity
-              onPress={() => setFollowed((v) => !v)}
+              onPress={() => dispatch(toggleFollowArtist({ id: artistId, name: artistName, imageUrl: artistImageUrl }))}
+
               activeOpacity={0.8}
               style={{
                 paddingHorizontal: 24,
@@ -323,6 +363,10 @@ export default function ArtistScreen() {
               song={song}
               index={i}
               onPress={() => handleSongPress(song)}
+              isLiked={likedSongs.some((s) => s.id === song.id)}
+              onLike={() => dispatch(toggleLikeSong(song))}
+              isDownloaded={downloadedSongs.some((s) => s.id === song.id)}
+              onDownload={() => dispatch(toggleDownload(song))}
             />
           ))
         )}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import {
   cycleRepeat,
   setVolume,
 } from "../store/playerSlice";
+import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
 
 const { width } = Dimensions.get("window");
 const ART_SIZE = width - 64;
@@ -98,9 +99,9 @@ const HeartIcon = ({ filled }: { filled: boolean }) => (
   </Svg>
 );
 
-const DownloadIcon = () => (
+const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
   <Svg width={22} height={22} viewBox="0 0 24 24">
-    <Path fill="#aaa" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+    <Path fill={downloaded ? "#4fc3f7" : "#aaa"} d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
   </Svg>
 );
 
@@ -164,7 +165,15 @@ export default function PlayerScreen() {
     volume,
   } = useAppSelector((s) => s.player);
 
-  const [liked, setLiked] = useState(false);
+  const likedSongs = useAppSelector((s) => s.library.likedSongs);
+  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+  const isLiked = currentSong ? likedSongs.some((s) => s.id === currentSong?.id) : false;
+  const isDownloaded = currentSong ? downloadedSongs.some((s) => s.id === currentSong?.id) : false;
+
+  useEffect(() => {
+    dispatch(loadLibrary());
+  }, []);
+
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const [activeTab, setActiveTab] = useState<"player" | "lyrics">("player");
@@ -299,11 +308,11 @@ export default function PlayerScreen() {
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
-              <TouchableOpacity onPress={() => setLiked((v) => !v)} activeOpacity={0.7}>
-                <HeartIcon filled={liked} />
+              <TouchableOpacity onPress={() => dispatch(toggleLikeSong(currentSong))} activeOpacity={0.7}>
+                <HeartIcon filled={isLiked} />
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.7}>
-                <DownloadIcon />
+              <TouchableOpacity onPress={() => dispatch(toggleDownload(currentSong))} activeOpacity={0.7}>
+                <DownloadIcon downloaded={isDownloaded} />
               </TouchableOpacity>
               <TouchableOpacity activeOpacity={0.7}>
                 <ShareIcon />

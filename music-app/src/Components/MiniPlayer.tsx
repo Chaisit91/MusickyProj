@@ -43,13 +43,13 @@ export default function MiniPlayer() {
       activeOpacity={0.95}
       style={{
         position: "absolute",
-        bottom: 68,
+        bottom: 96,
         left: 10,
         right: 10,
         height: 68,
         borderRadius: 14,
         backgroundColor: "#1c1c1e",
-        flexDirection: "row",
+        flexDirection:"row",
         alignItems: "center",
         paddingLeft: 10,
         paddingRight: 10,

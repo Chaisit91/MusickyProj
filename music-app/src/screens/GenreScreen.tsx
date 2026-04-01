@@ -110,6 +110,7 @@ export default function GenreScreen() {
     setActiveTab(tab);
     if (tab === "Home") router.replace("/home");
     if (tab === "Search") router.replace("/search");
+    if (tab === "Your Library") router.replace("/your-library");
   };
 
   useEffect(() => {

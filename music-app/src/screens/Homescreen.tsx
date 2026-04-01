@@ -21,6 +21,7 @@ import MiniPlayer from "../Components/MiniPlayer";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logoutThunk } from "../store/authSlice";
 import { playSong, togglePlay } from "../store/playerSlice";
+import { toggleLikeSong, loadLibrary } from "../store/librarySlice";
 import {
   getFeaturingSongs,
   getRecentlyPlayed,
@@ -426,8 +427,9 @@ const FeaturingCard = ({
   const currentSong = useAppSelector((s) => s.player.currentSong);
   const isPlaying = useAppSelector((s) => s.player.isPlaying);
 
-  const [liked, setLiked] = useState(false);
+  const likedSongs = useAppSelector((s) => s.library.likedSongs);
   const featured = songs[0];
+  const liked = likedSongs.some((s) => s.id === featured.id);
   const listSongs = songs.slice(1, 5);
   const coverUri = featured.coverUrl || featured.album.coverUrl;
   const isFeaturedPlaying = currentSong?.id === featured.id && isPlaying;
@@ -485,7 +487,7 @@ const FeaturingCard = ({
           </Text>
           {/* action row */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 12 }}>
-            <TouchableOpacity onPress={() => setLiked((v) => !v)} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => dispatch(toggleLikeSong(featured))} activeOpacity={0.7}>
               <HeartIcon filled={liked} />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7}>
@@ -609,6 +611,7 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    dispatch(loadLibrary());
     loadStaticData();
   }, [loadStaticData]);
 
@@ -648,6 +651,7 @@ export default function HomeScreen() {
   const handleTabPress = (tab: TabName) => {
     setActiveTab(tab);
     if (tab === "Search") router.push("/search");
+    if (tab === "Your Library") router.push("/your-library");
   };
 
   // ── Determine if we show "For you" or a mood category ─────────────────────
