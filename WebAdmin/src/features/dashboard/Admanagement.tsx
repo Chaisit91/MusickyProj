@@ -70,7 +70,10 @@ const AdModal: React.FC<{
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<MediaType>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [durationDetected, setDurationDetected] = useState(false);
+  // edit mode: ถ้าโฆษณาเดิมเป็น video และมี duration → ถือว่า detected แล้ว
+  const isExistingVideo = mode === "edit" && ad.imageUrl
+    && (ad.imageUrl.includes("/video/upload/") || /\.(mp4|webm|mov)(\?|$)/i.test(ad.imageUrl));
+  const [durationDetected, setDurationDetected] = useState(!!isExistingVideo && (ad.adDuration ?? 0) > 0);
   const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -225,7 +228,7 @@ const AdModal: React.FC<{
           </div>
 
           {/* ประเภทโฆษณา + ความยาว */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${durationDetected ? "grid-cols-2" : "grid-cols-1"}`}>
             <div>
               <label className={labelCls}>ประเภทโฆษณา</label>
               <select value={form.adType} onChange={(e) => setForm({ ...form, adType: e.target.value })} className={inputCls}>
@@ -234,19 +237,16 @@ const AdModal: React.FC<{
                 <option value="AFTER_MULTIPLE">หลังจบหลายเพลง</option>
               </select>
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <label className="text-xs font-medium text-gray-500">ความยาว (วินาที)</label>
-                {durationDetected && (
-                  <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded font-medium">ตรวจจับอัตโนมัติ</span>
-                )}
+            {durationDetected && (
+              <div>
+                <label className={labelCls}>ความยาววิดีโอ</label>
+                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                  <Video size={14} className="text-green-500 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-green-700">{form.adDuration} วินาที</span>
+                  <span className="text-xs text-green-500 ml-auto">คำนวณอัตโนมัติ</span>
+                </div>
               </div>
-              <input type="number" min={0} value={form.adDuration}
-                onChange={(e) => { setForm({ ...form, adDuration: Number(e.target.value) }); setDurationDetected(false); }}
-                className={inputCls}
-                readOnly={durationDetected}
-              />
-            </div>
+            )}
           </div>
 
           {/* วันเริ่มต้น + วันสิ้นสุด */}
