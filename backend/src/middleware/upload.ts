@@ -61,12 +61,11 @@ const adFileFilter = (
   const allowed = [
     "image/jpeg", "image/png", "image/webp", "image/gif",
     "video/mp4", "video/quicktime", "video/x-mp4",
-    "audio/mpeg", "audio/mp3", "audio/x-mp3",
   ];
   if (allowed.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only image, MP4, or MP3 files are allowed"));
+    cb(new Error("Only image or MP4 files are allowed"));
   }
 };
 

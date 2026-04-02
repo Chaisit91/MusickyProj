@@ -347,15 +347,12 @@ const DeleteModal: React.FC<{ ad: Ad; onClose: () => void; onConfirm: () => void
 // ---- Preview thumbnail in table ----
 const AdThumbnail: React.FC<{ url: string }> = ({ url }) => {
   const isVideo = url && (url.includes("/video/upload/") || url.match(/\.(mp4|webm|mov)(\?|$)/i));
-  const isAudio = url && url.match(/\.(mp3|m4a|ogg)(\?|$)/i);
   return (
     <div className="w-8 h-8 rounded-md bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
-      {url && !isVideo && !isAudio ? (
+      {url && !isVideo ? (
         <img src={url} alt="" className="w-full h-full object-cover" />
       ) : isVideo ? (
         <Video size={12} className="text-blue-400" />
-      ) : isAudio ? (
-        <Music size={12} className="text-purple-400" />
       ) : (
         <Video size={12} className="text-gray-500" />
       )}
