@@ -12,8 +12,8 @@ import {
   RefreshControl,
   Dimensions,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
+import Svg, { Path } from "react-native-svg";
 import { useFocusEffect } from "@react-navigation/native";
 import TopBar from "../Components/Topbar";
 import BottomNav, { TabName } from "../Components/Bottomnav";
@@ -32,24 +32,13 @@ import {
   PlayHistoryItem,
   Genre,
 } from "../api/homeApi";
+import { FALLBACK_COLORS, colorFor } from "../constants";
+import { PlayIcon } from "../Components/icons";
 
 const { width } = Dimensions.get("window");
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
 
-const PlayIcon = ({ size = 14, color = "#fff" }: { size?: number; color?: string }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24">
-    <Path fill={color} d="M8 5v14l11-7z" />
-  </Svg>
-);
 
-// ─── Fallback colors ──────────────────────────────────────────────────────────
-
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-];
-const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 
 // ─── Featuring Banner Card ────────────────────────────────────────────────────
 

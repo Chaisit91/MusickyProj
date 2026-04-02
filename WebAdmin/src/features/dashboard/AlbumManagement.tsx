@@ -9,45 +9,14 @@ import { useAlbums } from "../../hooks/useAlbums";
 import { useArtists } from "../../hooks/useArtists";
 import { getAlbumByIdApi } from "../../api/albumApi";
 import type { Album, AlbumSong } from "../../types/album";
+import { StatCard, ConfirmDeleteModal } from "../../components/common";
+import { toDateInputValue, formatDuration } from "../../utils/format";
 
 interface Artist {
   id: string;
   name: string;
   imageUrl?: string;
 }
-
-// แปลง ISO / dd/mm/yyyy → yyyy-mm-dd
-const toDateInputValue = (val?: string | null): string => {
-  if (!val) return "";
-  try {
-    if (typeof val === "string" && val.includes("/")) {
-      const [datePart] = val.split(" ");
-      const [dd, mm, yyyy] = datePart.split("/");
-      return `${parseInt(yyyy) - 543}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-    }
-    return new Date(val).toISOString().split("T")[0];
-  } catch {
-    return "";
-  }
-};
-
-const formatDuration = (sec?: number) => {
-  if (!sec) return "—";
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-};
-
-// ---- Stat Card ----
-const StatCard: React.FC<{ label: string; value: string | number; icon?: React.ReactNode }> = ({ label, value, icon }) => (
-  <div className="bg-gray-800 rounded-xl px-5 py-4 flex items-center gap-4 flex-1 min-w-0">
-    {icon && <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-gray-300">{icon}</div>}
-    <div>
-      <p className="text-gray-400 text-xs">{label}</p>
-      <p className="text-white text-xl font-bold mt-0.5">{typeof value === "number" ? value.toLocaleString() : value}</p>
-    </div>
-  </div>
-);
 
 // ---- Album Modal (Add / Edit) ----
 const AlbumModal: React.FC<{
@@ -187,27 +156,6 @@ const AlbumModal: React.FC<{
   );
 };
 
-// ---- Delete Confirm Modal ----
-const DeleteModal: React.FC<{ album: Album; onClose: () => void; onConfirm: () => void }> = ({ album, onClose, onConfirm }) => (
-  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-    onClick={(e) => e.target === e.currentTarget && onClose()}>
-    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
-      <div className="px-6 py-5">
-        <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mb-3">
-          <Trash2 size={18} className="text-red-500" />
-        </div>
-        <p className="font-semibold text-gray-900 text-sm">ลบอัลบั้มนี้?</p>
-        <p className="text-gray-500 text-xs mt-1">"{album.title}" จะถูกลบออกจากระบบ</p>
-      </div>
-      <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-        <button onClick={onClose}
-          className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">ยกเลิก</button>
-        <button onClick={onConfirm}
-          className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium">ลบอัลบั้ม</button>
-      </div>
-    </div>
-  </div>
-);
 
 // ---- Album Songs Modal ----
 const AlbumSongsModal: React.FC<{ album: Album; onClose: () => void }> = ({ album, onClose }) => {
@@ -505,7 +453,7 @@ const AlbumManagementPage: React.FC = () => {
         <AlbumModal mode="edit" album={editAlbum} artists={artists} onClose={() => setEditAlbum(null)} onSave={handleEditSave} />
       )}
       {deleteAlbum && (
-        <DeleteModal album={deleteAlbum} onClose={() => setDeleteAlbum(null)} onConfirm={handleDelete} />
+        <ConfirmDeleteModal title="อัลบั้ม" onClose={() => setDeleteAlbum(null)} onConfirm={handleDelete} />
       )}
       {viewSongsAlbum && (
         <AlbumSongsModal album={viewSongsAlbum} onClose={() => setViewSongsAlbum(null)} />

@@ -20,6 +20,7 @@ import { getTrendingArtists, getBrowseGenres, searchAll, SearchResult } from "..
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
 import { toggleLikeSong, toggleDownload } from "../store/librarySlice";
+import { colorFor } from "../constants";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -98,15 +99,6 @@ const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
     />
   </Svg>
 );
-
-// ─── Fallback colors ──────────────────────────────────────────────────────────
-
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-  "#5B2C6F", "#1A5276", "#784212", "#145A32",
-];
-const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 
 // ─── Recent Search Storage ────────────────────────────────────────────────────
 

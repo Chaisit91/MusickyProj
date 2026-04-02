@@ -6,6 +6,8 @@ import {
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import { useAds } from "../../hooks/useAds";
+import { StatCard } from "../../components/common";
+import { toDateInputValue, formatDate } from "../../utils/format";
 
 interface Ad {
   id: string;
@@ -27,37 +29,6 @@ const AD_TYPE_LABEL: Record<string, string> = {
   AFTER_MULTIPLE: "หลังจบหลายเพลง",
 };
 
-const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode }> = ({ label, value, icon }) => (
-  <div className="bg-gray-800 rounded-xl px-5 py-4 flex items-center gap-4 flex-1 min-w-0">
-    <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-gray-300">{icon}</div>
-    <div>
-      <p className="text-gray-400 text-xs">{label}</p>
-      <p className="text-white text-xl font-bold mt-0.5">{typeof value === "number" ? value.toLocaleString() : value}</p>
-    </div>
-  </div>
-);
-
-const toDateInputValue = (val?: string | Date | null): string => {
-  if (!val) return "";
-  try {
-    if (typeof val === "string" && val.includes("/")) {
-      const [datePart] = val.split(" ");
-      const [dd, mm, yyyy] = datePart.split("/");
-      return `${parseInt(yyyy) - 543}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-    }
-    return new Date(val).toISOString().split("T")[0];
-  } catch { return ""; }
-};
-
-const formatDate = (d?: string | null): string => {
-  if (!d) return "—";
-  try {
-    if (typeof d === "string" && d.includes("/")) return d.split(" ")[0];
-    const date = new Date(d);
-    if (isNaN(date.getTime())) return "—";
-    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()}`;
-  } catch { return "—"; }
-};
 
 type MediaType = "image" | "video" | null;
 

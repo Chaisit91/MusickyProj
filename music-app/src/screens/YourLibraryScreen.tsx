@@ -14,6 +14,7 @@ import { getRecentlyPlayed, recordPlay, PlayHistoryItem, Song } from "../api/hom
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
 import { loadLibrary } from "../store/librarySlice";
+import { colorFor } from "../constants";
 import MiniPlayer from "../Components/MiniPlayer";
 import BottomNav, { TabName } from "../Components/Bottomnav";
 
@@ -66,14 +67,6 @@ const ChevronRight = () => (
   </Svg>
 );
 
-// ─── Fallback colors ──────────────────────────────────────────────────────────
-
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-];
-const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
-
 // ─── Library Card ─────────────────────────────────────────────────────────────
 
 const LibraryCard = ({
@@ -119,7 +112,7 @@ const SongRow = ({
   onPress: () => void;
 }) => {
   const { song } = item;
-  const coverUri = song.coverUrl || song.album.coverUrl;
+  const coverUri = song.coverUrl;
 
   return (
     <TouchableOpacity

@@ -5,16 +5,8 @@ import Topbar from "../../components/layout/Topbar";
 import { useSongs } from "../../hooks/useSongs";
 import type { Song } from "../../types/song";
 import api from "../../api/axios";
-
-const StatCard: React.FC<{ label: string; value: string | number; icon?: React.ReactNode }> = ({ label, value, icon }) => (
-  <div className="bg-gray-800 rounded-xl px-5 py-4 flex items-center gap-4 flex-1 min-w-0">
-    {icon && <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-gray-300">{icon}</div>}
-    <div>
-      <p className="text-gray-400 text-xs">{label}</p>
-      <p className="text-white text-xl font-bold mt-0.5">{typeof value === "number" ? value.toLocaleString() : value}</p>
-    </div>
-  </div>
-);
+import { StatCard, ConfirmDeleteModal } from "../../components/common";
+import { formatDuration } from "../../utils/format";
 
 type AudioTab = "upload" | "url";
 
@@ -306,28 +298,6 @@ const SongModal: React.FC<{
   );
 };
 
-const DeleteModal: React.FC<{ song: Song; onClose: () => void; onConfirm: () => void }> = ({ song, onClose, onConfirm }) => (
-  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
-      <div className="px-6 py-5">
-        <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mb-3"><Trash2 size={18} className="text-red-500" /></div>
-        <p className="font-semibold text-gray-900 text-sm">ลบเพลงนี้?</p>
-        <p className="text-gray-500 text-xs mt-1">"{song.title}" จะถูกลบออกจากระบบ</p>
-      </div>
-      <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">ยกเลิก</button>
-        <button onClick={onConfirm} className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium">ลบเพลง</button>
-      </div>
-    </div>
-  </div>
-);
-
-const formatDuration = (sec?: number) => {
-  if (!sec) return "—";
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-};
 
 const SongManagementPage: React.FC = () => {
   const [search, setSearch] = useState("");
@@ -438,7 +408,7 @@ const SongManagementPage: React.FC = () => {
         />
       )}
       {deleteSong && (
-        <DeleteModal song={deleteSong} onClose={() => setDeleteSong(null)} onConfirm={handleDelete} />
+        <ConfirmDeleteModal title="เพลง" onClose={() => setDeleteSong(null)} onConfirm={handleDelete} />
       )}
     </div>
   );

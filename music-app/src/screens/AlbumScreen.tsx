@@ -10,9 +10,17 @@ import {
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import Svg, { Path, Circle } from "react-native-svg";
 import { recordPlay, Song } from "../api/homeApi";
 import { getAlbumSongs } from "../api/detailApi";
+import { FALLBACK_COLORS, colorFor } from "../constants";
+import {
+  BackIcon,
+  PlayIcon,
+  HeartIcon,
+  ShareIcon,
+  MoreIcon,
+  DownloadIcon,
+} from "../Components/icons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
@@ -21,59 +29,6 @@ import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 300;
 
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-];
-const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const BackIcon = () => (
-  <Svg width={24} height={24} viewBox="0 0 24 24">
-    <Path fill="#fff" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-  </Svg>
-);
-
-const PlayIcon = ({ color = "#000", size = 22 }: { color?: string; size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24">
-    <Path fill={color} d="M8 5v14l11-7z" />
-  </Svg>
-);
-
-const HeartIcon = ({ filled = false }: { filled?: boolean }) => (
-  <Svg width={22} height={22} viewBox="0 0 24 24">
-    <Path
-      fill={filled ? "#e74c3c" : "none"}
-      stroke={filled ? "#e74c3c" : "#aaa"}
-      strokeWidth={1.8}
-      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-    />
-  </Svg>
-);
-
-const ShareIcon = () => (
-  <Svg width={20} height={20} viewBox="0 0 24 24">
-    <Path
-      fill="#aaa"
-      d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"
-    />
-  </Svg>
-);
-
-const MoreIcon = () => (
-  <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Circle cx={5} cy={12} r={2} fill="#666" />
-    <Circle cx={12} cy={12} r={2} fill="#666" />
-    <Circle cx={19} cy={12} r={2} fill="#666" />
-  </Svg>
-);
-
-const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Path fill={downloaded ? "#4fc3f7" : "#555"} d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-  </Svg>
-);
 
 // ─── Song Row ─────────────────────────────────────────────────────────────────
 

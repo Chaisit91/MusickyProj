@@ -159,8 +159,8 @@ export const adminLogin = async (req: Request, res: Response) => {
 };
 
 export const refresh = async (req: Request, res: Response) => {
-  //  อ่าน refreshToken จาก Cookie
-  const refreshToken = req.cookies?.refreshToken;
+  // WebAdmin ส่งผ่าน Cookie, mobile app ส่งผ่าน body
+  const refreshToken = req.cookies?.refreshToken ?? req.body?.refreshToken;
 
   if (!refreshToken) {
     res.status(400).json({ success: false, message: "refreshToken is required" });

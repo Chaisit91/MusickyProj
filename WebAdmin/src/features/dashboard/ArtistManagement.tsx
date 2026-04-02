@@ -3,6 +3,7 @@ import { Search, Plus, Pencil, Trash2, Mic, X, Upload, ImageIcon } from "lucide-
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import { useArtists } from "../../hooks/useArtists";
+import { StatCard } from "../../components/common";
 
 interface Artist {
   id: string;
@@ -12,15 +13,6 @@ interface Artist {
   createdAt: string;
 }
 
-const StatCard: React.FC<{ label: string; value: string | number; icon?: React.ReactNode }> = ({ label, value, icon }) => (
-  <div className="bg-gray-800 rounded-xl px-5 py-4 flex items-center gap-4 flex-1 min-w-0">
-    {icon && <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-gray-300">{icon}</div>}
-    <div>
-      <p className="text-gray-400 text-xs">{label}</p>
-      <p className="text-white text-xl font-bold mt-0.5">{typeof value === "number" ? value.toLocaleString() : value}</p>
-    </div>
-  </div>
-);
 
 const ArtistModal: React.FC<{
   mode: "add" | "edit";

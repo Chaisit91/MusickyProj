@@ -1,18 +1,13 @@
 import { prisma } from "../../../lib/prisma";
 
 export const getDashboardStats = async () => {
-  const [totalUsers, totalSongs, totalPlaysAgg, totalArtists] = await Promise.all([
+  const [totalUsers, totalSongs, totalPlays, totalArtists] = await Promise.all([
     prisma.user.count(),
     prisma.song.count(),
-    prisma.song.aggregate({ _sum: { playCount: true } }),
+    prisma.playHistory.count(),
     prisma.artist.count(),
   ]);
-  return {
-    totalUsers,
-    totalSongs,
-    totalPlays: totalPlaysAgg._sum.playCount ?? 0,
-    totalArtists,
-  };
+  return { totalUsers, totalSongs, totalPlays, totalArtists };
 };
 
 export const getRecentActivities = async () => {
@@ -74,10 +69,25 @@ export const getRecentActivities = async () => {
 };
 
 export const getTopSongs = async () => {
-  return prisma.song.findMany({
-    orderBy: { playCount: "desc" },
+  // นับจาก PlayHistory จริงๆ ที่ music-app บันทึกไว้
+  const grouped = await prisma.playHistory.groupBy({
+    by: ["songId"],
+    _count: { songId: true },
+    orderBy: { _count: { songId: "desc" } },
     take: 5,
+  });
+
+  if (grouped.length === 0) return [];
+
+  const songs = await prisma.song.findMany({
+    where: { id: { in: grouped.map((g) => g.songId) } },
     include: { artist: true, album: true, genre: true },
+  });
+
+  // จัดเรียงตามลำดับการเล่นจริง และแนบยอดเล่น
+  return grouped.map((g) => {
+    const song = songs.find((s) => s.id === g.songId)!;
+    return { ...song, playCount: g._count.songId };
   });
 };
 
@@ -93,6 +103,32 @@ export const getUserGrowth = async () => {
       prisma.user.count({
         where: {
           createdAt: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          },
+        },
+      })
+    )
+  );
+
+  return months.map(({ year, month }, i) => ({
+    label: `${month < 10 ? "0" + month : month}/${String(year).slice(2)}`,
+    count: results[i],
+  }));
+};
+
+export const getPlayGrowth = async () => {
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - (5 - i));
+    return { year: d.getFullYear(), month: d.getMonth() + 1 };
+  });
+
+  const results = await Promise.all(
+    months.map(({ year, month }) =>
+      prisma.playHistory.count({
+        where: {
+          playedAt: {
             gte: new Date(year, month - 1, 1),
             lt: new Date(year, month, 1),
           },

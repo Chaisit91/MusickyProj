@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
 import { playSong } from "../store/playerSlice";
 import { recordPlay, Song } from "../api/homeApi";
+import { colorFor } from "../constants";
 import MiniPlayer from "../Components/MiniPlayer";
 import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 
@@ -55,14 +56,6 @@ const PlayIcon = () => (
     <Path fill="#000" d="M8 5v14l11-7z" />
   </Svg>
 );
-
-// ─── Fallback colors ──────────────────────────────────────────────────────────
-
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-];
-const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 

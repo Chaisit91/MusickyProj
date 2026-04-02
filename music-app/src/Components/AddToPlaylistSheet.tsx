@@ -99,9 +99,9 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
           {/* Song info */}
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 16, gap: 12 }}>
             <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#2a2a2a" }}>
-              {(song.coverUrl || song.album.coverUrl) ? (
+              {song.coverUrl ? (
                 <Image
-                  source={{ uri: (song.coverUrl || song.album.coverUrl)! }}
+                  source={{ uri: song.coverUrl }}
                   style={{ width: 44, height: 44 }}
                   resizeMode="cover"
                 />

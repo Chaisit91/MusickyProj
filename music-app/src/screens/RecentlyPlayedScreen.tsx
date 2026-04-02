@@ -13,11 +13,7 @@ import {
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { getAllPlayHistory, recordPlay, deleteHistoryRecord, deleteAllHistory, PlayHistoryItem } from "../api/homeApi";
-
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-];
+import { colorFor } from "../constants";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -129,7 +125,7 @@ export default function RecentlyPlayedScreen() {
   };
 
   const renderItem = ({ item, index }: { item: PlayHistoryItem; index: number }) => {
-    const color = FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+    const color = colorFor(index);
     const isDeleting = deletingId === item.id;
 
     return (

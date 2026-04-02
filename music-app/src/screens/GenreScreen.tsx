@@ -10,9 +10,16 @@ import {
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import Svg, { Path, Circle } from "react-native-svg";
 import { recordPlay, Song } from "../api/homeApi";
 import { getGenreSongs } from "../api/detailApi";
+import { FALLBACK_COLORS, colorFor } from "../constants";
+import {
+  BackIcon,
+  PlayIcon,
+  MoreIcon,
+  HeartIcon,
+  DownloadIcon,
+} from "../Components/icons";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { playSong } from "../store/playerSlice";
 import { toggleLikeSong, toggleDownload } from "../store/librarySlice";
@@ -23,50 +30,6 @@ import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 220;
 
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-];
-const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const BackIcon = () => (
-  <Svg width={24} height={24} viewBox="0 0 24 24">
-    <Path fill="#fff" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-  </Svg>
-);
-
-const PlayIcon = ({ size = 22 }: { size?: number }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24">
-    <Path fill="#fff" d="M8 5v14l11-7z" />
-  </Svg>
-);
-
-const MoreIcon = () => (
-  <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Circle cx={5} cy={12} r={2} fill="#666" />
-    <Circle cx={12} cy={12} r={2} fill="#666" />
-    <Circle cx={19} cy={12} r={2} fill="#666" />
-  </Svg>
-);
-
-const HeartIcon = ({ filled }: { filled: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Path
-      fill={filled ? "#e84393" : "none"}
-      stroke={filled ? "#e84393" : "#666"}
-      strokeWidth={2}
-      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-    />
-  </Svg>
-);
-
-const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
-  <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Path fill={downloaded ? "#4fc3f7" : "#555"} d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
-  </Svg>
-);
 
 // ─── Song Row ─────────────────────────────────────────────────────────────────
 

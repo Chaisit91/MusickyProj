@@ -33,6 +33,7 @@ export const useDashboard = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [topSongs, setTopSongs] = useState<TopSong[]>([]);
   const [userGrowth, setUserGrowth] = useState<UserGrowth[]>([]);
+  const [playGrowth, setPlayGrowth] = useState<UserGrowth[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +46,7 @@ export const useDashboard = () => {
       setActivities(res.data.data.activities);
       setTopSongs(res.data.data.topSongs);
       setUserGrowth(res.data.data.userGrowth);
+      setPlayGrowth(res.data.data.playGrowth ?? []);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch dashboard");
     } finally {
@@ -56,5 +58,5 @@ export const useDashboard = () => {
     fetchDashboard();
   }, []);
 
-  return { stats, activities, topSongs, userGrowth, loading, error, refetch: fetchDashboard };
+  return { stats, activities, topSongs, userGrowth, playGrowth, loading, error, refetch: fetchDashboard };
 };

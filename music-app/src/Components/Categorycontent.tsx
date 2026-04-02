@@ -141,7 +141,7 @@ const FeaturedPlaylistCard = ({
   const [liked, setLiked] = useState(false);
   const featuredSong = songs[0];
   const listSongs = songs.slice(1, 5);
-  const coverUri = featuredSong.coverUrl || featuredSong.album.coverUrl;
+  const coverUri = featuredSong.coverUrl;
   const isFeaturedPlaying = currentSong?.id === featuredSong.id && isPlaying;
 
   const handleFeaturedPlay = () => {
@@ -224,9 +224,9 @@ const FeaturedPlaylistCard = ({
           style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}
         >
           <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: colorFor(i + 1) }}>
-            {(song.coverUrl || song.album.coverUrl) ? (
+            {song.coverUrl ? (
               <Image
-                source={{ uri: (song.coverUrl || song.album.coverUrl)! }}
+                source={{ uri: song.coverUrl }}
                 style={{ width: 44, height: 44 }}
                 resizeMode="cover"
               />
@@ -298,9 +298,9 @@ const SongStrip = ({
           justifyContent: "flex-end",
         }}
       >
-        {song.album.coverUrl ? (
+        {song.coverUrl ? (
           <Image
-            source={{ uri: song.album.coverUrl }}
+            source={{ uri: song.coverUrl }}
             style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
             resizeMode="cover"
           />

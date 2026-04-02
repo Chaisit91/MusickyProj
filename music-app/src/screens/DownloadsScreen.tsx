@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { toggleDownload, toggleLikeSong, loadLibrary } from "../store/librarySlice";
 import { playSong } from "../store/playerSlice";
 import { recordPlay, Song } from "../api/homeApi";
+import { colorFor } from "../constants";
 import MiniPlayer from "../Components/MiniPlayer";
 import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
 
@@ -54,14 +55,6 @@ const PlayIcon = () => (
     <Path fill="#000" d="M8 5v14l11-7z" />
   </Svg>
 );
-
-// ─── Fallback colors ──────────────────────────────────────────────────────────
-
-const FALLBACK_COLORS = [
-  "#8B4513", "#2F4F4F", "#8B0000", "#1a1a2e",
-  "#003366", "#1a472a", "#4a0000", "#2d2d2d",
-];
-const colorFor = (i: number) => FALLBACK_COLORS[i % FALLBACK_COLORS.length];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
@@ -194,7 +187,7 @@ export default function DownloadsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 110, paddingTop: 8 }}
           renderItem={({ item, index }) => {
-            const cover = item.coverUrl || item.album.coverUrl;
+            const cover = item.coverUrl;
             const isLiked = likedSongs.some((s) => s.id === item.id);
             return (
               <TouchableOpacity
