@@ -27,12 +27,15 @@ import {
   getFeaturingSongs,
   getRecentlyPlayed,
   getGenres,
+  getNewReleases,
+  getAllArtists,
   recordPlay,
   Song,
   PlayHistoryItem,
   Genre,
+  Artist,
 } from "../api/homeApi";
-import { FALLBACK_COLORS, colorFor } from "../constants";
+import { colorFor } from "../constants";
 import { PlayIcon } from "../Components/icons";
 
 const { width } = Dimensions.get("window");
@@ -259,6 +262,124 @@ const SectionHeader = ({
   </View>
 );
 
+// ─── Artist Card (From Artists You Follow) ────────────────────────────────────
+
+const ArtistCard = ({
+  artist,
+  index,
+  onPress,
+}: {
+  artist: Artist;
+  index: number;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.8}
+    style={{ marginRight: 14, width: 110, alignItems: "center" }}
+  >
+    <View
+      style={{
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        overflow: "hidden",
+        backgroundColor: colorFor(index),
+        marginBottom: 8,
+      }}
+    >
+      {artist.imageUrl ? (
+        <Image source={{ uri: artist.imageUrl }} style={{ width: 110, height: 110 }} resizeMode="cover" />
+      ) : null}
+    </View>
+    <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600", textAlign: "center" }} numberOfLines={1}>
+      {artist.name}
+    </Text>
+  </TouchableOpacity>
+);
+
+// ─── New Release Card ─────────────────────────────────────────────────────────
+
+const NewReleaseCard = ({
+  song,
+  index,
+  onPress,
+}: {
+  song: Song;
+  index: number;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.8}
+    style={{ marginRight: 14, width: 120 }}
+  >
+    <View
+      style={{
+        width: 120,
+        height: 120,
+        borderRadius: 10,
+        overflow: "hidden",
+        backgroundColor: colorFor(index),
+        marginBottom: 8,
+      }}
+    >
+      {song.coverUrl ? (
+        <Image source={{ uri: song.coverUrl }} style={{ width: 120, height: 120 }} resizeMode="cover" />
+      ) : null}
+    </View>
+    <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }} numberOfLines={1}>
+      {song.title}
+    </Text>
+    <Text style={{ color: "#888", fontSize: 10, marginTop: 2 }} numberOfLines={1}>
+      {song.artist.name}
+    </Text>
+  </TouchableOpacity>
+);
+
+// ─── Playlist Card (Top Playlists) ────────────────────────────────────────────
+
+const PlaylistCard = ({
+  title,
+  coverUrl,
+  songCount,
+  index,
+  onPress,
+}: {
+  title: string;
+  coverUrl: string | null;
+  songCount: number;
+  index: number;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.8}
+    style={{ marginRight: 14, width: 140 }}
+  >
+    <View
+      style={{
+        width: 140,
+        height: 140,
+        borderRadius: 12,
+        overflow: "hidden",
+        backgroundColor: colorFor(index),
+        marginBottom: 8,
+      }}
+    >
+      {coverUrl ? (
+        <Image source={{ uri: coverUrl }} style={{ width: 140, height: 140 }} resizeMode="cover" />
+      ) : null}
+    </View>
+    <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }} numberOfLines={1}>
+      {title}
+    </Text>
+    <Text style={{ color: "#888", fontSize: 11, marginTop: 2 }}>
+      {songCount} songs
+    </Text>
+  </TouchableOpacity>
+);
+
 // ─── Logout Modal ─────────────────────────────────────────────────────────────
 
 const LogoutModal = ({
@@ -411,20 +532,29 @@ export default function HomeScreen() {
   const [featuringSongs, setFeaturingSongs] = useState<Song[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistoryItem[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [newReleases, setNewReleases] = useState<Song[]>([]);
+  const [allArtists, setAllArtists] = useState<Artist[]>([]);
 
   const [loadingFeaturing, setLoadingFeaturing] = useState(true);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [loadingGenres, setLoadingGenres] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const followedArtists = useAppSelector((s) => s.library.followedArtists);
+  const playlists = useAppSelector((s) => s.library.playlists);
+
   const loadStaticData = useCallback(async () => {
     try {
-      const [songs, genreList] = await Promise.allSettled([
+      const [songs, genreList, releases, artists] = await Promise.allSettled([
         getFeaturingSongs(),
         getGenres(),
+        getNewReleases(8),
+        getAllArtists(),
       ]);
       if (songs.status === "fulfilled") setFeaturingSongs(songs.value);
       if (genreList.status === "fulfilled") setGenres(genreList.value);
+      if (releases.status === "fulfilled") setNewReleases(releases.value);
+      if (artists.status === "fulfilled") setAllArtists(artists.value);
     } finally {
       setLoadingFeaturing(false);
       setLoadingGenres(false);
@@ -608,9 +738,9 @@ export default function HomeScreen() {
             {/* ── Mixes for you ── */}
             <SectionHeader title="Mixes for you" />
             {loadingGenres ? (
-              <ActivityIndicator color="#fff" style={{ marginBottom: 110 }} />
+              <ActivityIndicator color="#fff" style={{ marginBottom: 28 }} />
             ) : genres.length === 0 ? (
-              <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 110, fontSize: 13 }}>
+              <Text style={{ color: "#555", paddingHorizontal: 20, marginBottom: 28, fontSize: 13 }}>
                 No genres available yet
               </Text>
             ) : (
@@ -618,7 +748,7 @@ export default function HomeScreen() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 20 }}
-                style={{ marginBottom: 110 }}
+                style={{ marginBottom: 28 }}
               >
                 {genres.map((genre, gi) => (
                   <MixCard
@@ -641,10 +771,109 @@ export default function HomeScreen() {
                 ))}
               </ScrollView>
             )}
+
+            {/* ── From Artists You Follow ── */}
+            {(followedArtists.length > 0 || allArtists.length > 0) && (
+              <>
+                <SectionHeader
+                  title="From Artists You Follow"
+                  onSeeMore={() => router.push("/search")}
+                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 20 }}
+                  style={{ marginBottom: 28 }}
+                >
+                  {(followedArtists.length > 0 ? followedArtists : allArtists.slice(0, 6)).map(
+                    (artist, i) => (
+                      <ArtistCard
+                        key={artist.id}
+                        artist={artist}
+                        index={i}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/artist/[id]",
+                            params: { id: artist.id },
+                          })
+                        }
+                      />
+                    )
+                  )}
+                </ScrollView>
+              </>
+            )}
+
+            {/* ── New Releases ── */}
+            {newReleases.length > 0 && (
+              <>
+                <SectionHeader title="New Releases" onSeeMore={() => router.push("/search")} />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 20 }}
+                  style={{ marginBottom: 28 }}
+                >
+                  {newReleases.map((song, i) => (
+                    <NewReleaseCard
+                      key={song.id}
+                      song={song}
+                      index={i}
+                      onPress={() => handleSongPress(song)}
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
+            {/* ── Top Playlists ── */}
+            {playlists.length > 0 && (
+              <>
+                <SectionHeader
+                  title="Top Playlists"
+                  onSeeMore={() => router.push("/your-library")}
+                />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 20 }}
+                  style={{ marginBottom: 110 }}
+                >
+                  {playlists.map((pl, i) => (
+                    <PlaylistCard
+                      key={pl.id}
+                      title={pl.title}
+                      coverUrl={pl.coverUrl}
+                      songCount={pl.songs.length}
+                      index={i}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/playlist/[id]",
+                          params: { id: pl.id },
+                        })
+                      }
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
+            {/* Bottom padding when no playlists */}
+            {playlists.length === 0 && <View style={{ height: 110 }} />}
           </>
         ) : (
           <View style={{ paddingBottom: 110 }}>
-            <CategoryContent category={activeCategory} onSongPress={handleSongPress} />
+            <CategoryContent
+              category={activeCategory}
+              onSongPress={handleSongPress}
+              featuringSongs={featuringSongs}
+              recentlyPlayed={recentlyPlayed}
+              genres={genres}
+              newReleases={newReleases}
+              followedArtists={followedArtists}
+              allArtists={allArtists}
+              playlists={playlists}
+            />
           </View>
         )}
       </ScrollView>

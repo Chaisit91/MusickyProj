@@ -75,3 +75,13 @@ export const deleteHistoryRecord = async (id: string): Promise<void> => {
 export const deleteAllHistory = async (): Promise<void> => {
   await apiClient.delete("/play-history/clear-all");
 };
+
+export const getNewReleases = async (limit = 8): Promise<Song[]> => {
+  const { data } = await apiClient.get("/songs", { params: { limit } });
+  return (data.data as Song[]).slice(0, limit);
+};
+
+export const getAllArtists = async (): Promise<Artist[]> => {
+  const { data } = await apiClient.get("/artists");
+  return data.data as Artist[];
+};
