@@ -158,9 +158,9 @@ export default function RecentlyPlayedScreen() {
             flexShrink: 0,
           }}
         >
-          {item.song.album.coverUrl ? (
+          {item.song.coverUrl ? (
             <Image
-              source={{ uri: item.song.album.coverUrl }}
+              source={{ uri: item.song.coverUrl }}
               style={{ width: 54, height: 54 }}
               resizeMode="cover"
             />

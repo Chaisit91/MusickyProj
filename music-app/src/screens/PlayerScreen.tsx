@@ -278,9 +278,9 @@ export default function PlayerScreen() {
                 shadowRadius: 20,
               }}
             >
-              {(currentSong.coverUrl || currentSong.album.coverUrl) ? (
+              {currentSong.coverUrl ? (
                 <Image
-                  source={{ uri: (currentSong.coverUrl || currentSong.album.coverUrl)! }}
+                  source={{ uri: currentSong.coverUrl }}
                   style={{ width: ART_SIZE, height: ART_SIZE }}
                   resizeMode="cover"
                 />
@@ -445,8 +445,8 @@ export default function PlayerScreen() {
             {upNext ? (
               <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
                 <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", backgroundColor: "#333" }}>
-                  {(upNext.coverUrl || upNext.album.coverUrl) ? (
-                    <Image source={{ uri: (upNext.coverUrl || upNext.album.coverUrl)! }} style={{ width: 36, height: 36 }} resizeMode="cover" />
+                  {upNext.coverUrl ? (
+                    <Image source={{ uri: upNext.coverUrl }} style={{ width: 36, height: 36 }} resizeMode="cover" />
                   ) : (
                     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                       <Text style={{ color: "#555" }}>♪</Text>
@@ -483,9 +483,9 @@ export default function PlayerScreen() {
             <View
               style={{ width: 48, height: 48, borderRadius: 8, overflow: "hidden", backgroundColor: "#1a1a3e" }}
             >
-              {(currentSong.coverUrl || currentSong.album.coverUrl) ? (
+              {currentSong.coverUrl ? (
                 <Image
-                  source={{ uri: (currentSong.coverUrl || currentSong.album.coverUrl)! }}
+                  source={{ uri: currentSong.coverUrl }}
                   style={{ width: 48, height: 48 }}
                   resizeMode="cover"
                 />

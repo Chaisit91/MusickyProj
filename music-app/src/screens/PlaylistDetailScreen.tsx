@@ -186,7 +186,7 @@ export default function PlaylistDetailScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
           renderItem={({ item, index }) => {
-            const cover = item.coverUrl || item.album?.coverUrl;
+            const cover = item.coverUrl;
             const isLiked = likedSongs.some((s) => s.id === item.id);
             const isDownloaded = downloadedSongs.some((s) => s.id === item.id);
             return (

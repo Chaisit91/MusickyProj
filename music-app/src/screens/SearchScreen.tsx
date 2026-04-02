@@ -330,8 +330,8 @@ const SearchResultItem = ({
           backgroundColor: "#2a2a2a",
         }}
       >
-        {song.album.coverUrl ? (
-          <Image source={{ uri: song.album.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+        {song.coverUrl ? (
+          <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: "#555", fontSize: 18 }}>♪</Text>
@@ -519,7 +519,7 @@ export default function SearchScreen() {
       title: song.title,
       subtitle: `Song • ${song.artist.name}`,
       type: "song",
-      coverUrl: song.album.coverUrl,
+      coverUrl: song.coverUrl,
     };
     await addRecentSearch(item);
     const updated = await loadRecent();

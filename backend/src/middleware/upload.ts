@@ -51,3 +51,27 @@ export const uploadSong = multer({
   fileFilter: songFileFilter,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB (รองรับเพลงใหญ่)
 });
+
+// ---- Ad media: รับได้ทั้ง image, mp3, mp4 ----
+const adFileFilter = (
+  _req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowed = [
+    "image/jpeg", "image/png", "image/webp", "image/gif",
+    "video/mp4", "video/quicktime", "video/x-mp4",
+    "audio/mpeg", "audio/mp3", "audio/x-mp3",
+  ];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image, MP4, or MP3 files are allowed"));
+  }
+};
+
+export const uploadAd = multer({
+  storage,
+  fileFilter: adFileFilter,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+});

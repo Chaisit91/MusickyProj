@@ -1,7 +1,22 @@
 import { Response } from "express";
 import { MulterRequest } from "../../../types/multerRequest";
 import * as AdminAdsRepository from "./adminAdsRepository";
-import { uploadImageToCloudinary, deleteImageFromCloudinary } from "../../../utils/uploadImage";
+import {
+  uploadAdMediaToCloudinary,
+  deleteImageFromCloudinary,
+  deleteAudioFromCloudinary,
+} from "../../../utils/uploadImage";
+
+// ลบ media เดิม (image หรือ video/audio) ออกจาก Cloudinary
+const deleteExistingMedia = async (url: string, mimetype?: string) => {
+  if (!url) return;
+  const isVideo = url.includes("/video/upload/") || url.includes("resource_type=video");
+  if (isVideo || (mimetype && !mimetype.startsWith("image/"))) {
+    await deleteAudioFromCloudinary(url); // resource_type: video ครอบคลุม mp4 + mp3
+  } else {
+    await deleteImageFromCloudinary(url);
+  }
+};
 
 export const getAllAds = async (req: MulterRequest, res: Response) => {
   const ads = await AdminAdsRepository.findAllAds();
@@ -18,30 +33,27 @@ export const getAdById = async (req: MulterRequest, res: Response) => {
 };
 
 export const createAd = async (req: MulterRequest, res: Response) => {
-  const { title, linkUrl, adType, adDuration, advertiser, imageUrl: imageUrlFromBody, startDate, endDate } = req.body;
+  const { title, adType, adDuration, advertiser, startDate, endDate } = req.body;
 
-  if (!title || !linkUrl || !adType) {
-    res.status(400).json({
-      success: false,
-      message: "title, linkUrl and adType are required",
-    });
+  if (!title || !adType) {
+    res.status(400).json({ success: false, message: "title and adType are required" });
     return;
   }
 
-  let imageUrl: string | undefined = imageUrlFromBody;
+  let mediaUrl: string | undefined;
   if (req.file) {
-    imageUrl = await uploadImageToCloudinary(req.file.buffer, "ads");
+    mediaUrl = await uploadAdMediaToCloudinary(req.file.buffer, req.file.mimetype);
   }
 
-  if (!imageUrl) {
-    res.status(400).json({ success: false, message: "Image is required for ads" });
+  if (!mediaUrl) {
+    res.status(400).json({ success: false, message: "Media file is required for ads" });
     return;
   }
 
   const ad = await AdminAdsRepository.createAds({
     title,
-    imageUrl,
-    linkUrl,
+    imageUrl: mediaUrl,
+    linkUrl: "",
     adType,
     adDuration: adDuration ? Number(adDuration) : 30,
     advertiser: advertiser || "",
@@ -58,20 +70,16 @@ export const updateAd = async (req: MulterRequest, res: Response) => {
     return;
   }
 
-  const { title, linkUrl, adType, adDuration, isActive, advertiser, imageUrl: imageUrlFromBody, startDate, endDate } = req.body;
+  const { title, adType, adDuration, isActive, advertiser, startDate, endDate } = req.body;
 
-  let imageUrl: string | undefined = undefined;
+  let imageUrl: string | undefined;
   if (req.file) {
-    if (existing.imageUrl) await deleteImageFromCloudinary(existing.imageUrl);
-    imageUrl = await uploadImageToCloudinary(req.file.buffer, "ads");
-  } else if (imageUrlFromBody && imageUrlFromBody !== existing.imageUrl) {
-    if (existing.imageUrl) await deleteImageFromCloudinary(existing.imageUrl);
-    imageUrl = imageUrlFromBody;
+    await deleteExistingMedia(existing.imageUrl, req.file.mimetype);
+    imageUrl = await uploadAdMediaToCloudinary(req.file.buffer, req.file.mimetype);
   }
 
   const ad = await AdminAdsRepository.updateAds(req.params.id as string, {
     title,
-    linkUrl,
     adType,
     adDuration: adDuration ? Number(adDuration) : undefined,
     advertiser,
@@ -89,7 +97,7 @@ export const deleteAd = async (req: MulterRequest, res: Response) => {
     res.status(404).json({ success: false, message: "Ad not found" });
     return;
   }
-  if (existing.imageUrl) await deleteImageFromCloudinary(existing.imageUrl);
+  await deleteExistingMedia(existing.imageUrl);
   await AdminAdsRepository.deleteAds(req.params.id as string);
   res.json({ success: true, message: "Ad deleted" });
 };

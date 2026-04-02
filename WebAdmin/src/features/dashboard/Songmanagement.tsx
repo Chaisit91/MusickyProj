@@ -269,21 +269,10 @@ const SongModal: React.FC<{
             </select>
           </div>
 
-          {/* ความยาว + ปี */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <label className="text-xs font-medium text-gray-500">ความยาว (วินาที)</label>
-                {audioFile && form.duration && (
-                  <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded font-medium">ตรวจจับอัตโนมัติ</span>
-                )}
-              </div>
-              <input type="number" value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} className={inputCls} placeholder="210" />
-            </div>
-            <div>
-              <label className={labelCls}>ปีที่ลงเพลง</label>
-              <input type="number" value={form.year} onChange={(e) => setForm({ ...form, year: Number(e.target.value) })} className={inputCls} />
-            </div>
+          {/* ปี */}
+          <div>
+            <label className={labelCls}>ปีที่ลงเพลง</label>
+            <input type="number" value={form.year} onChange={(e) => setForm({ ...form, year: Number(e.target.value) })} className={inputCls} />
           </div>
 
           {/* เนื้อเพลง */}

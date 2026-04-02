@@ -124,8 +124,8 @@ const SongRow = ({
         backgroundColor: colorFor(index),
       }}
     >
-      {(song.coverUrl || song.album.coverUrl) ? (
-        <Image source={{ uri: (song.coverUrl || song.album.coverUrl)! }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+      {song.coverUrl ? (
+        <Image source={{ uri: song.coverUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#ffffff60", fontSize: 16 }}>♪</Text>

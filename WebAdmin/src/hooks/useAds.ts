@@ -57,12 +57,13 @@ export const useAds = () => {
 
   const createAds = async (data: {
     title: string;
-    imageUrl: string;
-    linkUrl: string;
     adType: string;
     adDuration: number;
     advertiser: string;
     isActive?: boolean;
+    startDate?: string;
+    endDate?: string;
+    mediaFile: File;
   }) => {
     await createAdsApi(data);
     await fetchAds();
@@ -70,12 +71,13 @@ export const useAds = () => {
 
   const updateAds = async (id: string, data: {
     title?: string;
-    imageUrl?: string;
-    linkUrl?: string;
     adType?: string;
     adDuration?: number;
     advertiser?: string;
     isActive?: boolean;
+    startDate?: string;
+    endDate?: string;
+    mediaFile?: File;
   }) => {
     await updateAdsApi(id, data);
     await fetchAds();

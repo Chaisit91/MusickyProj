@@ -71,6 +71,35 @@ export const uploadAudioToCloudinary = (buffer: Buffer): Promise<string> => {
   });
 };
 
+// อัปโหลดสื่อโฆษณา (image / mp4 / mp3) ไปยัง Cloudinary
+export const uploadAdMediaToCloudinary = (
+  buffer: Buffer,
+  mimetype: string
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const baseFolder = process.env.CLOUDINARY_FOLDER || "musickyproj";
+    const isImage = mimetype.startsWith("image/");
+    const resourceType = isImage ? "image" : "video"; // Cloudinary ใช้ "video" สำหรับ audio/video
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `${baseFolder}/ads`,
+        resource_type: resourceType,
+        ...(isImage && { transformation: [{ quality: "auto", fetch_format: "auto" }] }),
+      },
+      (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
+        if (error || !result) {
+          console.error("Cloudinary ad media upload error:", error);
+          return reject(error);
+        }
+        resolve(result.secure_url);
+      }
+    );
+
+    Readable.from(buffer).pipe(uploadStream);
+  });
+};
+
 export const deleteImageFromCloudinary = async (imageUrl: string): Promise<void> => {
   try {
     const matches = imageUrl.match(/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/i);

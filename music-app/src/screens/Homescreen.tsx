@@ -66,7 +66,7 @@ const FeaturingBannerCard = ({
   songs: Song[];
   onPress: () => void;
 }) => {
-  const covers = songs.slice(0, 6).map((s) => s.coverUrl || s.album.coverUrl || null);
+  const covers = songs.slice(0, 6).map((s) => s.coverUrl ?? null);
 
   return (
     <TouchableOpacity
@@ -132,7 +132,7 @@ const RecentCard = ({
   index: number;
   onPress: () => void;
 }) => {
-  const cover = song.coverUrl || song.album.coverUrl;
+  const cover = song.coverUrl;
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -187,7 +187,7 @@ const MixCard = ({
   coverSongs: Song[];
   onPress: () => void;
 }) => {
-  const covers = coverSongs.slice(0, 4).map((s) => s.coverUrl || s.album.coverUrl || null);
+  const covers = coverSongs.slice(0, 4).map((s) => s.coverUrl ?? null);
 
   return (
     <TouchableOpacity
@@ -385,8 +385,8 @@ const FeaturedSongsModal = ({
                 {i + 1}
               </Text>
               <View style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: colorFor(i), marginRight: 12, overflow: "hidden" }}>
-                {(song.coverUrl || song.album.coverUrl) ? (
-                  <Image source={{ uri: (song.coverUrl || song.album.coverUrl)! }} style={{ width: 52, height: 52 }} resizeMode="cover" />
+                {song.coverUrl ? (
+                  <Image source={{ uri: song.coverUrl }} style={{ width: 52, height: 52 }} resizeMode="cover" />
                 ) : null}
               </View>
               <View style={{ flex: 1 }}>

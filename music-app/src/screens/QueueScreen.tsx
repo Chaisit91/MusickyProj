@@ -131,8 +131,8 @@ const QueueRow = ({
       <DragIcon />
     </View>
     <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: colorFor(index) }}>
-      {(song.coverUrl || song.album.coverUrl) ? (
-        <Image source={{ uri: (song.coverUrl || song.album.coverUrl)! }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+      {song.coverUrl ? (
+        <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#ffffff60" }}>♪</Text>
@@ -231,8 +231,8 @@ const AddSongsModal = ({
                   style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, gap: 12 }}
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#1a1a3e" }}>
-                    {(song.coverUrl || song.album.coverUrl) ? (
-                      <Image source={{ uri: (song.coverUrl || song.album.coverUrl)! }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+                    {song.coverUrl ? (
+                      <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
                     ) : (
                       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                         <Text style={{ color: "#ffffff40" }}>♪</Text>
@@ -310,8 +310,8 @@ export default function QueueScreen() {
       >
         <ChevronDown />
         <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#1a1a3e" }}>
-          {(currentSong.coverUrl || currentSong.album.coverUrl) ? (
-            <Image source={{ uri: (currentSong.coverUrl || currentSong.album.coverUrl)! }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+          {currentSong.coverUrl ? (
+            <Image source={{ uri: currentSong.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
           ) : (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: "#ffffff30" }}>♪</Text>

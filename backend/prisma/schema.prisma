@@ -172,7 +172,7 @@ model Ads {
   title       String
   advertiser  String    @default("")
   imageUrl    String
-  linkUrl     String
+  linkUrl     String    @default("")
   adType      String
   adDuration  Int       @default(30)
   impressions Int       @default(0)

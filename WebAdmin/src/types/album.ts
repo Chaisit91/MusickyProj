@@ -1,5 +1,14 @@
 import type { Artist } from "./artist";
 
+export interface AlbumSong {
+  id: string;
+  title: string;
+  duration?: number;
+  playCount: number;
+  coverUrl?: string;
+  genre?: { id: string; name: string };
+}
+
 export interface Album {
   id: string;
   title: string;
@@ -9,6 +18,7 @@ export interface Album {
   createdAt: string;
   updatedAt: string;
   artist?: Artist;
+  songs?: AlbumSong[];
 }
 
 export interface AlbumCreateInput {

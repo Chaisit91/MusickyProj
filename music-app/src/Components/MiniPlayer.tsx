@@ -35,7 +35,7 @@ export default function MiniPlayer() {
 
   const duration = currentSong.duration ?? 200;
   const progress = Math.min(progressSeconds / duration, 1);
-  const coverUri = currentSong.coverUrl || currentSong.album.coverUrl;
+  const coverUri = currentSong.coverUrl;
 
   return (
     <TouchableOpacity

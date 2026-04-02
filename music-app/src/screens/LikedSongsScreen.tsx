@@ -176,7 +176,7 @@ export default function LikedSongsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 110, paddingTop: 8 }}
           renderItem={({ item, index }) => {
-            const cover = item.coverUrl || item.album.coverUrl;
+            const cover = item.coverUrl;
             const isDownloaded = downloadedSongs.some((s) => s.id === item.id);
             return (
               <TouchableOpacity
