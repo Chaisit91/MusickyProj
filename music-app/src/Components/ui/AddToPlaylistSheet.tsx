@@ -10,13 +10,13 @@ import {
   Image,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   createPlaylistThunk,
   addSongToPlaylistThunk,
   removeSongFromPlaylistThunk,
-} from "../store/librarySlice";
-import { Song } from "../api/homeApi";
+} from "../../store/librarySlice";
+import { Song } from "../../api/homeApi";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

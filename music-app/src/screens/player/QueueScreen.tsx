@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import { router } from "expo-router";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   playSong,
   removeFromQueue,
@@ -21,10 +21,10 @@ import {
   togglePlay,
   addToQueue,
   setRepeatMode,
-} from "../store/playerSlice";
-import { Song } from "../api/homeApi";
-import { colorFor } from "../constants";
-import { searchAll } from "../api/searchApi";
+} from "../../store/playerSlice";
+import { Song } from "../../api/homeApi";
+import { colorFor } from "../../constants";
+import { searchAll } from "../../api/searchApi";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

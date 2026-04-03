@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from "expo-audio";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   setProgress,
   setDuration,
   nextSong,
   clearSeekRequest,
-} from "../store/playerSlice";
+} from "../../store/playerSlice";
 
 
 export default function AudioControllerImpl() {

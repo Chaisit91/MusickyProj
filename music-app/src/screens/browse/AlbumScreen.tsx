@@ -10,9 +10,9 @@ import {
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../api/homeApi";
-import { getAlbumSongs } from "../api/detailApi";
-import { FALLBACK_COLORS, colorFor } from "../constants";
+import { recordPlay, Song } from "../../api/homeApi";
+import { getAlbumSongs } from "../../api/detailApi";
+import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
   BackIcon,
   PlayIcon,
@@ -20,11 +20,11 @@ import {
   ShareIcon,
   MoreIcon,
   DownloadIcon,
-} from "../Components/icons";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { playSong } from "../store/playerSlice";
-import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
-import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
+} from "../../Components/ui/icons";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { playSong } from "../../store/playerSlice";
+import { toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
+import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 300;

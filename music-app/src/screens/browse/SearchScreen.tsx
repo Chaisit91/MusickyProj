@@ -13,14 +13,14 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path, Circle } from "react-native-svg";
 import { router } from "expo-router";
-import BottomNav, { TabName } from "../Components/Bottomnav";
-import MiniPlayer from "../Components/MiniPlayer";
-import { Artist, Genre, Song } from "../api/homeApi";
-import { getTrendingArtists, getBrowseGenres, searchAll, SearchResult } from "../api/searchApi";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { playSong } from "../store/playerSlice";
-import { toggleLikeSong, toggleDownload } from "../store/librarySlice";
-import { colorFor } from "../constants";
+import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import MiniPlayer from "../../Components/player/MiniPlayer";
+import { Artist, Genre, Song } from "../../api/homeApi";
+import { getTrendingArtists, getBrowseGenres, searchAll, SearchResult } from "../../api/searchApi";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { playSong } from "../../store/playerSlice";
+import { toggleLikeSong, toggleDownload } from "../../store/librarySlice";
+import { colorFor } from "../../constants";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;

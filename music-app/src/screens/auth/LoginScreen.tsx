@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
-import { useAppDispatch } from "../store/hooks";
-import { loginThunk } from "../store/authSlice";
+import { useAppDispatch } from "../../store/hooks";
+import { loginThunk } from "../../store/authSlice";
 import axios from "axios";
 
 // ─── Dot badge (same as WelcomeScreen) ───────────────────────────────────────

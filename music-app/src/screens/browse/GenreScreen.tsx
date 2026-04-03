@@ -10,22 +10,22 @@ import {
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../api/homeApi";
-import { getGenreSongs } from "../api/detailApi";
-import { colorFor } from "../constants";
+import { recordPlay, Song } from "../../api/homeApi";
+import { getGenreSongs } from "../../api/detailApi";
+import { colorFor } from "../../constants";
 import {
   BackIcon,
   PlayIcon,
   MoreIcon,
   HeartIcon,
   DownloadIcon,
-} from "../Components/icons";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { playSong } from "../store/playerSlice";
-import { toggleLikeSong, toggleDownload } from "../store/librarySlice";
-import MiniPlayer from "../Components/MiniPlayer";
-import BottomNav, { TabName } from "../Components/Bottomnav";
-import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
+} from "../../Components/ui/icons";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { playSong } from "../../store/playerSlice";
+import { toggleLikeSong, toggleDownload } from "../../store/librarySlice";
+import MiniPlayer from "../../Components/player/MiniPlayer";
+import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 220;

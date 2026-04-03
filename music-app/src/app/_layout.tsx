@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 import { store } from "../store/store";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { restoreSession } from "../store/authSlice";
-import AudioController from "../Components/AudioController";
+import AudioController from "../Components/player/AudioController";
 
 function RootLayoutNav() {
   const dispatch = useAppDispatch();

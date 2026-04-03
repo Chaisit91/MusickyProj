@@ -10,9 +10,9 @@ import {
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../api/homeApi";
-import { getArtistSongs } from "../api/detailApi";
-import { FALLBACK_COLORS, colorFor } from "../constants";
+import { recordPlay, Song } from "../../api/homeApi";
+import { getArtistSongs } from "../../api/detailApi";
+import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
   BackIcon,
   PlayIcon,
@@ -20,13 +20,13 @@ import {
   MoreIcon,
   HeartIcon as HeartSmallIcon,
   DownloadIcon as DownloadSmallIcon,
-} from "../Components/icons";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { playSong } from "../store/playerSlice";
-import { toggleFollowArtist, toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
-import MiniPlayer from "../Components/MiniPlayer";
-import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
-import BottomNav, { TabName } from "../Components/Bottomnav";
+} from "../../Components/ui/icons";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { playSong } from "../../store/playerSlice";
+import { toggleFollowArtist, toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
+import MiniPlayer from "../../Components/player/MiniPlayer";
+import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
+import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 280;

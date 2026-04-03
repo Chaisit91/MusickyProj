@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { getAllPlayHistory, recordPlay, deleteHistoryRecord, deleteAllHistory, PlayHistoryItem } from "../api/homeApi";
-import { colorFor } from "../constants";
+import { getAllPlayHistory, recordPlay, deleteHistoryRecord, deleteAllHistory, PlayHistoryItem } from "../../api/homeApi";
+import { colorFor } from "../../constants";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">

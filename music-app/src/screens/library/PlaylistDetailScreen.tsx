@@ -8,15 +8,16 @@ import {
   Image,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { playSong } from "../store/playerSlice";
+import Svg, { Path } from "react-native-svg";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { playSong } from "../../store/playerSlice";
 import {
   toggleLikeSong,
   toggleDownload,
   removeSongFromPlaylistThunk,
-} from "../store/librarySlice";
-import { recordPlay, Song } from "../api/homeApi";
-import { FALLBACK_COLORS, colorFor } from "../constants";
+} from "../../store/librarySlice";
+import { recordPlay, Song } from "../../api/homeApi";
+import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
   BackIcon,
   PlayIcon,
@@ -24,9 +25,9 @@ import {
   DownloadIcon,
   MoreIcon,
   MusicNoteIcon,
-} from "../Components/icons";
-import MiniPlayer from "../Components/MiniPlayer";
-import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
+} from "../../Components/ui/icons";
+import MiniPlayer from "../../Components/player/MiniPlayer";
+import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 
 
 // ─── Main ─────────────────────────────────────────────────────────────────────

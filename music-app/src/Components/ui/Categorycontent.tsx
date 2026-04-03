@@ -7,9 +7,9 @@ import {
   Image,
 } from "react-native";
 import { router } from "expo-router";
-import { Song, PlayHistoryItem, Genre, Artist } from "../api/homeApi";
-import { Playlist } from "../store/librarySlice";
-import { colorFor } from "../constants";
+import { Song, PlayHistoryItem, Genre, Artist } from "../../api/homeApi";
+import { Playlist } from "../../store/librarySlice";
+import { colorFor } from "../../constants";
 import { PlayIcon } from "./icons";
 
 export type CategoryName = "For you" | "Relax" | "Workout" | "Travel" | "Party";

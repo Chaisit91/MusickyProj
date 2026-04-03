@@ -15,14 +15,14 @@ import {
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { useFocusEffect } from "@react-navigation/native";
-import TopBar from "../Components/Topbar";
-import BottomNav, { TabName } from "../Components/Bottomnav";
-import CategoryContent, { CategoryName } from "../Components/Categorycontent";
-import MiniPlayer from "../Components/MiniPlayer";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { logoutThunk } from "../store/authSlice";
-import { playSong } from "../store/playerSlice";
-import { loadLibrary } from "../store/librarySlice";
+import TopBar from "../../Components/layout/Topbar";
+import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import CategoryContent, { CategoryName } from "../../Components/ui/Categorycontent";
+import MiniPlayer from "../../Components/player/MiniPlayer";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { logoutThunk } from "../../store/authSlice";
+import { playSong } from "../../store/playerSlice";
+import { loadLibrary } from "../../store/librarySlice";
 import {
   getFeaturingSongs,
   getRecentlyPlayed,
@@ -34,9 +34,9 @@ import {
   PlayHistoryItem,
   Genre,
   Artist,
-} from "../api/homeApi";
-import { colorFor } from "../constants";
-import { PlayIcon } from "../Components/icons";
+} from "../../api/homeApi";
+import { colorFor } from "../../constants";
+import { PlayIcon } from "../../Components/ui/icons";
 
 const { width } = Dimensions.get("window");
 

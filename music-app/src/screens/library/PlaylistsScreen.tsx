@@ -13,10 +13,10 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { createPlaylistThunk, deletePlaylistThunk, loadLibrary, Playlist } from "../store/librarySlice";
-import MiniPlayer from "../Components/MiniPlayer";
-import BottomNav, { TabName } from "../Components/Bottomnav";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { createPlaylistThunk, deletePlaylistThunk, loadLibrary, Playlist } from "../../store/librarySlice";
+import MiniPlayer from "../../Components/player/MiniPlayer";
+import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
 
 const { width } = Dimensions.get("window");
 const CARD_W = (width - 48) / 2;

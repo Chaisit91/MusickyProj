@@ -11,7 +11,7 @@ import {
 import Slider from "@react-native-community/slider";
 import Svg, { Path, Circle } from "react-native-svg";
 import { router } from "expo-router";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   togglePlay,
   nextSong,
@@ -20,9 +20,9 @@ import {
   toggleShuffle,
   setRepeatMode,
   setVolume,
-} from "../store/playerSlice";
-import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
-import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
+} from "../../store/playerSlice";
+import { toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
+import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 
 const { width } = Dimensions.get("window");
 const ART_SIZE = width - 64;

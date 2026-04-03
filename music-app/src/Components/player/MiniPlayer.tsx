@@ -2,8 +2,8 @@ import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { togglePlay, stopSong } from "../store/playerSlice";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { togglePlay, stopSong } from "../../store/playerSlice";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

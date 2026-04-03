@@ -9,13 +9,13 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { toggleDownload, toggleLikeSong, loadLibrary } from "../store/librarySlice";
-import { playSong } from "../store/playerSlice";
-import { recordPlay, Song } from "../api/homeApi";
-import { colorFor } from "../constants";
-import MiniPlayer from "../Components/MiniPlayer";
-import AddToPlaylistSheet from "../Components/AddToPlaylistSheet";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { toggleDownload, toggleLikeSong, loadLibrary } from "../../store/librarySlice";
+import { playSong } from "../../store/playerSlice";
+import { recordPlay, Song } from "../../api/homeApi";
+import { colorFor } from "../../constants";
+import MiniPlayer from "../../Components/player/MiniPlayer";
+import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
