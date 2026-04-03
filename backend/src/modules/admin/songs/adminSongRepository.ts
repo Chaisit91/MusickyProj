@@ -67,7 +67,13 @@ export const updateSong = async (id: string, data: {
 };
 
 export const deleteSong = async (id: string) => {
-  return prisma.song.delete({ where: { id } });
+  return prisma.$transaction([
+    prisma.likedSong.deleteMany({ where: { songId: id } }),
+    prisma.playlistSong.deleteMany({ where: { songId: id } }),
+    prisma.download.deleteMany({ where: { songId: id } }),
+    prisma.queue.deleteMany({ where: { songId: id } }),
+    prisma.song.delete({ where: { id } }),
+  ]);
 };
 
 export const incrementPlayCount = async (id: string) => {

@@ -18,7 +18,7 @@ import {
   prevSong,
   seekTo,
   toggleShuffle,
-  cycleRepeat,
+  setRepeatMode,
   setVolume,
 } from "../store/playerSlice";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../store/librarySlice";
@@ -194,7 +194,7 @@ export default function PlayerScreen() {
     );
   }
 
-  const upNext = queue[currentIndex + 1] ?? queue[0];
+  const upNext = queue[currentIndex + 1] ?? (repeatMode === "all" ? queue[0] : null);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
@@ -385,7 +385,10 @@ export default function PlayerScreen() {
               <SkipNextIcon />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => dispatch(cycleRepeat())} activeOpacity={0.7}>
+            <TouchableOpacity
+              onPress={() => dispatch(setRepeatMode(repeatMode === "one" ? "none" : "one"))}
+              activeOpacity={0.7}
+            >
               <RepeatIcon mode={repeatMode} />
             </TouchableOpacity>
           </View>

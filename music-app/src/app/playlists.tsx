@@ -1,2 +1,2 @@
-import PlaylistsScreen from "../screens/PlaylistsScreen";
+import PlaylistsScreen from "../screens/library/PlaylistsScreen";
 export default PlaylistsScreen;

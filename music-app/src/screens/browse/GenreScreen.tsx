@@ -12,7 +12,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { recordPlay, Song } from "../api/homeApi";
 import { getGenreSongs } from "../api/detailApi";
-import { FALLBACK_COLORS, colorFor } from "../constants";
+import { colorFor } from "../constants";
 import {
   BackIcon,
   PlayIcon,

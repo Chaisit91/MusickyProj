@@ -1,2 +1,2 @@
-import DownloadsScreen from "../screens/DownloadsScreen";
+import DownloadsScreen from "../screens/library/DownloadsScreen";
 export default DownloadsScreen;

@@ -1,2 +1,2 @@
-import QueueScreen from "../screens/QueueScreen";
+import QueueScreen from "../screens/player/QueueScreen";
 export default QueueScreen;

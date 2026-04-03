@@ -1,2 +1,2 @@
-import ArtistScreen from "../../screens/ArtistScreen";
+import ArtistScreen from "../../screens/browse/ArtistScreen";
 export default ArtistScreen;

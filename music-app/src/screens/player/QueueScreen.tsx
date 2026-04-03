@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   playSong,
   removeFromQueue,
+  moveQueueItem,
   togglePlay,
   addToQueue,
   setRepeatMode,
@@ -33,9 +34,15 @@ const ChevronDown = () => (
   </Svg>
 );
 
-const DragIcon = () => (
-  <Svg width={20} height={20} viewBox="0 0 24 24">
-    <Path fill="#444" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+const ArrowUpIcon = ({ disabled }: { disabled?: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path fill={disabled ? "#2a2a2a" : "#555"} d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+  </Svg>
+);
+
+const ArrowDownIcon = ({ disabled }: { disabled?: boolean }) => (
+  <Svg width={18} height={18} viewBox="0 0 24 24">
+    <Path fill={disabled ? "#2a2a2a" : "#555"} d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
   </Svg>
 );
 
@@ -103,12 +110,20 @@ const QueueRow = ({
   isActive,
   onPress,
   onRemove,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: {
   song: Song;
   index: number;
   isActive: boolean;
   onPress: () => void;
   onRemove: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }) => (
   <TouchableOpacity
     onPress={onPress}
@@ -122,9 +137,30 @@ const QueueRow = ({
       backgroundColor: isActive ? "#1e1e1e" : "transparent",
     }}
   >
-    <View style={{ padding: 4 }}>
-      <DragIcon />
-    </View>
+    {isActive ? (
+      <View style={{ width: 28 }} />
+    ) : (
+      <View style={{ width: 28, alignItems: "center", gap: 0 }}>
+        <TouchableOpacity
+          onPress={onMoveUp}
+          disabled={!canMoveUp}
+          activeOpacity={0.7}
+          style={{ padding: 2 }}
+          hitSlop={{ top: 4, bottom: 4, left: 8, right: 8 }}
+        >
+          <ArrowUpIcon disabled={!canMoveUp} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={onMoveDown}
+          disabled={!canMoveDown}
+          activeOpacity={0.7}
+          style={{ padding: 2 }}
+          hitSlop={{ top: 4, bottom: 4, left: 8, right: 8 }}
+        >
+          <ArrowDownIcon disabled={!canMoveDown} />
+        </TouchableOpacity>
+      </View>
+    )}
     <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: colorFor(index) }}>
       {song.coverUrl ? (
         <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
@@ -435,16 +471,23 @@ export default function QueueScreen() {
         />
 
         {/* Upcoming songs */}
-        {upcomingQueue.map((song, i) => (
-          <QueueRow
-            key={`${song.id}-${i}`}
-            song={song}
-            index={currentIndex + 1 + i}
-            isActive={false}
-            onPress={() => dispatch(playSong({ song, queue, index: currentIndex + 1 + i }))}
-            onRemove={() => dispatch(removeFromQueue(currentIndex + 1 + i))}
-          />
-        ))}
+        {upcomingQueue.map((song, i) => {
+          const queueIdx = currentIndex + 1 + i;
+          return (
+            <QueueRow
+              key={`${song.id}-${i}`}
+              song={song}
+              index={queueIdx}
+              isActive={false}
+              onPress={() => dispatch(playSong({ song, queue, index: queueIdx }))}
+              onRemove={() => dispatch(removeFromQueue(queueIdx))}
+              canMoveUp={i > 0}
+              canMoveDown={i < upcomingQueue.length - 1}
+              onMoveUp={() => dispatch(moveQueueItem({ from: queueIdx, to: queueIdx - 1 }))}
+              onMoveDown={() => dispatch(moveQueueItem({ from: queueIdx, to: queueIdx + 1 }))}
+            />
+          );
+        })}
 
         {upcomingQueue.length === 0 && (
           <Text style={{ color: "#333", paddingHorizontal: 20, paddingVertical: 16, fontSize: 13, textAlign: "center" }}>

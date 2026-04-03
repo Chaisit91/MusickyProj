@@ -140,6 +140,13 @@ const playerSlice = createSlice({
       }
     },
 
+    moveQueueItem(state, action: PayloadAction<{ from: number; to: number }>) {
+      const { from, to } = action.payload;
+      if (from < 0 || to < 0 || from >= state.queue.length || to >= state.queue.length) return;
+      const [item] = state.queue.splice(from, 1);
+      state.queue.splice(to, 0, item);
+    },
+
     setQueue(state, action: PayloadAction<Song[]>) {
       state.queue = action.payload;
     },
@@ -173,6 +180,7 @@ export const {
   setRepeatMode,
   addToQueue,
   removeFromQueue,
+  moveQueueItem,
   setQueue,
 } = playerSlice.actions;
 

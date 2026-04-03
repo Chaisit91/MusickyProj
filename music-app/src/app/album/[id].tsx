@@ -1,2 +1,2 @@
-import AlbumScreen from "../../screens/AlbumScreen";
+import AlbumScreen from "../../screens/browse/AlbumScreen";
 export default AlbumScreen;

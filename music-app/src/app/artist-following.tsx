@@ -1,2 +1,2 @@
-import ArtistFollowingScreen from "../screens/ArtistFollowingScreen";
+import ArtistFollowingScreen from "../screens/browse/ArtistFollowingScreen";
 export default ArtistFollowingScreen;

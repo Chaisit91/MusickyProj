@@ -449,6 +449,144 @@ const LogoutModal = ({
   </Modal>
 );
 
+// ─── Mixes / Genres Modal ─────────────────────────────────────────────────────
+
+const MixesModal = ({
+  visible,
+  genres,
+  onClose,
+}: {
+  visible: boolean;
+  genres: Genre[];
+  onClose: () => void;
+}) => (
+  <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Pressable
+      style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}
+      onPress={onClose}
+    >
+      <Pressable
+        style={{
+          backgroundColor: "#1a1a1a",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          paddingTop: 12,
+          paddingBottom: 40,
+          maxHeight: "85%",
+        }}
+        onPress={() => {}}
+      >
+        <View style={{ width: 40, height: 4, backgroundColor: "#333", borderRadius: 2, alignSelf: "center", marginBottom: 16 }} />
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 8 }}>
+          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>Mixes for you</Text>
+          <Text style={{ color: "#888", fontSize: 12, marginLeft: 8 }}>ทุกหมวดหมู่</Text>
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {genres.map((genre, i) => (
+            <TouchableOpacity
+              key={genre.id}
+              onPress={() => {
+                onClose();
+                router.push({
+                  pathname: "/genre/[id]",
+                  params: {
+                    id: genre.id,
+                    name: encodeURIComponent(genre.name),
+                    color: encodeURIComponent(genre.color ?? "#1a1a2e"),
+                    imageUrl: encodeURIComponent(genre.imageUrl ?? ""),
+                  },
+                });
+              }}
+              activeOpacity={0.7}
+              style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 10, gap: 14 }}
+            >
+              <View style={{ width: 56, height: 56, borderRadius: 10, overflow: "hidden", backgroundColor: genre.color ?? colorFor(i) }}>
+                {genre.imageUrl ? (
+                  <Image source={{ uri: genre.imageUrl }} style={{ width: 56, height: 56 }} resizeMode="cover" />
+                ) : (
+                  <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ color: "#ffffff30", fontSize: 22, fontWeight: "900" }}>{genre.name.charAt(0).toUpperCase()}</Text>
+                  </View>
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }} numberOfLines={1}>{genre.name}</Text>
+                <Text style={{ color: "#888", fontSize: 12, marginTop: 2 }}>Mix {i + 1}</Text>
+              </View>
+              <Svg width={18} height={18} viewBox="0 0 24 24">
+                <Path fill="#555" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+              </Svg>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </Pressable>
+    </Pressable>
+  </Modal>
+);
+
+// ─── New Releases Modal ───────────────────────────────────────────────────────
+
+const NewReleasesModal = ({
+  visible,
+  songs,
+  onClose,
+  onPlay,
+}: {
+  visible: boolean;
+  songs: Song[];
+  onClose: () => void;
+  onPlay: (song: Song) => void;
+}) => (
+  <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Pressable
+      style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}
+      onPress={onClose}
+    >
+      <Pressable
+        style={{
+          backgroundColor: "#1a1a1a",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          paddingTop: 12,
+          paddingBottom: 40,
+          maxHeight: "85%",
+        }}
+        onPress={() => {}}
+      >
+        <View style={{ width: 40, height: 4, backgroundColor: "#333", borderRadius: 2, alignSelf: "center", marginBottom: 16 }} />
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 8 }}>
+          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>New Releases</Text>
+          <Text style={{ color: "#888", fontSize: 12, marginLeft: 8 }}>เพลงใหม่ล่าสุด</Text>
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {songs.map((song, i) => (
+            <TouchableOpacity
+              key={song.id}
+              onPress={() => { onPlay(song); onClose(); }}
+              activeOpacity={0.7}
+              style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 10 }}
+            >
+              <Text style={{ color: "#555", fontWeight: "700", fontSize: 14, width: 24 }}>{i + 1}</Text>
+              <View style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: colorFor(i), marginRight: 12, overflow: "hidden" }}>
+                {song.coverUrl ? (
+                  <Image source={{ uri: song.coverUrl }} style={{ width: 52, height: 52 }} resizeMode="cover" />
+                ) : null}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: "#fff", fontWeight: "600", fontSize: 14 }} numberOfLines={1}>{song.title}</Text>
+                <Text style={{ color: "#888", fontSize: 12, marginTop: 2 }} numberOfLines={1}>{song.artist.name} · {song.album.title}</Text>
+              </View>
+              <View style={{ backgroundColor: "#2a2a2a", borderRadius: 20, padding: 8 }}>
+                <PlayIcon />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </Pressable>
+    </Pressable>
+  </Modal>
+);
+
 // ─── Featured Songs Modal ─────────────────────────────────────────────────────
 
 const FeaturedSongsModal = ({
@@ -528,6 +666,8 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<TabName>("Home");
   const [showLogout, setShowLogout] = useState(false);
   const [showFeatured, setShowFeatured] = useState(false);
+  const [showMixes, setShowMixes] = useState(false);
+  const [showNewReleases, setShowNewReleases] = useState(false);
 
   const [featuringSongs, setFeaturingSongs] = useState<Song[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<PlayHistoryItem[]>([]);
@@ -736,7 +876,7 @@ export default function HomeScreen() {
             )}
 
             {/* ── Mixes for you ── */}
-            <SectionHeader title="Mixes for you" />
+            <SectionHeader title="Mixes for you" onSeeMore={() => setShowMixes(true)} />
             {loadingGenres ? (
               <ActivityIndicator color="#fff" style={{ marginBottom: 28 }} />
             ) : genres.length === 0 ? (
@@ -777,7 +917,7 @@ export default function HomeScreen() {
               <>
                 <SectionHeader
                   title="From Artists You Follow"
-                  onSeeMore={() => router.push("/search")}
+                  onSeeMore={() => router.push("/artist-following")}
                 />
                 <ScrollView
                   horizontal
@@ -807,7 +947,7 @@ export default function HomeScreen() {
             {/* ── New Releases ── */}
             {newReleases.length > 0 && (
               <>
-                <SectionHeader title="New Releases" onSeeMore={() => router.push("/search")} />
+                <SectionHeader title="New Releases" onSeeMore={() => setShowNewReleases(true)} />
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -885,6 +1025,19 @@ export default function HomeScreen() {
         visible={showFeatured}
         songs={featuringSongs}
         onClose={() => setShowFeatured(false)}
+        onPlay={handleSongPress}
+      />
+
+      <MixesModal
+        visible={showMixes}
+        genres={genres}
+        onClose={() => setShowMixes(false)}
+      />
+
+      <NewReleasesModal
+        visible={showNewReleases}
+        songs={newReleases}
+        onClose={() => setShowNewReleases(false)}
         onPlay={handleSongPress}
       />
 

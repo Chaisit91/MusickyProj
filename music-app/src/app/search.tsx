@@ -1,2 +1,2 @@
-import SearchScreen from "../screens/SearchScreen";
+import SearchScreen from "../screens/browse/SearchScreen";
 export default SearchScreen;

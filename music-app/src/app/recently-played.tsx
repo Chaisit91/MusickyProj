@@ -1,2 +1,2 @@
-import RecentlyPlayedScreen from "../screens/RecentlyPlayedScreen";
+import RecentlyPlayedScreen from "../screens/library/RecentlyPlayedScreen";
 export default RecentlyPlayedScreen;
