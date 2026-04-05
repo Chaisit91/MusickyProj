@@ -17,8 +17,3 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// ─── Login Schema ─────────────────────────────────────────────────────────────
-export const loginSchema = z.object({
-  email:    emailField,
-  password: passwordField,
-});

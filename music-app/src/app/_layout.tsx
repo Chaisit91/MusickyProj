@@ -7,40 +7,56 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { restoreSession } from "../store/authSlice";
 import AudioController from "../Components/player/AudioController";
 
-function RootLayoutNav() {
-  const dispatch = useAppDispatch();
-  const { isLoggedIn, isLoading } = useAppSelector((state) => state.auth);
+// ─── Public route segments (no login required) ────────────────────────────────
+// "(auth)" covers the entire (auth) route group: /login, /register
+const PUBLIC_SEGMENTS = new Set<string | undefined>([undefined, "index", "(auth)"]);
+
+// ─── Auth Guard ───────────────────────────────────────────────────────────────
+// Handles redirect logic separately from layout rendering.
+// • Logged-in user on a public route  → push to /home
+// • Guest on a protected route        → push to /login
+function AuthGuard() {
+  const { isLoggedIn, isLoading } = useAppSelector((s) => s.auth);
   const router = useRouter();
   const segments = useSegments();
-
-  // Restore session from AsyncStorage on app start
-  useEffect(() => {
-    dispatch(restoreSession());
-  }, []);
 
   useEffect(() => {
     if (isLoading) return;
 
-    const currentRoute = segments[0] as string | undefined;
-    // "(auth)" = route group containing login & register
-    const publicRoutes = [undefined, "index", "login", "register", "(auth)"];
-    const isOnPublicRoute = publicRoutes.includes(currentRoute as string);
+    const rootSegment = segments[0] as string | undefined;
+    const isPublic = PUBLIC_SEGMENTS.has(rootSegment);
 
-    if (isLoggedIn && isOnPublicRoute) {
+    if (isLoggedIn && isPublic) {
       router.replace("/home");
-    } else if (!isLoggedIn && !isOnPublicRoute) {
+    } else if (!isLoggedIn && !isPublic) {
       router.replace("/login");
     }
   }, [isLoggedIn, isLoading, segments]);
 
+  return null;
+}
+
+// ─── Root Layout Nav ──────────────────────────────────────────────────────────
+// Restores session from AsyncStorage on app start,
+// then renders the global AudioController + root Stack.
+function RootLayoutNav() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(restoreSession());
+  }, []);
+
   return (
     <>
+      <AuthGuard />
       <AudioController />
       <Stack screenOptions={{ headerShown: false }} />
     </>
   );
 }
 
+// ─── Root Layout ──────────────────────────────────────────────────────────────
+// Wraps the entire app with the Redux store.
 export default function RootLayout() {
   return (
     <Provider store={store}>
