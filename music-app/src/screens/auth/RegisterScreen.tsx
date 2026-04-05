@@ -96,6 +96,7 @@ export default function RegisterScreen() {
     control,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -126,8 +127,16 @@ export default function RegisterScreen() {
       router.replace("/login");
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        const msg = err.response?.data?.message ?? "Registration failed";
-        setServerError(msg);
+        const msg: string = err.response?.data?.message ?? "Registration failed";
+        const isEmailTaken =
+          err.response?.status === 409 ||
+          msg.toLowerCase().includes("email") ||
+          msg.toLowerCase().includes("already");
+        if (isEmailTaken) {
+          setError("email", { message: "This email is already registered" });
+        } else {
+          setServerError(msg);
+        }
       } else {
         setServerError("Unable to connect to server");
       }

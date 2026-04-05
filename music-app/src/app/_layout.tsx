@@ -22,7 +22,8 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const currentRoute = segments[0] as string | undefined;
-    const publicRoutes = [undefined, "index", "login", "register"];
+    // "(auth)" = route group containing login & register
+    const publicRoutes = [undefined, "index", "login", "register", "(auth)"];
     const isOnPublicRoute = publicRoutes.includes(currentRoute as string);
 
     if (isLoggedIn && isOnPublicRoute) {

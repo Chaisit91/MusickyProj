@@ -50,7 +50,9 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const dispatch = useAppDispatch();
@@ -63,24 +65,39 @@ export default function LoginScreen() {
   }, []);
 
   const handleLogin = async () => {
-    setError("");
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields");
-      return;
+    setEmailError("");
+    setPasswordError("");
+    setServerError("");
+
+    let hasError = false;
+    if (!email.trim()) {
+      setEmailError("Email is required");
+      hasError = true;
+    } else if (!/\S+@\S+\.\S+/.test(email.trim())) {
+      setEmailError("Invalid email format");
+      hasError = true;
     }
+    if (!password.trim()) {
+      setPasswordError("Password is required");
+      hasError = true;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      hasError = true;
+    }
+    if (hasError) return;
 
     setLoading(true);
     try {
       const result = await dispatch(loginThunk({ email: email.trim(), password }));
       if (loginThunk.rejected.match(result)) {
-        setError(result.payload as string);
+        setServerError("Invalid email or password");
       }
       // _layout.tsx จัดการ redirect ไป /home อัตโนมัติเมื่อ isLoggedIn = true
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(`Cannot reach server (${err.message})`);
+        setServerError(`Cannot reach server (${err.message})`);
       } else {
-        setError("Unexpected error occurred");
+        setServerError("Unexpected error occurred");
       }
     } finally {
       setLoading(false);
@@ -133,21 +150,25 @@ export default function LoginScreen() {
               color: "#fff",
               fontSize: 15,
               borderWidth: 1,
-              borderColor: "#2a2a2a",
-              marginBottom: 16,
+              borderColor: emailError ? "#ff4444" : "#2a2a2a",
             }}
             placeholder="your@gmail.com"
             placeholderTextColor="#555"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(t) => { setEmail(t); if (emailError) setEmailError(""); }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
           />
+          {emailError ? (
+            <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4, marginBottom: 12 }}>{emailError}</Text>
+          ) : (
+            <View style={{ marginBottom: 16 }} />
+          )}
 
           {/* ── Password ── */}
           <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>Password</Text>
-          <View style={{ position: "relative", marginBottom: 24 }}>
+          <View style={{ position: "relative" }}>
             <TextInput
               style={{
                 backgroundColor: "#1e1e1e",
@@ -158,12 +179,12 @@ export default function LoginScreen() {
                 color: "#fff",
                 fontSize: 15,
                 borderWidth: 1,
-                borderColor: "#2a2a2a",
+                borderColor: passwordError ? "#ff4444" : "#2a2a2a",
               }}
               placeholder="Password"
               placeholderTextColor="#555"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(t) => { setPassword(t); if (passwordError) setPasswordError(""); }}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
             />
@@ -174,11 +195,16 @@ export default function LoginScreen() {
               <EyeIcon visible={showPassword} />
             </TouchableOpacity>
           </View>
+          {passwordError ? (
+            <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4, marginBottom: 16 }}>{passwordError}</Text>
+          ) : (
+            <View style={{ marginBottom: 24 }} />
+          )}
 
-          {/* ── Error ── */}
-          {error ? (
+          {/* ── Server Error ── */}
+          {serverError ? (
             <Text style={{ color: "#ff4444", fontSize: 13, marginBottom: 16, textAlign: "center" }}>
-              {error}
+              {serverError}
             </Text>
           ) : null}
 
