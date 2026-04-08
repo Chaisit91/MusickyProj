@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from "expo-audio";
+import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import type { AudioPlayer } from "expo-audio";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   setProgress,
@@ -8,20 +9,16 @@ import {
   clearSeekRequest,
 } from "../../store/playerSlice";
 
-
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
   const { currentSong, isPlaying, seekRequest, volume } = useAppSelector((s) => s.player);
 
+  const playerRef = useRef<AudioPlayer | null>(null);
   const isPlayingRef = useRef(isPlaying);
-  const initializedRef = useRef(false);
+  const volumeRef = useRef(volume);
 
-  const player = useAudioPlayer(null);
-  const status = useAudioPlayerStatus(player);
-
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
 
   // ── Set audio mode once ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -29,63 +26,67 @@ export default function AudioControllerImpl() {
       playsInSilentMode: true,
       shouldPlayInBackground: true,
     }).catch(() => {});
+
+    return () => {
+      playerRef.current?.remove();
+    };
   }, []);
 
   // ── โหลดเพลงใหม่เมื่อ currentSong เปลี่ยน ───────────────────────────────────
   useEffect(() => {
-    if (!currentSong) {
-      player.pause();
-      initializedRef.current = false;
-      return;
-    }
+    playerRef.current?.remove();
+    playerRef.current = null;
+
+    if (!currentSong) return;
 
     console.log("AudioController: loading", currentSong.filePath);
-    initializedRef.current = false;
 
-    player.replace({ uri: currentSong.filePath });
+    const player = createAudioPlayer({ uri: currentSong.filePath });
+    player.volume = volumeRef.current;
+    playerRef.current = player;
 
-    // play() หลัง replace จะรอ buffer อัตโนมัติ
     if (isPlayingRef.current) {
       player.play();
     }
 
-    initializedRef.current = true;
+    const subscription = player.addListener("playbackStatusUpdate", (status) => {
+      dispatch(setProgress(Math.floor(status.currentTime ?? 0)));
+      if (status.duration && status.duration > 0) {
+        dispatch(setDuration(Math.floor(status.duration)));
+      }
+      if (status.didJustFinish) {
+        dispatch(nextSong());
+      }
+    });
+
+    return () => {
+      subscription.remove();
+      player.remove();
+      playerRef.current = null;
+    };
   }, [currentSong?.id]);
-
-  // ── Update duration ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (status.duration && status.duration > 0) {
-      dispatch(setDuration(Math.floor(status.duration)));
-    }
-  }, [status.duration]);
-
-  // ── Update progress + auto-next ───────────────────────────────────────────────
-  useEffect(() => {
-    dispatch(setProgress(Math.floor(status.currentTime ?? 0)));
-    if (status.didJustFinish) {
-      dispatch(nextSong());
-    }
-  }, [status.currentTime, status.didJustFinish]);
 
   // ── Play / Pause ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!initializedRef.current) return;
+    if (!playerRef.current) return;
     if (isPlaying) {
-      player.play();
+      playerRef.current.play();
     } else {
-      player.pause();
+      playerRef.current.pause();
     }
   }, [isPlaying]);
 
   // ── Volume ────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    player.volume = volume;
+    if (playerRef.current) {
+      playerRef.current.volume = volume;
+    }
   }, [volume]);
 
-  // ── Seek ──────────────────────────────────────────────────────────────────────
+  // ── Seek (expo-audio ใช้ seconds) ─────────────────────────────────────────────
   useEffect(() => {
     if (seekRequest === null) return;
-    player.seekTo(seekRequest); // expo-audio ใช้ seconds (ไม่ใช่ ms)
+    playerRef.current?.seekTo(seekRequest).catch(() => {});
     dispatch(clearSeekRequest());
   }, [seekRequest]);
 
