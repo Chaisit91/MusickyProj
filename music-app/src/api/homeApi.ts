@@ -85,3 +85,48 @@ export const getAllArtists = async (): Promise<Artist[]> => {
   const { data } = await apiClient.get("/artists");
   return data.data as Artist[];
 };
+
+// ─── Artist Follow API ────────────────────────────────────────────────────────
+
+export const getFollowedArtistsApi = async (): Promise<Artist[]> => {
+  const { data } = await apiClient.get("/artist-follows");
+  return data.data as Artist[];
+};
+
+export const followArtistApi = async (artistId: string): Promise<void> => {
+  await apiClient.post("/artist-follows", { artistId });
+};
+
+export const unfollowArtistApi = async (artistId: string): Promise<void> => {
+  await apiClient.delete(`/artist-follows/${artistId}`);
+};
+
+// ─── Liked Songs API ──────────────────────────────────────────────────────────
+
+export const getLikedSongsApi = async (): Promise<Song[]> => {
+  const { data } = await apiClient.get("/liked-songs");
+  return (data.data as { song: Song }[]).map((item) => item.song);
+};
+
+export const likeSongApi = async (songId: string): Promise<void> => {
+  await apiClient.post("/liked-songs", { songId });
+};
+
+export const unlikeSongApi = async (songId: string): Promise<void> => {
+  await apiClient.delete(`/liked-songs/${songId}`);
+};
+
+// ─── Downloads API ────────────────────────────────────────────────────────────
+
+export const getDownloadsApi = async (): Promise<Song[]> => {
+  const { data } = await apiClient.get("/downloads");
+  return (data.data as { song: Song }[]).map((item) => item.song);
+};
+
+export const addDownloadApi = async (songId: string): Promise<void> => {
+  await apiClient.post("/downloads", { songId });
+};
+
+export const removeDownloadApi = async (songId: string): Promise<void> => {
+  await apiClient.delete(`/downloads/song/${songId}`);
+};

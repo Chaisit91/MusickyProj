@@ -34,6 +34,10 @@ export const deleteDownload = async (id: string) => {
   return prisma.download.delete({ where: { id } });
 };
 
+export const deleteDownloadBySongId = async (userId: string, songId: string) => {
+  return prisma.download.deleteMany({ where: { userId, songId } });
+};
+
 export const deleteAllDownloadsByUser = async (userId: string) => {
   return prisma.download.deleteMany({ where: { userId } });
 };

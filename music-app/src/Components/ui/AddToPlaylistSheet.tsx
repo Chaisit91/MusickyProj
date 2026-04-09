@@ -16,7 +16,7 @@ import {
   addSongToPlaylistThunk,
   removeSongFromPlaylistThunk,
 } from "../../store/librarySlice";
-import { Song } from "../../app/api/homeApi";
+import { Song } from "../../api/homeApi";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

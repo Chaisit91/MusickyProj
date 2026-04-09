@@ -10,13 +10,22 @@ import {
   Dimensions,
   StatusBar,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path, Circle } from "react-native-svg";
 import { router } from "expo-router";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import { Artist, Genre, Song } from "../../api/homeApi";
-import { getTrendingArtists, getBrowseGenres, searchAll, SearchResult } from "../../api/searchApi";
+import {
+  getTrendingArtists,
+  getBrowseGenres,
+  searchAll,
+  SearchResult,
+  SearchHistoryItem,
+  getSearchHistoryItemsApi,
+  addSearchHistoryItemApi,
+  removeSearchHistoryItemApi,
+  clearSearchHistoryItemsApi,
+} from "../../api/searchApi";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { playSong } from "../../store/playerSlice";
 import { toggleLikeSong, toggleDownload } from "../../store/librarySlice";
@@ -24,17 +33,10 @@ import { colorFor } from "../../constants";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
-const STORAGE_KEY = "recent_searches";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface RecentSearchItem {
-  id: string;
-  title: string;
-  subtitle: string;
-  type: "song" | "album" | "artist" | "playlist";
-  coverUrl: string | null;
-}
+export type RecentSearchItem = SearchHistoryItem;
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -100,25 +102,22 @@ const DownloadIcon = ({ downloaded }: { downloaded: boolean }) => (
   </Svg>
 );
 
-// ─── Recent Search Storage ────────────────────────────────────────────────────
+// ─── Recent Search Storage (API) ─────────────────────────────────────────────
 
 const loadRecent = async (): Promise<RecentSearchItem[]> => {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    return await getSearchHistoryItemsApi();
   } catch {
     return [];
   }
 };
 
-const saveRecent = async (items: RecentSearchItem[]) => {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 20)));
-};
-
-export const addRecentSearch = async (item: RecentSearchItem) => {
-  const existing = await loadRecent();
-  const filtered = existing.filter((r) => r.id !== item.id);
-  await saveRecent([item, ...filtered]);
+export const addRecentSearch = async (item: { itemId: string; itemType: string; title: string; subtitle: string; coverUrl?: string | null }) => {
+  try {
+    await addSearchHistoryItemApi(item);
+  } catch {
+    // silent — non-critical
+  }
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -238,7 +237,7 @@ const RecentItem = ({
       style={{
         width: 44,
         height: 44,
-        borderRadius: item.type === "artist" ? 22 : 6,
+        borderRadius: item.itemType === "artist" ? 22 : 6,
         overflow: "hidden",
         backgroundColor: "#2a2a2a",
       }}
@@ -345,14 +344,14 @@ const SearchResultItem = ({
         </Text>
       </View>
       <TouchableOpacity
-        onPress={(e) => { e.stopPropagation(); dispatch(toggleLikeSong(song)); }}
+        onPress={(e) => { e.stopPropagation(); dispatch(toggleLikeSong({ song, wasLiked: isLiked })); }}
         activeOpacity={0.7}
         style={{ padding: 6 }}
       >
         <HeartIcon filled={isLiked} />
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={(e) => { e.stopPropagation(); dispatch(toggleDownload(song)); }}
+        onPress={(e) => { e.stopPropagation(); dispatch(toggleDownload({ song, wasDownloaded: isDownloaded })); }}
         activeOpacity={0.7}
         style={{ padding: 6 }}
       >
@@ -466,34 +465,33 @@ export default function SearchScreen() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleRemoveRecent = useCallback(async (id: string) => {
-    const updated = recentSearches.filter((r) => r.id !== id);
-    setRecentSearches(updated);
-    await saveRecent(updated);
-  }, [recentSearches]);
+    setRecentSearches((prev) => prev.filter((r) => r.id !== id));
+    await removeSearchHistoryItemApi(id).catch(() => {});
+  }, []);
 
   const handleClearAll = useCallback(async () => {
     setRecentSearches([]);
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await clearSearchHistoryItemsApi().catch(() => {});
   }, []);
 
   const navigateByType = useCallback((item: RecentSearchItem) => {
-    if (item.type === "artist") {
+    if (item.itemType === "artist") {
       router.push({
         pathname: "/artist/[id]",
         params: {
-          id: item.id,
+          id: item.itemId,
           name: encodeURIComponent(item.title),
           imageUrl: item.coverUrl ? encodeURIComponent(item.coverUrl) : "",
         },
       });
-    } else if (item.type === "album" || item.type === "playlist") {
+    } else if (item.itemType === "album" || item.itemType === "playlist") {
       router.push({
         pathname: "/album/[id]",
         params: {
-          id: item.id,
+          id: item.itemId,
           title: encodeURIComponent(item.title),
           coverUrl: item.coverUrl ? encodeURIComponent(item.coverUrl) : "",
-          type: item.type,
+          type: item.itemType,
           artistName: encodeURIComponent(item.subtitle),
         },
       });
@@ -506,40 +504,13 @@ export default function SearchScreen() {
 
   const handleSelectSong = useCallback(async (song: Song) => {
     dispatch(playSong({ song, queue: searchResults.songs.length > 0 ? searchResults.songs : [song] }));
-    const item: RecentSearchItem = {
-      id: song.id,
-      title: song.title,
-      subtitle: `Song • ${song.artist.name}`,
-      type: "song",
-      coverUrl: song.coverUrl,
-    };
-    await addRecentSearch(item);
-    const updated = await loadRecent();
-    setRecentSearches(updated);
-    // Also add artist as a navigable recent entry
-    const artistItem: RecentSearchItem = {
-      id: song.artist.id,
-      title: song.artist.name,
-      subtitle: "Artist",
-      type: "artist",
-      coverUrl: song.artist.imageUrl,
-    };
-    await addRecentSearch(artistItem);
-    const final = await loadRecent();
-    setRecentSearches(final);
-  }, []);
+    await addRecentSearch({ itemId: song.id, itemType: "song", title: song.title, subtitle: `Song • ${song.artist.name}`, coverUrl: song.coverUrl });
+    loadRecent().then(setRecentSearches);
+  }, [searchResults.songs]);
 
   const handleSelectArtist = useCallback(async (artist: Artist) => {
-    const item: RecentSearchItem = {
-      id: artist.id,
-      title: artist.name,
-      subtitle: "Artist",
-      type: "artist",
-      coverUrl: artist.imageUrl,
-    };
-    await addRecentSearch(item);
-    const updated = await loadRecent();
-    setRecentSearches(updated);
+    await addRecentSearch({ itemId: artist.id, itemType: "artist", title: artist.name, subtitle: "Artist", coverUrl: artist.imageUrl });
+    loadRecent().then(setRecentSearches);
     router.push({
       pathname: "/artist/[id]",
       params: {
@@ -711,7 +682,7 @@ export default function SearchScreen() {
                 <>
                   {recentSearches.map((item) => (
                     <RecentItem
-                      key={item.id}
+                      key={item.itemId}
                       item={item}
                       onRemove={handleRemoveRecent}
                       onPlay={handlePlayRecent}

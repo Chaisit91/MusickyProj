@@ -13,4 +13,10 @@ router.get("/", optionalAuthMiddleware, asyncHandler(SearchService.search));
 router.get("/history", authMiddleware, asyncHandler(SearchService.getSearchHistory));
 router.delete("/history", authMiddleware, asyncHandler(SearchService.clearSearchHistory));
 
+// Search history items (rich) — ต้อง login
+router.get("/history/items", authMiddleware, asyncHandler(SearchService.getSearchHistoryItems));
+router.post("/history/items", authMiddleware, asyncHandler(SearchService.addSearchHistoryItem));
+router.delete("/history/items", authMiddleware, asyncHandler(SearchService.clearSearchHistoryItems));
+router.delete("/history/items/:id", authMiddleware, asyncHandler(SearchService.removeSearchHistoryItem));
+
 export default router;
