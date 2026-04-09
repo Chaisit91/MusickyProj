@@ -28,14 +28,21 @@ export default function AudioControllerImpl() {
     }).catch(() => {});
 
     return () => {
-      playerRef.current?.remove();
+      if (playerRef.current) {
+        playerRef.current.pause();
+        playerRef.current.remove();
+        playerRef.current = null;
+      }
     };
   }, []);
 
   // ── โหลดเพลงใหม่เมื่อ currentSong เปลี่ยน ───────────────────────────────────
   useEffect(() => {
-    playerRef.current?.remove();
-    playerRef.current = null;
+    if (playerRef.current) {
+      playerRef.current.pause();
+      playerRef.current.remove();
+      playerRef.current = null;
+    }
 
     if (!currentSong) return;
 
@@ -61,6 +68,7 @@ export default function AudioControllerImpl() {
 
     return () => {
       subscription.remove();
+      player.pause();
       player.remove();
       playerRef.current = null;
     };
