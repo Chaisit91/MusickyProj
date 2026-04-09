@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Song } from "../app/api/homeApi";
+import { Song } from "../api/homeApi";
 import { logoutThunk } from "./authSlice";
 
 interface PlayerState {

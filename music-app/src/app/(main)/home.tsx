@@ -34,7 +34,7 @@ import {
   PlayHistoryItem,
   Genre,
   Artist,
-} from "../api/homeApi";
+} from "../../api/homeApi";
 import { colorFor } from "../../constants";
 import { PlayIcon } from "../../Components/ui/icons";
 

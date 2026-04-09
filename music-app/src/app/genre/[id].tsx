@@ -10,8 +10,8 @@ import {
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../api/homeApi";
-import { getGenreSongs } from "../api/detailApi";
+import { recordPlay, Song } from "../../api/homeApi";
+import { getGenreSongs } from "../../api/detailApi";
 import { colorFor } from "../../constants";
 import {
   BackIcon,

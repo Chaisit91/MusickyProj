@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { loadLibrary } from "../../store/librarySlice";
-import { Artist } from "../api/homeApi";
+import { Artist } from "../../api/homeApi";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
 

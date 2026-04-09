@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
-import { getRecentlyPlayed, recordPlay, PlayHistoryItem, Song } from "../api/homeApi";
+import { getRecentlyPlayed, recordPlay, PlayHistoryItem, Song } from "../../api/homeApi";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { playSong } from "../../store/playerSlice";
 import { loadLibrary } from "../../store/librarySlice";

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { getAllPlayHistory, recordPlay, deleteHistoryRecord, deleteAllHistory, PlayHistoryItem } from "../api/homeApi";
+import { getAllPlayHistory, recordPlay, deleteHistoryRecord, deleteAllHistory, PlayHistoryItem } from "../../api/homeApi";
 import { colorFor } from "../../constants";
 
 const BackIcon = () => (

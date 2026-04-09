@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { loginApi, logoutApi, AuthUser, LoginPayload } from "../app/api/authApi";
+import { loginApi, logoutApi, AuthUser, LoginPayload } from "../api/authApi";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 interface AuthState {

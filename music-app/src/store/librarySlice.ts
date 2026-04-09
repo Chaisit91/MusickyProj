@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Song, Artist } from "../app/api/homeApi";
+import { Song, Artist } from "../api/homeApi";
 import {
   getPlaylistsApi,
   createPlaylistApi,
@@ -8,7 +8,7 @@ import {
   addSongToPlaylistApi,
   removeSongFromPlaylistApi,
   ApiPlaylist,
-} from "../app/api/playlistApi";
+} from "../api/playlistApi";
 import { logoutThunk } from "./authSlice";
 import type { RootState } from "./store";
 
