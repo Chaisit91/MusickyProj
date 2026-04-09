@@ -1,12 +1,12 @@
 import axios from "axios";
-import { Platform } from "react-native";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Android emulator → 10.0.2.2, iOS simulator / web → localhost
-const BASE_URL =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:8080/api"
-    : "http://localhost:8080/api";
+const getBaseUrl = () => {
+  return "http://192.168.1.63:8080/api";
+};
+
+const BASE_URL = getBaseUrl();
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

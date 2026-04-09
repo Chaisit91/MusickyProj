@@ -90,7 +90,7 @@ export default function LoginScreen() {
     try {
       const result = await dispatch(loginThunk({ email: email.trim(), password }));
       if (loginThunk.rejected.match(result)) {
-        setServerError("Invalid email or password");
+        setServerError((result.payload as string) || "Invalid email or password");
       }
       // _layout.tsx จัดการ redirect ไป /home อัตโนมัติเมื่อ isLoggedIn = true
     } catch (err) {
