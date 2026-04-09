@@ -17,3 +17,15 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// ─── Login Schema ─────────────────────────────────────────────────────────────
+export const loginSchema = z.object({
+  email:    emailField,
+  password: passwordField,
+});
+
+// ─── Playlist Schema ──────────────────────────────────────────────────────────
+export const playlistTitleField = z.string().min(1, "Playlist name is required").max(50, "Max 50 characters");
+export const playlistSchema = z.object({
+  title: playlistTitleField,
+});
+

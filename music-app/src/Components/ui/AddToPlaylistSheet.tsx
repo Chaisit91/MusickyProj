@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   Image,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   createPlaylistThunk,
@@ -17,6 +20,7 @@ import {
   removeSongFromPlaylistThunk,
 } from "../../store/librarySlice";
 import { Song } from "../../api/homeApi";
+import { playlistSchema } from "../../schema/authSchema";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -45,13 +49,94 @@ interface Props {
   onClose: () => void;
 }
 
+type PlaylistForm = z.infer<typeof playlistSchema>;
+
+// ─── New Playlist Form ────────────────────────────────────────────────────────
+
+function NewPlaylistForm({ song, onDone }: { song: Song; onDone: () => void }) {
+  const dispatch = useAppDispatch();
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<PlaylistForm>({
+    resolver: zodResolver(playlistSchema),
+    defaultValues: { title: "" },
+  });
+
+  const titleValue = watch("title");
+
+  const onSubmit = async (data: PlaylistForm) => {
+    reset();
+    onDone();
+    const result = await dispatch(createPlaylistThunk(data.title.trim()));
+    if (createPlaylistThunk.fulfilled.match(result)) {
+      dispatch(addSongToPlaylistThunk({ playlistId: result.payload.id, song }));
+    }
+  };
+
+  return (
+    <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
+      <Controller
+        control={control}
+        name="title"
+        render={({ field: { onChange, value } }) => (
+          <TextInput
+            value={value}
+            onChangeText={onChange}
+            placeholder="Playlist name"
+            placeholderTextColor="#555"
+            autoFocus
+            style={{
+              backgroundColor: "#2a2a2a",
+              borderRadius: 8,
+              paddingHorizontal: 14,
+              paddingVertical: 10,
+              color: "#fff",
+              fontSize: 14,
+              marginBottom: errors.title ? 4 : 10,
+              borderWidth: 1,
+              borderColor: errors.title ? "#ff4444" : "transparent",
+            }}
+          />
+        )}
+      />
+      {errors.title ? (
+        <Text style={{ color: "#ff4444", fontSize: 12, marginBottom: 8 }}>{errors.title.message}</Text>
+      ) : null}
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <TouchableOpacity
+          onPress={() => { reset(); onDone(); }}
+          style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: "#2a2a2a", alignItems: "center" }}
+        >
+          <Text style={{ color: "#aaa", fontWeight: "600", fontSize: 13 }}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleSubmit(onSubmit)}
+          style={{
+            flex: 1, paddingVertical: 10, borderRadius: 8,
+            backgroundColor: titleValue.trim() ? "#1db954" : "#333",
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: titleValue.trim() ? "#fff" : "#666", fontWeight: "700", fontSize: 13 }}>
+            Create & Add
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AddToPlaylistSheet({ song, onClose }: Props) {
   const dispatch = useAppDispatch();
   const playlists = useAppSelector((s) => s.library.playlists);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
+  const [showCreate, setShowCreate] = React.useState(false);
 
   if (!song) return null;
 
@@ -63,17 +148,6 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
       dispatch(removeSongFromPlaylistThunk({ playlistId, songId: song.id }));
     } else {
       dispatch(addSongToPlaylistThunk({ playlistId, song }));
-    }
-  };
-
-  const handleCreateAndAdd = async () => {
-    const title = newTitle.trim();
-    if (!title) return;
-    setNewTitle("");
-    setShowCreate(false);
-    const result = await dispatch(createPlaylistThunk(title));
-    if (createPlaylistThunk.fulfilled.match(result)) {
-      dispatch(addSongToPlaylistThunk({ playlistId: result.payload.id, song }));
     }
   };
 
@@ -100,11 +174,7 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 16, gap: 12 }}>
             <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#2a2a2a" }}>
               {song.coverUrl ? (
-                <Image
-                  source={{ uri: song.coverUrl }}
-                  style={{ width: 44, height: 44 }}
-                  resizeMode="cover"
-                />
+                <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
               ) : (
                 <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                   <MusicIcon />
@@ -127,63 +197,16 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
 
           <View style={{ height: 1, backgroundColor: "#ffffff10", marginHorizontal: 20, marginBottom: 8 }} />
 
-          {/* New Playlist button */}
+          {/* New Playlist */}
           {showCreate ? (
-            <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
-              <TextInput
-                value={newTitle}
-                onChangeText={setNewTitle}
-                placeholder="Playlist name"
-                placeholderTextColor="#555"
-                autoFocus
-                style={{
-                  backgroundColor: "#2a2a2a",
-                  borderRadius: 8,
-                  paddingHorizontal: 14,
-                  paddingVertical: 10,
-                  color: "#fff",
-                  fontSize: 14,
-                  marginBottom: 10,
-                }}
-              />
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <TouchableOpacity
-                  onPress={() => { setShowCreate(false); setNewTitle(""); }}
-                  style={{ flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: "#2a2a2a", alignItems: "center" }}
-                >
-                  <Text style={{ color: "#aaa", fontWeight: "600", fontSize: 13 }}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleCreateAndAdd}
-                  style={{
-                    flex: 1, paddingVertical: 10, borderRadius: 8,
-                    backgroundColor: newTitle.trim() ? "#1db954" : "#333",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ color: newTitle.trim() ? "#fff" : "#666", fontWeight: "700", fontSize: 13 }}>
-                    Create & Add
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            <NewPlaylistForm song={song} onDone={() => setShowCreate(false)} />
           ) : (
             <TouchableOpacity
               onPress={() => setShowCreate(true)}
               activeOpacity={0.8}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                gap: 14,
-              }}
+              style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 12, gap: 14 }}
             >
-              <View style={{
-                width: 44, height: 44, borderRadius: 6,
-                backgroundColor: "#2a2a2a",
-                alignItems: "center", justifyContent: "center",
-              }}>
+              <View style={{ width: 44, height: 44, borderRadius: 6, backgroundColor: "#2a2a2a", alignItems: "center", justifyContent: "center" }}>
                 <AddIcon />
               </View>
               <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>New playlist</Text>
@@ -203,15 +226,8 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
                 <TouchableOpacity
                   onPress={() => handleToggle(item.id)}
                   activeOpacity={0.8}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 20,
-                    paddingVertical: 10,
-                    gap: 14,
-                  }}
+                  style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 10, gap: 14 }}
                 >
-                  {/* Cover */}
                   <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#2a2a2a" }}>
                     {cover ? (
                       <Image source={{ uri: cover }} style={{ width: 44, height: 44 }} resizeMode="cover" />
@@ -221,8 +237,6 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
                       </View>
                     )}
                   </View>
-
-                  {/* Info */}
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }} numberOfLines={1}>
                       {item.title}
@@ -231,8 +245,6 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
                       {item.songs.length} songs
                     </Text>
                   </View>
-
-                  {/* Check */}
                   {isIn && <CheckIcon />}
                 </TouchableOpacity>
               );
