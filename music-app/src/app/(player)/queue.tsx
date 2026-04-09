@@ -22,9 +22,9 @@ import {
   addToQueue,
   setRepeatMode,
 } from "../../store/playerSlice";
-import { Song } from "../../api/homeApi";
+import { Song } from "../api/homeApi";
 import { colorFor } from "../../constants";
-import { searchAll } from "../../api/searchApi";
+import { searchAll } from "../api/searchApi";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 

@@ -10,8 +10,8 @@ import {
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../../api/homeApi";
-import { getAlbumSongs } from "../../api/detailApi";
+import { recordPlay, Song } from "../api/homeApi";
+import { getAlbumSongs } from "../api/detailApi";
 import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
   BackIcon,

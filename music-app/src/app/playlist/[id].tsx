@@ -16,7 +16,7 @@ import {
   toggleDownload,
   removeSongFromPlaylistThunk,
 } from "../../store/librarySlice";
-import { recordPlay, Song } from "../../api/homeApi";
+import { recordPlay, Song } from "../api/homeApi";
 import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
   BackIcon,

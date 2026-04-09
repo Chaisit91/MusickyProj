@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
-import { registerApi } from "../../api/authApi";
+import { registerApi } from "../api/authApi";
 import axios from "axios";
 
 import { useForm, Controller, useWatch } from "react-hook-form";
