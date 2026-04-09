@@ -37,7 +37,7 @@ const port = process.env.PORT || 8080;
 
 // ── Global Middleware ──────────────────────────────────────────
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: true,
   credentials: true,
 }));
 app.use(express.json());
