@@ -11,11 +11,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
-import Svg, { Path, G, ClipPath, Defs, Rect } from "react-native-svg";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
 import { useAppDispatch } from "../../store/hooks";
-import { loginThunk, googleLoginThunk } from "../../store/authSlice";
+import { loginThunk } from "../../store/authSlice";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,25 +20,6 @@ import { z } from "zod";
 import { loginSchema } from "../../schema/authSchema";
 import { FormInput } from "../../Components/ui/FormInput";
 import { FormPasswordInput } from "../../Components/ui/FormPasswordInput";
-
-WebBrowser.maybeCompleteAuthSession();
-
-// ─── Google Icon ──────────────────────────────────────────────────────────────
-const GoogleIcon = () => (
-  <Svg width={20} height={20} viewBox="0 0 48 48">
-    <Defs>
-      <ClipPath id="clip">
-        <Rect width={48} height={48} />
-      </ClipPath>
-    </Defs>
-    <G clipPath="url(#clip)">
-      <Path fill="#4285F4" d="M47.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h13.2c-.6 3-2.3 5.5-4.9 7.2v6h7.9c4.6-4.2 7.3-10.5 7.3-17.2z" />
-      <Path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.9-6c-2.1 1.4-4.9 2.3-8 2.3-6.1 0-11.3-4.1-13.2-9.7H2.7v6.2C6.7 42.9 14.8 48 24 48z" />
-      <Path fill="#FBBC05" d="M10.8 28.8c-.5-1.4-.7-2.8-.7-4.3s.3-3 .7-4.3v-6.2H2.7C1 17.3 0 20.5 0 24s1 6.7 2.7 9.5l8.1-4.7z" />
-      <Path fill="#EA4335" d="M24 9.5c3.4 0 6.5 1.2 8.9 3.5l6.7-6.7C35.9 2.4 30.5 0 24 0 14.8 0 6.7 5.1 2.7 12.5l8.1 6.2C12.7 13.6 17.9 9.5 24 9.5z" />
-    </G>
-  </Svg>
-);
 
 // ─── Dot badge ────────────────────────────────────────────────────────────────
 const Dots = () => (
@@ -54,66 +32,14 @@ const Dots = () => (
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-// ─── REPLACE with your real Client IDs from Google Cloud Console ──────────────
-// https://console.cloud.google.com/ → APIs & Services → Credentials
-const GOOGLE_WEB_CLIENT_ID = "390954514798-7i5kqfklel0dd5csvpbi3v6ovcepf0c6.apps.googleusercontent.com";
-const GOOGLE_ANDROID_CLIENT_ID = "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com";
-const GOOGLE_IOS_CLIENT_ID = "390954514798-v6u0toepv9iob5gmpq0feh1j15on23hj.apps.googleusercontent.com";
-
 export default function LoginScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const dispatch = useAppDispatch();
-
-  // ── Google Auth ──────────────────────────────────────────────────────────
-  const [, response, promptAsync] = Google.useAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    scopes: ["profile", "email"],
-  });
-
-  useEffect(() => {
-    if (response?.type === "success") {
-      const accessToken = response.authentication?.accessToken;
-      if (accessToken) handleGoogleToken(accessToken);
-    }
-  }, [response]);
-
-  const handleGoogleToken = async (accessToken: string) => {
-    setGoogleLoading(true);
-    setServerError("");
-    try {
-      const result = await dispatch(googleLoginThunk({ accessToken }));
-      if (googleLoginThunk.fulfilled.match(result)) {
-        if (result.payload.requiresName) {
-          // user ใหม่ → ไปหน้าตั้งชื่อ
-          const { googleData } = result.payload;
-          router.replace({
-            pathname: "/set-username",
-            params: {
-              accessToken: googleData.accessToken,
-              email: googleData.email,
-              suggestedName: googleData.suggestedName,
-              avatarUrl: googleData.avatarUrl ?? "",
-            },
-          });
-        }
-        // requiresName=false → AuthGuard จะ redirect ไป /home เอง
-      } else {
-        setServerError((result.payload as string) ?? "Google login failed");
-      }
-    } catch {
-      setServerError("Unable to connect to server");
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
 
   const {
     control,
@@ -179,7 +105,7 @@ export default function LoginScreen() {
           </View>
 
           {/* ── Title ── */}
-          <Text style={{ color: "#fff", fontSize: 28, fontWeight: "700", marginTop: 40, marginBottom: 8  }}>
+          <Text style={{ color: "#fff", fontSize: 28, fontWeight: "700", marginTop: 40, marginBottom: 8 }}>
             Log in
           </Text>
           <Text style={{ color: "#888", fontSize: 14, marginBottom: 32 }}>
@@ -233,43 +159,6 @@ export default function LoginScreen() {
               <Text style={{ color: "#000", fontWeight: "600", fontSize: 15, letterSpacing: 0.5 }}>
                 Log in
               </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* ── Divider ── */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 20 }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: "#2a2a2a" }} />
-            <Text style={{ color: "#555", fontSize: 13, marginHorizontal: 12 }}>or</Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: "#2a2a2a" }} />
-          </View>
-
-          {/* ── Google Login Button ── */}
-          <TouchableOpacity
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#1e1e1e",
-              borderRadius: 50,
-              paddingVertical: 14,
-              borderWidth: 1,
-              borderColor: "#2a2a2a",
-              gap: 10,
-              opacity: googleLoading ? 0.7 : 1,
-            }}
-            onPress={() => promptAsync()}
-            activeOpacity={0.85}
-            disabled={googleLoading}
-          >
-            {googleLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <GoogleIcon />
-                <Text style={{ color: "#fff", fontWeight: "600", fontSize: 15 }}>
-                  Continue with Google
-                </Text>
-              </>
             )}
           </TouchableOpacity>
 
