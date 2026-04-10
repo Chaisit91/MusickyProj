@@ -126,10 +126,7 @@ const DeviceIcon = () => (
 
 const VolumeLowIcon = ({ color = "#aaa" }: { color?: string }) => (
   <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Path
-      fill={color}
-      d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"
-    />
+    <Path fill={color} d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z" />
   </Svg>
 );
 
@@ -180,6 +177,7 @@ export default function PlayerScreen() {
   const [activeTab, setActiveTab] = useState<"player" | "lyrics">("player");
   const [showPlaylistSheet, setShowPlaylistSheet] = useState(false);
 
+  // ── Misc ──────────────────────────────────────────────────────────────────
   const duration = durationSeconds > 0 ? durationSeconds : (currentSong?.duration ?? 0);
 
   if (!currentSong) {
@@ -198,339 +196,333 @@ export default function PlayerScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#111111" />
+        <StatusBar barStyle="light-content" backgroundColor="#111111" />
 
-      {/* ── Top bar ── */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 20,
-          paddingTop: 52,
-          paddingBottom: 12,
-        }}
-      >
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-          <ChevronDown />
-        </TouchableOpacity>
-        <View style={{ alignItems: "center" }}>
-          <Text style={{ color: "#888", fontSize: 11, letterSpacing: 1 }}>NOW PLAYING</Text>
+        {/* ── Drag handle ── */}
+        <View style={{ alignItems: "center", paddingTop: 10, paddingBottom: 2 }}>
+          <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#333" }} />
         </View>
-        <TouchableOpacity onPress={() => setShowPlaylistSheet(true)} activeOpacity={0.7}>
-          <MoreVertIcon />
-        </TouchableOpacity>
-      </View>
 
-      {/* ── Tabs ── */}
-      <View
-        style={{
-          flexDirection: "row",
-          marginHorizontal: 32,
-          marginBottom: 16,
-          backgroundColor: "#1a1a1a",
-          borderRadius: 10,
-          padding: 3,
-        }}
-      >
-        {(["player", "lyrics"] as const).map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => setActiveTab(tab)}
-            activeOpacity={0.8}
-            style={{
-              flex: 1,
-              paddingVertical: 7,
-              borderRadius: 8,
-              alignItems: "center",
-              backgroundColor: activeTab === tab ? "#2a2a2a" : "transparent",
-            }}
-          >
-            <Text
-              style={{
-                color: activeTab === tab ? "#fff" : "#555",
-                fontSize: 12,
-                fontWeight: "600",
-                letterSpacing: 0.5,
-              }}
-            >
-              {tab === "player" ? "PLAYER" : "LYRICS"}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {activeTab === "player" ? (
-        <>
-          {/* ── Album art ── */}
-          <View style={{ alignItems: "center", marginBottom: 24 }}>
-            <View
-              style={{
-                width: ART_SIZE,
-                height: ART_SIZE,
-                borderRadius: 16,
-                overflow: "hidden",
-                backgroundColor: "#1a1a3e",
-                elevation: 20,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.5,
-                shadowRadius: 20,
-              }}
-            >
-              {currentSong.coverUrl ? (
-                <Image
-                  source={{ uri: currentSong.coverUrl }}
-                  style={{ width: ART_SIZE, height: ART_SIZE }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                  <Text style={{ color: "#ffffff20", fontSize: 80 }}>♪</Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* ── Song info + actions ── */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 32,
-              marginBottom: 20,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800" }} numberOfLines={1}>
-                {currentSong.title}
-              </Text>
-              <Text style={{ color: "#888", fontSize: 14, marginTop: 4 }} numberOfLines={1}>
-                {currentSong.artist.name}
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
-              <TouchableOpacity onPress={() => dispatch(toggleLikeSong({ song: currentSong, wasLiked: isLiked }))} activeOpacity={0.7}>
-                <HeartIcon filled={isLiked} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => dispatch(toggleDownload({ song: currentSong, wasDownloaded: isDownloaded }))} activeOpacity={0.7}>
-                <DownloadIcon downloaded={isDownloaded} />
-              </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.7}>
-                <ShareIcon />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* ── Progress Slider ── */}
-          <View style={{ paddingHorizontal: 24, marginBottom: 4 }}>
-            <Slider
-              style={{ width: "100%", height: 40 }}
-              minimumValue={0}
-              maximumValue={duration > 0 ? duration : 1}
-              value={isSeeking ? seekValue : progressSeconds}
-              minimumTrackTintColor="#ffffff"
-              maximumTrackTintColor="#444444"
-              thumbTintColor="#ffffff"
-              onSlidingStart={(v) => { setIsSeeking(true); setSeekValue(v); }}
-              onValueChange={(v) => setSeekValue(v)}
-              onSlidingComplete={(v) => {
-                setIsSeeking(false);
-                dispatch(seekTo(Math.floor(v)));
-              }}
-            />
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: -6 }}>
-              <Text style={{ color: "#666", fontSize: 11 }}>
-                {fmt(isSeeking ? seekValue : progressSeconds)}
-              </Text>
-              <Text style={{ color: "#666", fontSize: 11 }}>{fmt(duration)}</Text>
-            </View>
-          </View>
-
-          {/* ── Controls ── */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingHorizontal: 32,
-              marginTop: 10,
-              marginBottom: 16,
-            }}
-          >
-            <TouchableOpacity onPress={() => dispatch(toggleShuffle())} activeOpacity={0.7}>
-              <ShuffleIcon active={isShuffle} />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => dispatch(prevSong())} activeOpacity={0.7}>
-              <SkipPrevIcon />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => dispatch(togglePlay())}
-              activeOpacity={0.85}
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                backgroundColor: "#fff",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {isPlaying ? <PauseIcon /> : <PlayIcon />}
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => dispatch(nextSong())} activeOpacity={0.7}>
-              <SkipNextIcon />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => dispatch(setRepeatMode(repeatMode === "one" ? "none" : "one"))}
-              activeOpacity={0.7}
-            >
-              <RepeatIcon mode={repeatMode} />
-            </TouchableOpacity>
-          </View>
-
-          {/* ── Volume Slider ── */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 28,
-              marginBottom: 16,
-              gap: 8,
-            }}
-          >
-            <TouchableOpacity onPress={() => dispatch(setVolume(0))} activeOpacity={0.7}>
-              <VolumeLowIcon color={volume === 0 ? "#fff" : "#555"} />
-            </TouchableOpacity>
-            <Slider
-              style={{ flex: 1, height: 32 }}
-              minimumValue={0}
-              maximumValue={1}
-              step={0.01}
-              value={volume}
-              minimumTrackTintColor="#ffffff"
-              maximumTrackTintColor="#333333"
-              thumbTintColor="#ffffff"
-              onValueChange={(v) => dispatch(setVolume(v))}
-            />
-            <TouchableOpacity onPress={() => dispatch(setVolume(1))} activeOpacity={0.7}>
-              <VolumeHighIcon color={volume === 1 ? "#fff" : "#555"} />
-            </TouchableOpacity>
-          </View>
-
-          {/* ── Connect to a device ── */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 16 }}
-          >
-            <DeviceIcon />
-            <Text style={{ color: "#aaa", fontSize: 12 }}>Connect to a device</Text>
-          </TouchableOpacity>
-
-          {/* ── Up Next ── */}
-          <View
-            style={{
-              marginHorizontal: 20,
-              padding: 12,
-              borderRadius: 12,
-              backgroundColor: "#1a1a1a",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <Text style={{ color: "#888", fontSize: 12, fontWeight: "600" }}>Up Next</Text>
-
-            {upNext ? (
-              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", backgroundColor: "#333" }}>
-                  {upNext.coverUrl ? (
-                    <Image source={{ uri: upNext.coverUrl }} style={{ width: 36, height: 36 }} resizeMode="cover" />
-                  ) : (
-                    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                      <Text style={{ color: "#555" }}>♪</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
-                    {upNext.title}
-                  </Text>
-                  <Text style={{ color: "#666", fontSize: 11 }} numberOfLines={1}>
-                    {upNext.artist.name}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <Text style={{ color: "#555", fontSize: 12, flex: 1 }}>End of queue</Text>
-            )}
-
-            <TouchableOpacity onPress={() => router.push("/queue")} activeOpacity={0.7}>
-              <Text style={{ color: "#aaa", fontSize: 12, fontWeight: "600" }}>Queue ›</Text>
-            </TouchableOpacity>
-          </View>
-        </>
-      ) : (
-        /* ── Lyrics Tab ── */
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
+        {/* ── Top bar ── */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 20,
+            paddingTop: 40,
+            paddingBottom: 12,
+          }}
         >
-          {/* Mini song info */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 28 }}>
-            <View
-              style={{ width: 48, height: 48, borderRadius: 8, overflow: "hidden", backgroundColor: "#1a1a3e" }}
-            >
-              {currentSong.coverUrl ? (
-                <Image
-                  source={{ uri: currentSong.coverUrl }}
-                  style={{ width: 48, height: 48 }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                  <Text style={{ color: "#ffffff40" }}>♪</Text>
-                </View>
-              )}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }} numberOfLines={1}>
-                {currentSong.title}
-              </Text>
-              <Text style={{ color: "#888", fontSize: 13 }} numberOfLines={1}>
-                {currentSong.artist.name}
-              </Text>
-            </View>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+            <ChevronDown />
+          </TouchableOpacity>
+          <View style={{ alignItems: "center" }}>
+            <Text style={{ color: "#888", fontSize: 11, letterSpacing: 1 }}>NOW PLAYING</Text>
           </View>
+          <TouchableOpacity onPress={() => setShowPlaylistSheet(true)} activeOpacity={0.7}>
+            <MoreVertIcon />
+          </TouchableOpacity>
+        </View>
 
-          {currentSong.lyrics ? (
-            <Text
+        {/* ── Tabs ── */}
+        <View
+          style={{
+            flexDirection: "row",
+            marginHorizontal: 32,
+            marginBottom: 16,
+            backgroundColor: "#1a1a1a",
+            borderRadius: 10,
+            padding: 3,
+          }}
+        >
+          {(["player", "lyrics"] as const).map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              activeOpacity={0.8}
               style={{
-                color: "#ddd",
-                fontSize: 16,
-                lineHeight: 30,
-                letterSpacing: 0.3,
+                flex: 1,
+                paddingVertical: 7,
+                borderRadius: 8,
+                alignItems: "center",
+                backgroundColor: activeTab === tab ? "#2a2a2a" : "transparent",
               }}
             >
-              {currentSong.lyrics}
-            </Text>
-          ) : (
-            <View style={{ alignItems: "center", marginTop: 60 }}>
-              <Text style={{ color: "#333", fontSize: 40, marginBottom: 16 }}>♪</Text>
-              <Text style={{ color: "#555", fontSize: 14 }}>ยังไม่มีเนื้อเพลง</Text>
+              <Text
+                style={{
+                  color: activeTab === tab ? "#fff" : "#555",
+                  fontSize: 12,
+                  fontWeight: "600",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {tab === "player" ? "PLAYER" : "LYRICS"}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {activeTab === "player" ? (
+          <>
+            {/* ── Album art ── */}
+            <View style={{ alignItems: "center", marginBottom: 24 }}>
+              <View
+                style={{
+                  width: ART_SIZE,
+                  height: ART_SIZE,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  backgroundColor: "#1a1a3e",
+                  elevation: 20,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 10 },
+                  shadowOpacity: 0.5,
+                  shadowRadius: 20,
+                }}
+              >
+                {currentSong.coverUrl ? (
+                  <Image
+                    source={{ uri: currentSong.coverUrl }}
+                    style={{ width: ART_SIZE, height: ART_SIZE }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ color: "#ffffff20", fontSize: 80 }}>♪</Text>
+                  </View>
+                )}
+              </View>
             </View>
-          )}
-        </ScrollView>
-      )}
-      <AddToPlaylistSheet
-        song={showPlaylistSheet ? currentSong : null}
-        onClose={() => setShowPlaylistSheet(false)}
-      />
+
+            {/* ── Song info + actions ── */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 32,
+                marginBottom: 20,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800" }} numberOfLines={1}>
+                  {currentSong.title}
+                </Text>
+                <Text style={{ color: "#888", fontSize: 14, marginTop: 4 }} numberOfLines={1}>
+                  {currentSong.artist.name}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
+                <TouchableOpacity onPress={() => dispatch(toggleLikeSong({ song: currentSong, wasLiked: isLiked }))} activeOpacity={0.7}>
+                  <HeartIcon filled={isLiked} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => dispatch(toggleDownload({ song: currentSong, wasDownloaded: isDownloaded }))} activeOpacity={0.7}>
+                  <DownloadIcon downloaded={isDownloaded} />
+                </TouchableOpacity>
+                <TouchableOpacity activeOpacity={0.7}>
+                  <ShareIcon />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* ── Progress Slider ── */}
+            <View style={{ paddingHorizontal: 24, marginBottom: 4 }}>
+              <Slider
+                style={{ width: "100%", height: 40 }}
+                minimumValue={0}
+                maximumValue={duration > 0 ? duration : 1}
+                value={isSeeking ? seekValue : progressSeconds}
+                minimumTrackTintColor="#ffffff"
+                maximumTrackTintColor="#444444"
+                thumbTintColor="#ffffff"
+                onSlidingStart={(v) => { setIsSeeking(true); setSeekValue(v); }}
+                onValueChange={(v) => setSeekValue(v)}
+                onSlidingComplete={(v) => {
+                  setIsSeeking(false);
+                  dispatch(seekTo(Math.floor(v)));
+                }}
+              />
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: -6 }}>
+                <Text style={{ color: "#666", fontSize: 11 }}>
+                  {fmt(isSeeking ? seekValue : progressSeconds)}
+                </Text>
+                <Text style={{ color: "#666", fontSize: 11 }}>{fmt(duration)}</Text>
+              </View>
+            </View>
+
+            {/* ── Controls ── */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 32,
+                marginTop: 10,
+                marginBottom: 16,
+              }}
+            >
+              <TouchableOpacity onPress={() => dispatch(toggleShuffle())} activeOpacity={0.7}>
+                <ShuffleIcon active={isShuffle} />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => dispatch(prevSong())} activeOpacity={0.7}>
+                <SkipPrevIcon />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => dispatch(togglePlay())}
+                activeOpacity={0.85}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  backgroundColor: "#fff",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {isPlaying ? <PauseIcon /> : <PlayIcon />}
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => dispatch(nextSong())} activeOpacity={0.7}>
+                <SkipNextIcon />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => dispatch(setRepeatMode(repeatMode === "one" ? "none" : "one"))}
+                activeOpacity={0.7}
+              >
+                <RepeatIcon mode={repeatMode} />
+              </TouchableOpacity>
+            </View>
+
+            {/* ── Volume Slider ── */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 28,
+                marginBottom: 16,
+                gap: 8,
+              }}
+            >
+              <TouchableOpacity onPress={() => dispatch(setVolume(0))} activeOpacity={0.7}>
+                <VolumeLowIcon color={volume === 0 ? "#fff" : "#555"} />
+              </TouchableOpacity>
+              <Slider
+                style={{ flex: 1, height: 32 }}
+                minimumValue={0}
+                maximumValue={1}
+                step={0.01}
+                value={volume}
+                minimumTrackTintColor="#ffffff"
+                maximumTrackTintColor="#333333"
+                thumbTintColor="#ffffff"
+                onValueChange={(v) => dispatch(setVolume(v))}
+              />
+              <TouchableOpacity onPress={() => dispatch(setVolume(1))} activeOpacity={0.7}>
+                <VolumeHighIcon color={volume === 1 ? "#fff" : "#555"} />
+              </TouchableOpacity>
+            </View>
+
+            {/* ── Connect to a device ── */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 16 }}
+            >
+              <DeviceIcon />
+              <Text style={{ color: "#aaa", fontSize: 12 }}>Connect to a device</Text>
+            </TouchableOpacity>
+
+            {/* ── Up Next ── */}
+            <View
+              style={{
+                marginHorizontal: 20,
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor: "#1a1a1a",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <Text style={{ color: "#888", fontSize: 12, fontWeight: "600" }}>Up Next</Text>
+
+              {upNext ? (
+                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", backgroundColor: "#333" }}>
+                    {upNext.coverUrl ? (
+                      <Image source={{ uri: upNext.coverUrl }} style={{ width: 36, height: 36 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                        <Text style={{ color: "#555" }}>♪</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
+                      {upNext.title}
+                    </Text>
+                    <Text style={{ color: "#666", fontSize: 11 }} numberOfLines={1}>
+                      {upNext.artist.name}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <Text style={{ color: "#555", fontSize: 12, flex: 1 }}>End of queue</Text>
+              )}
+
+              <TouchableOpacity onPress={() => router.push("/queue")} activeOpacity={0.7}>
+                <Text style={{ color: "#aaa", fontSize: 12, fontWeight: "600" }}>Queue ›</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          /* ── Lyrics Tab ── */
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40 }}
+            showsVerticalScrollIndicator={false}
+            scrollEventThrottle={16}
+          >
+            {/* Mini song info */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 28 }}>
+              <View style={{ width: 48, height: 48, borderRadius: 8, overflow: "hidden", backgroundColor: "#1a1a3e" }}>
+                {currentSong.coverUrl ? (
+                  <Image source={{ uri: currentSong.coverUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+                ) : (
+                  <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ color: "#ffffff40" }}>♪</Text>
+                  </View>
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }} numberOfLines={1}>
+                  {currentSong.title}
+                </Text>
+                <Text style={{ color: "#888", fontSize: 13 }} numberOfLines={1}>
+                  {currentSong.artist.name}
+                </Text>
+              </View>
+            </View>
+
+            {currentSong.lyrics ? (
+              <Text style={{ color: "#ddd", fontSize: 16, lineHeight: 30, letterSpacing: 0.3 }}>
+                {currentSong.lyrics}
+              </Text>
+            ) : (
+              <View style={{ alignItems: "center", marginTop: 60 }}>
+                <Text style={{ color: "#333", fontSize: 40, marginBottom: 16 }}>♪</Text>
+                <Text style={{ color: "#555", fontSize: 14 }}>ยังไม่มีเนื้อเพลง</Text>
+              </View>
+            )}
+          </ScrollView>
+        )}
+
+        <AddToPlaylistSheet
+          song={showPlaylistSheet ? currentSong : null}
+          onClose={() => setShowPlaylistSheet(false)}
+        />
     </View>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import "../../global.css";
 import { Provider } from "react-redux";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { store } from "../store/store";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { restoreSession } from "../store/authSlice";
@@ -50,7 +51,7 @@ function RootLayoutNav() {
     <>
       <AuthGuard />
       <AudioController />
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false, animation: "fade", animationDuration: 200 }} />
     </>
   );
 }
@@ -59,8 +60,10 @@ function RootLayoutNav() {
 // Wraps the entire app with the Redux store.
 export default function RootLayout() {
   return (
-    <Provider store={store}>
-      <RootLayoutNav />
-    </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <RootLayoutNav />
+      </Provider>
+    </GestureHandlerRootView>
   );
 }

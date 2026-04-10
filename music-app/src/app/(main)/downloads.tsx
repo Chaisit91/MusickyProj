@@ -27,7 +27,7 @@ const BackIcon = () => (
 
 const DownloadedIcon = () => (
   <Svg width={18} height={18} viewBox="0 0 24 24">
-    <Path fill="#4fc3f7" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+    <Path fill="#fff" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
   </Svg>
 );
 
@@ -70,6 +70,7 @@ export default function DownloadsScreen() {
 
   const handlePlay = async (song: Song) => {
     dispatch(playSong({ song, queue: downloadedSongs }));
+    router.push("/player");
     try { await recordPlay(song.id); } catch { /* silent */ }
   };
 
@@ -87,7 +88,7 @@ export default function DownloadsScreen() {
           paddingTop: 56,
           paddingBottom: 24,
           paddingHorizontal: 20,
-          backgroundColor: "#0a2a3d",
+          backgroundColor: "#1a1a1a",
         }}
       >
         <TouchableOpacity
@@ -104,7 +105,7 @@ export default function DownloadsScreen() {
             width: 140,
             height: 140,
             borderRadius: 12,
-            backgroundColor: "#4fc3f7",
+            backgroundColor: "#2a2a2a",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 16,
@@ -158,7 +159,7 @@ export default function DownloadsScreen() {
             }}
           >
             <Svg width={36} height={36} viewBox="0 0 24 24">
-              <Path fill="#4fc3f7" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+              <Path fill="#aaa" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
             </Svg>
           </View>
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700", textAlign: "center" }}>

@@ -144,6 +144,7 @@ export default function ArtistScreen() {
 
   const handleSongPress = async (song: Song) => {
     dispatch(playSong({ song, queue: songs.length > 0 ? songs : [song] }));
+    router.push("/player");
     try {
       await recordPlay(song.id);
     } catch {
@@ -200,7 +201,7 @@ export default function ArtistScreen() {
             activeOpacity={0.8}
             style={{
               position: "absolute",
-              top: 24,
+              top: 52,
               left: 16,
               width: 36,
               height: 36,

@@ -1,8 +1,16 @@
 import { Stack } from "expo-router";
 
 // ─── Player Layout ────────────────────────────────────────────────────────────
-// Covers: /player, /queue
-// Auth guard (guest → /login) is handled by the root _layout.tsx AuthGuard.
 export default function PlayerLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_bottom",
+        animationDuration: 380,
+        gestureEnabled: true,
+        gestureDirection: "vertical",
+      }}
+    />
+  );
 }

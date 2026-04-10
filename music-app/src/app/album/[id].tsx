@@ -144,6 +144,7 @@ export default function AlbumScreen() {
 
   const handleSongPress = async (song: Song) => {
     dispatch(playSong({ song, queue: songs.length > 0 ? songs : [song] }));
+    router.push("/player");
     try {
       await recordPlay(song.id);
     } catch {

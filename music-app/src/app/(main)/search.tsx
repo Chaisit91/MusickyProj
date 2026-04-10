@@ -504,6 +504,7 @@ export default function SearchScreen() {
 
   const handleSelectSong = useCallback(async (song: Song) => {
     dispatch(playSong({ song, queue: searchResults.songs.length > 0 ? searchResults.songs : [song] }));
+    router.push("/player");
     await addRecentSearch({ itemId: song.id, itemType: "song", title: song.title, subtitle: `Song • ${song.artist.name}`, coverUrl: song.coverUrl });
     loadRecent().then(setRecentSearches);
   }, [searchResults.songs]);

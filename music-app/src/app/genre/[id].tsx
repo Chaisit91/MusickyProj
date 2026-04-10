@@ -133,6 +133,7 @@ export default function GenreScreen() {
   const handlePlayAll = () => {
     if (songs.length === 0) return;
     dispatch(playSong({ song: songs[0], queue: songs }));
+    router.push("/player");
     recordPlay(songs[0].id).catch(() => {});
   };
 

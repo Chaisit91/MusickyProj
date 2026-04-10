@@ -729,6 +729,7 @@ export default function HomeScreen() {
 
   const handleSongPress = async (song: Song) => {
     dispatch(playSong({ song, queue: featuringSongs.length > 0 ? featuringSongs : [song] }));
+    router.push("/player");
     try {
       await recordPlay(song.id);
       const updated = await getRecentlyPlayed(6);

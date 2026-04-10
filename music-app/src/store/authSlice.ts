@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { loginApi, logoutApi, AuthUser, LoginPayload } from "../api/authApi";
+import { setCachedToken } from "../api/apiClient";
 
 // ─── State ────────────────────────────────────────────────────────────────────
 interface AuthState {
@@ -26,6 +27,7 @@ export const restoreSession = createAsyncThunk("auth/restoreSession", async () =
   const token = await AsyncStorage.getItem("accessToken");
   const userJson = await AsyncStorage.getItem("user");
   if (token && userJson) {
+    setCachedToken(token);
     return { accessToken: token, user: JSON.parse(userJson) as AuthUser };
   }
   return null;
@@ -41,6 +43,7 @@ export const loginThunk = createAsyncThunk(
       await AsyncStorage.setItem("accessToken", accessToken);
       await AsyncStorage.setItem("refreshToken", refreshToken);
       await AsyncStorage.setItem("user", JSON.stringify(user));
+      setCachedToken(accessToken);
       return { accessToken, user };
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message ?? "Login failed");
@@ -55,6 +58,7 @@ export const logoutThunk = createAsyncThunk("auth/logout", async () => {
   } catch {
     // proceed even if API fails
   }
+  setCachedToken(null);
   await AsyncStorage.multiRemove(["accessToken", "refreshToken", "user"]);
 });
 

@@ -56,6 +56,7 @@ export default function PlaylistDetailScreen() {
 
   const handlePlay = async (song: Song, queue: Song[]) => {
     dispatch(playSong({ song, queue }));
+    router.push("/player");
     try { await recordPlay(song.id); } catch { /* silent */ }
   };
 

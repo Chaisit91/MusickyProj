@@ -1,5 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -43,6 +49,73 @@ const tabs: { label: TabName; Icon: React.FC<{ active?: boolean }> }[] = [
   { label: "Your Library", Icon: LibraryIcon },
 ];
 
+// ─── Tab Button ───────────────────────────────────────────────────────────────
+
+function TabButton({
+  label,
+  Icon,
+  active,
+  onPress,
+}: {
+  label: TabName;
+  Icon: React.FC<{ active?: boolean }>;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const scale = useSharedValue(1);
+  const dotOpacity = useSharedValue(active ? 1 : 0);
+  const dotScale = useSharedValue(active ? 1 : 0);
+
+  useEffect(() => {
+    scale.value = withSpring(active ? 1.18 : 1, { damping: 10, stiffness: 220 });
+    dotOpacity.value = withTiming(active ? 1 : 0, { duration: 200 });
+    dotScale.value = withSpring(active ? 1 : 0, { damping: 12, stiffness: 200 });
+  }, [active]);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const dotStyle = useAnimatedStyle(() => ({
+    opacity: dotOpacity.value,
+    transform: [{ scale: dotScale.value }],
+  }));
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={{ alignItems: "center", gap: 4, paddingHorizontal: 16 }}
+    >
+      <Animated.View style={iconStyle}>
+        <Icon active={active} />
+      </Animated.View>
+      <Text
+        style={{
+          color: active ? "#fff" : "#555",
+          fontSize: 10,
+          fontWeight: active ? "600" : "400",
+        }}
+      >
+        {label}
+      </Text>
+      {/* Active dot indicator */}
+      <Animated.View
+        style={[
+          {
+            width: 4,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: "#fff",
+            marginTop: -2,
+          },
+          dotStyle,
+        ]}
+      />
+    </TouchableOpacity>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function BottomNav({ activeTab = "Home", onTabPress }: BottomNavProps) {
@@ -54,7 +127,7 @@ export default function BottomNav({ activeTab = "Home", onTabPress }: BottomNavP
         left: 0,
         right: 0,
         flexDirection: "row",
-        backgroundColor: "rgba(15, 15, 15, 0.85)",
+        backgroundColor: "rgba(15, 15, 15, 0.92)",
         borderTopWidth: 1,
         borderTopColor: "rgba(255,255,255,0.07)",
         paddingTop: 12,
@@ -62,28 +135,15 @@ export default function BottomNav({ activeTab = "Home", onTabPress }: BottomNavP
         justifyContent: "space-around",
       }}
     >
-      {tabs.map(({ label, Icon }) => {
-        const active = activeTab === label;
-        return (
-          <TouchableOpacity
-            key={label}
-            activeOpacity={0.7}
-            onPress={() => onTabPress?.(label)}
-            style={{ alignItems: "center", gap: 4 }}
-          >
-            <Icon active={active} />
-            <Text
-              style={{
-                color: active ? "#fff" : "#555",
-                fontSize: 10,
-                fontWeight: active ? "600" : "400",
-              }}
-            >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+      {tabs.map(({ label, Icon }) => (
+        <TabButton
+          key={label}
+          label={label}
+          Icon={Icon}
+          active={activeTab === label}
+          onPress={() => onTabPress?.(label)}
+        />
+      ))}
     </View>
   );
 }
