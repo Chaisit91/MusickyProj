@@ -20,6 +20,7 @@ import userRouter from "./modules/user/userRouter";
 import adsRouter from "./modules/ads/adsRouter";
 import uploadRouter from "./modules/upload/uploadRouter"; // ✅ upload API
 import playHistoryRouter from "./modules/playHistory/playHistoryRouter";
+import artistFollowRouter from "./modules/artistFollow/artistFollowRouter";
 
 // Admin Routers
 import dashboardRouter from "./modules/admin/dashboard/dashboardRouter";
@@ -37,7 +38,7 @@ const port = process.env.PORT || 8080;
 
 // ── Global Middleware ──────────────────────────────────────────
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: true,
   credentials: true,
 }));
 app.use(express.json());
@@ -59,6 +60,7 @@ app.use("/api/users", userRouter);
 app.use("/api/ads", adsRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/play-history", playHistoryRouter);
+app.use("/api/artist-follows", artistFollowRouter);
 
 // ── Admin Routes ──────────────────────────────────────────────
 app.use("/api/admin/dashboard", dashboardRouter);

@@ -230,7 +230,7 @@ export default function DownloadsScreen() {
 
                 {/* Like */}
                 <TouchableOpacity
-                  onPress={() => dispatch(toggleLikeSong(item))}
+                  onPress={() => dispatch(toggleLikeSong({ song: item, wasLiked: isLiked }))}
                   activeOpacity={0.7}
                   style={{ padding: 6 }}
                 >
@@ -239,7 +239,7 @@ export default function DownloadsScreen() {
 
                 {/* Remove download */}
                 <TouchableOpacity
-                  onPress={() => dispatch(toggleDownload(item))}
+                  onPress={() => dispatch(toggleDownload({ song: item, wasDownloaded: true }))}
                   activeOpacity={0.7}
                   style={{ padding: 6 }}
                 >

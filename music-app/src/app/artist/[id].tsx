@@ -243,7 +243,7 @@ export default function ArtistScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             {/* Follow */}
             <TouchableOpacity
-              onPress={() => dispatch(toggleFollowArtist({ id: artistId, name: artistName, imageUrl: artistImageUrl }))}
+              onPress={() => dispatch(toggleFollowArtist({ artist: { id: artistId, name: artistName, imageUrl: artistImageUrl }, wasFollowing: followed }))}
 
               activeOpacity={0.8}
               style={{
@@ -322,9 +322,9 @@ export default function ArtistScreen() {
               index={i}
               onPress={() => handleSongPress(song)}
               isLiked={likedSongs.some((s) => s.id === song.id)}
-              onLike={() => dispatch(toggleLikeSong(song))}
+              onLike={() => dispatch(toggleLikeSong({ song, wasLiked: likedSongs.some((s) => s.id === song.id) }))}
               isDownloaded={downloadedSongs.some((s) => s.id === song.id)}
-              onDownload={() => dispatch(toggleDownload(song))}
+              onDownload={() => dispatch(toggleDownload({ song, wasDownloaded: downloadedSongs.some((s) => s.id === song.id) }))}
               onMore={() => setSelectedSong(song)}
             />
           ))

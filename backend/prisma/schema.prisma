@@ -7,22 +7,24 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(uuid())
-  name          String
-  email         String          @unique
-  password      String
-  role          Role            @default(USER)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  isActive      Boolean         @default(true)
-  lastLogin     DateTime?
-  playlists     Playlist[]
-  downloads     Download[]
-  queues        Queue[]
-  searchHistory SearchHistory[]
-  likedSongs    LikedSong[]
-  refreshTokens RefreshToken[]
-  playHistory   PlayHistory[]
+  id                 String              @id @default(uuid())
+  name               String
+  email              String              @unique
+  password           String
+  role               Role                @default(USER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  isActive           Boolean             @default(true)
+  lastLogin          DateTime?
+  playlists          Playlist[]
+  downloads          Download[]
+  queues             Queue[]
+  searchHistory      SearchHistory[]
+  searchHistoryItems SearchHistoryItem[]
+  likedSongs         LikedSong[]
+  refreshTokens      RefreshToken[]
+  playHistory        PlayHistory[]
+  artistFollows      ArtistFollow[]
 }
 
 model RefreshToken {
@@ -62,14 +64,15 @@ model Song {
 }
 
 model Artist {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   name      String
   bio       String?
   imageUrl  String?
   songs     Song[]
   albums    Album[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  followers ArtistFollow[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
 model Album {
@@ -164,6 +167,33 @@ model SearchHistory {
   searchedAt DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+}
+
+model SearchHistoryItem {
+  id         String   @id @default(uuid())
+  userId     String
+  itemId     String
+  itemType   String
+  title      String
+  subtitle   String
+  coverUrl   String?
+  searchedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+}
+
+model ArtistFollow {
+  id        String   @id @default(uuid())
+  userId    String
+  artistId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artist    Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, artistId])
   @@index([userId])
 }
 

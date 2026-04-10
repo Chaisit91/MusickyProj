@@ -1,6 +1,17 @@
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Song, Artist } from "../api/homeApi";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import {
+  Song,
+  Artist,
+  getLikedSongsApi,
+  likeSongApi,
+  unlikeSongApi,
+  getDownloadsApi,
+  addDownloadApi,
+  removeDownloadApi,
+  getFollowedArtistsApi,
+  followArtistApi,
+  unfollowArtistApi,
+} from "../api/homeApi";
 import {
   getPlaylistsApi,
   createPlaylistApi,
@@ -12,11 +23,6 @@ import {
 import { logoutThunk } from "./authSlice";
 import type { RootState } from "./store";
 
-const userKeys = (userId: string) => ({
-  liked: `@library_liked_songs_${userId}`,
-  followed: `@library_followed_artists_${userId}`,
-  downloaded: `@library_downloaded_songs_${userId}`,
-});
 
 export interface Playlist {
   id: string;
@@ -56,7 +62,7 @@ const initialState: LibraryState = {
   playlists: [],
 };
 
-// ─── Local data thunk (liked / followed / downloaded) ─────────────────────────
+// ─── Load library (API for liked/downloaded, AsyncStorage for followed) ────────
 
 export const loadLibrary = createAsyncThunk(
   "library/load",
@@ -64,31 +70,68 @@ export const loadLibrary = createAsyncThunk(
     const state = getState() as RootState;
     const userId = state.auth.user?.id ?? null;
 
-    const [likedRaw, followedRaw, downloadedRaw] = userId
-      ? await Promise.all([
-          AsyncStorage.getItem(userKeys(userId).liked),
-          AsyncStorage.getItem(userKeys(userId).followed),
-          AsyncStorage.getItem(userKeys(userId).downloaded),
-        ])
-      : [null, null, null];
-
+    let likedSongs: Song[] = [];
+    let downloadedSongs: Song[] = [];
+    let followedArtists: Artist[] = [];
     let playlists: Playlist[] = [];
+
     if (userId) {
-      try {
-        const res = await getPlaylistsApi();
-        playlists = res.data.data.map(toPlaylist);
-      } catch {
-        // offline — keep empty
-      }
+      const [likedResult, downloadedResult, playlistsResult, followedResult] = await Promise.allSettled([
+        getLikedSongsApi(),
+        getDownloadsApi(),
+        getPlaylistsApi(),
+        getFollowedArtistsApi(),
+      ]);
+
+      if (likedResult.status === "fulfilled") likedSongs = likedResult.value;
+      if (downloadedResult.status === "fulfilled") downloadedSongs = downloadedResult.value;
+      if (playlistsResult.status === "fulfilled") playlists = playlistsResult.value.data.data.map(toPlaylist);
+      if (followedResult.status === "fulfilled") followedArtists = followedResult.value;
     }
 
-    return {
-      userId,
-      likedSongs: likedRaw ? (JSON.parse(likedRaw) as Song[]) : [],
-      followedArtists: followedRaw ? (JSON.parse(followedRaw) as Artist[]) : [],
-      downloadedSongs: downloadedRaw ? (JSON.parse(downloadedRaw) as Song[]) : [],
-      playlists,
-    };
+    return { userId, likedSongs, followedArtists, downloadedSongs, playlists };
+  }
+);
+
+// ─── Liked Songs thunk (optimistic) ───────────────────────────────────────────
+
+export const toggleLikeSong = createAsyncThunk(
+  "library/toggleLikeSong",
+  async ({ song, wasLiked }: { song: Song; wasLiked: boolean }) => {
+    if (wasLiked) {
+      await unlikeSongApi(song.id);
+    } else {
+      await likeSongApi(song.id);
+    }
+    return { song, wasLiked };
+  }
+);
+
+// ─── Downloads thunk (optimistic) ─────────────────────────────────────────────
+
+export const toggleDownload = createAsyncThunk(
+  "library/toggleDownload",
+  async ({ song, wasDownloaded }: { song: Song; wasDownloaded: boolean }) => {
+    if (wasDownloaded) {
+      await removeDownloadApi(song.id);
+    } else {
+      await addDownloadApi(song.id);
+    }
+    return { song, wasDownloaded };
+  }
+);
+
+// ─── Follow Artist thunk (optimistic) ────────────────────────────────────────
+
+export const toggleFollowArtist = createAsyncThunk(
+  "library/toggleFollowArtist",
+  async ({ artist, wasFollowing }: { artist: Artist; wasFollowing: boolean }) => {
+    if (wasFollowing) {
+      await unfollowArtistApi(artist.id);
+    } else {
+      await followArtistApi(artist.id);
+    }
+    return { artist, wasFollowing };
   }
 );
 
@@ -136,44 +179,7 @@ export const removeSongFromPlaylistThunk = createAsyncThunk(
 const librarySlice = createSlice({
   name: "library",
   initialState,
-  reducers: {
-    toggleLikeSong(state, action: PayloadAction<Song>) {
-      const song = action.payload;
-      const idx = state.likedSongs.findIndex((s) => s.id === song.id);
-      if (idx >= 0) {
-        state.likedSongs.splice(idx, 1);
-      } else {
-        state.likedSongs.unshift(song);
-      }
-      if (state.userId) {
-        AsyncStorage.setItem(userKeys(state.userId).liked, JSON.stringify(state.likedSongs));
-      }
-    },
-    toggleFollowArtist(state, action: PayloadAction<Artist>) {
-      const artist = action.payload;
-      const idx = state.followedArtists.findIndex((a) => a.id === artist.id);
-      if (idx >= 0) {
-        state.followedArtists.splice(idx, 1);
-      } else {
-        state.followedArtists.unshift(artist);
-      }
-      if (state.userId) {
-        AsyncStorage.setItem(userKeys(state.userId).followed, JSON.stringify(state.followedArtists));
-      }
-    },
-    toggleDownload(state, action: PayloadAction<Song>) {
-      const song = action.payload;
-      const idx = state.downloadedSongs.findIndex((s) => s.id === song.id);
-      if (idx >= 0) {
-        state.downloadedSongs.splice(idx, 1);
-      } else {
-        state.downloadedSongs.unshift(song);
-      }
-      if (state.userId) {
-        AsyncStorage.setItem(userKeys(state.userId).downloaded, JSON.stringify(state.downloadedSongs));
-      }
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     // loadLibrary
     builder.addCase(loadLibrary.fulfilled, (state, action) => {
@@ -182,6 +188,52 @@ const librarySlice = createSlice({
       state.followedArtists = action.payload.followedArtists;
       state.downloadedSongs = action.payload.downloadedSongs;
       state.playlists = action.payload.playlists;
+    });
+
+    // toggleLikeSong — optimistic: update on pending, revert on rejected
+    builder.addCase(toggleLikeSong.pending, (state, action) => {
+      const { song, wasLiked } = action.meta.arg;
+      if (wasLiked) {
+        state.likedSongs = state.likedSongs.filter((s) => s.id !== song.id);
+      } else {
+        if (!state.likedSongs.some((s) => s.id === song.id)) {
+          state.likedSongs.unshift(song);
+        }
+      }
+    });
+    builder.addCase(toggleLikeSong.rejected, (state, action) => {
+      const { song, wasLiked } = action.meta.arg;
+      if (wasLiked) {
+        // Failed to unlike → add back
+        if (!state.likedSongs.some((s) => s.id === song.id)) {
+          state.likedSongs.unshift(song);
+        }
+      } else {
+        // Failed to like → remove
+        state.likedSongs = state.likedSongs.filter((s) => s.id !== song.id);
+      }
+    });
+
+    // toggleDownload — optimistic: update on pending, revert on rejected
+    builder.addCase(toggleDownload.pending, (state, action) => {
+      const { song, wasDownloaded } = action.meta.arg;
+      if (wasDownloaded) {
+        state.downloadedSongs = state.downloadedSongs.filter((s) => s.id !== song.id);
+      } else {
+        if (!state.downloadedSongs.some((s) => s.id === song.id)) {
+          state.downloadedSongs.unshift(song);
+        }
+      }
+    });
+    builder.addCase(toggleDownload.rejected, (state, action) => {
+      const { song, wasDownloaded } = action.meta.arg;
+      if (wasDownloaded) {
+        if (!state.downloadedSongs.some((s) => s.id === song.id)) {
+          state.downloadedSongs.unshift(song);
+        }
+      } else {
+        state.downloadedSongs = state.downloadedSongs.filter((s) => s.id !== song.id);
+      }
     });
 
     // fetchPlaylists
@@ -221,14 +273,31 @@ const librarySlice = createSlice({
       }
     });
 
+    // toggleFollowArtist — optimistic
+    builder.addCase(toggleFollowArtist.pending, (state, action) => {
+      const { artist, wasFollowing } = action.meta.arg;
+      if (wasFollowing) {
+        state.followedArtists = state.followedArtists.filter((a) => a.id !== artist.id);
+      } else {
+        if (!state.followedArtists.some((a) => a.id === artist.id)) {
+          state.followedArtists.unshift(artist);
+        }
+      }
+    });
+    builder.addCase(toggleFollowArtist.rejected, (state, action) => {
+      const { artist, wasFollowing } = action.meta.arg;
+      if (wasFollowing) {
+        if (!state.followedArtists.some((a) => a.id === artist.id)) {
+          state.followedArtists.unshift(artist);
+        }
+      } else {
+        state.followedArtists = state.followedArtists.filter((a) => a.id !== artist.id);
+      }
+    });
+
     // logout
     builder.addCase(logoutThunk.fulfilled, () => initialState);
   },
 });
 
-export const {
-  toggleLikeSong,
-  toggleFollowArtist,
-  toggleDownload,
-} = librarySlice.actions;
 export default librarySlice.reducer;

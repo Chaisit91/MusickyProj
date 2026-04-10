@@ -177,12 +177,12 @@ export default function PlaylistDetailScreen() {
                 </View>
 
                 {/* Like */}
-                <TouchableOpacity onPress={() => dispatch(toggleLikeSong(item))} activeOpacity={0.7} style={{ padding: 6 }}>
+                <TouchableOpacity onPress={() => dispatch(toggleLikeSong({ song: item, wasLiked: isLiked }))} activeOpacity={0.7} style={{ padding: 6 }}>
                   <HeartIcon filled={isLiked} />
                 </TouchableOpacity>
 
                 {/* Download */}
-                <TouchableOpacity onPress={() => dispatch(toggleDownload(item))} activeOpacity={0.7} style={{ padding: 6 }}>
+                <TouchableOpacity onPress={() => dispatch(toggleDownload({ song: item, wasDownloaded: isDownloaded }))} activeOpacity={0.7} style={{ padding: 6 }}>
                   <DownloadIcon downloaded={isDownloaded} />
                 </TouchableOpacity>
 

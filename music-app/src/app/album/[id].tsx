@@ -256,7 +256,7 @@ export default function AlbumScreen() {
 
           {/* Action row */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-            <TouchableOpacity onPress={() => songs[0] && dispatch(toggleLikeSong(songs[0]))} activeOpacity={0.7} style={{ padding: 4 }}>
+            <TouchableOpacity onPress={() => songs[0] && dispatch(toggleLikeSong({ song: songs[0], wasLiked: isAlbumLiked }))} activeOpacity={0.7} style={{ padding: 4 }}>
               <HeartIcon filled={isAlbumLiked} />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7} style={{ padding: 4 }}>
@@ -303,9 +303,9 @@ export default function AlbumScreen() {
               index={i}
               showIndex={showIndex}
               isLiked={likedSongs.some((s) => s.id === song.id)}
-              onLike={() => dispatch(toggleLikeSong(song))}
+              onLike={() => dispatch(toggleLikeSong({ song, wasLiked: likedSongs.some((s) => s.id === song.id) }))}
               isDownloaded={downloadedSongs.some((s) => s.id === song.id)}
-              onDownload={() => dispatch(toggleDownload(song))}
+              onDownload={() => dispatch(toggleDownload({ song, wasDownloaded: downloadedSongs.some((s) => s.id === song.id) }))}
               onPress={() => handleSongPress(song)}
               onMore={() => setSelectedSong(song)}
             />

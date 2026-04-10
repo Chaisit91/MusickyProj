@@ -38,6 +38,13 @@ export const removeDownload = async (req: Request, res: Response) => {
   res.json({ success: true, message: "Download removed" });
 };
 
+export const removeDownloadBySong = async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const songId = req.params.songId as string;
+  await DownloadRepository.deleteDownloadBySongId(userId, songId);
+  res.json({ success: true, message: "Download removed" });
+};
+
 export const clearAllDownloads = async (req: Request, res: Response) => {
   const userId = req.user!.id;
   await DownloadRepository.deleteAllDownloadsByUser(userId);

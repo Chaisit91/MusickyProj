@@ -310,10 +310,10 @@ export default function PlayerScreen() {
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
-              <TouchableOpacity onPress={() => dispatch(toggleLikeSong(currentSong))} activeOpacity={0.7}>
+              <TouchableOpacity onPress={() => dispatch(toggleLikeSong({ song: currentSong, wasLiked: isLiked }))} activeOpacity={0.7}>
                 <HeartIcon filled={isLiked} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => dispatch(toggleDownload(currentSong))} activeOpacity={0.7}>
+              <TouchableOpacity onPress={() => dispatch(toggleDownload({ song: currentSong, wasDownloaded: isDownloaded }))} activeOpacity={0.7}>
                 <DownloadIcon downloaded={isDownloaded} />
               </TouchableOpacity>
               <TouchableOpacity activeOpacity={0.7}>

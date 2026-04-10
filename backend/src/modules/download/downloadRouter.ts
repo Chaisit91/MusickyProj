@@ -9,6 +9,7 @@ const router = Router();
 router.get("/", authMiddleware, asyncHandler(DownloadService.getDownloads));
 router.post("/", authMiddleware, asyncHandler(DownloadService.addDownload));
 router.delete("/clear", authMiddleware, asyncHandler(DownloadService.clearAllDownloads));
+router.delete("/song/:songId", authMiddleware, asyncHandler(DownloadService.removeDownloadBySong));
 router.delete("/:id", authMiddleware, asyncHandler(DownloadService.removeDownload));
 
 export default router;

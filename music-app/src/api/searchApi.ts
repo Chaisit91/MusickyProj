@@ -15,50 +15,29 @@ export interface SearchResult {
   artists: Artist[];
 }
 
-// ─── Search by title + artist (parallel calls + client-side filter) ───────────
+// ─── Search via backend /search?q= endpoint ──────────────────────────────────
 
 export const searchAll = async (query: string): Promise<SearchResult> => {
   const q = query.normalize("NFC").trim();
   const lower = q.toLowerCase();
 
-  // Two parallel calls: one searching by title, one by artist name
-  const [byTitle, byArtist] = await Promise.allSettled([
-    apiClient.get("/songs", { params: { search: q, limit: 30 }, paramsSerializer: serialize }),
-    apiClient.get("/songs", { params: { artist: q, limit: 20 }, paramsSerializer: serialize }),
-  ]);
+  const { data } = await apiClient.get("/search", {
+    params: { q },
+    paramsSerializer: serialize,
+  });
 
-  // Merge & deduplicate
-  const seen = new Set<string>();
-  const allSongs: Song[] = [];
+  const songs = (data.data?.songs ?? []) as Song[];
+  const artists = (data.data?.artists ?? []) as Artist[];
 
-  for (const res of [byTitle, byArtist]) {
-    if (res.status === "fulfilled") {
-      const songs = (res.value.data.data ?? []) as Song[];
-      for (const song of songs) {
-        if (!seen.has(song.id)) {
-          seen.add(song.id);
-          allSongs.push(song);
-        }
-      }
-    }
-  }
-
-  // Client-side filter: keep songs whose title OR artist name includes the query
-  const matchedSongs = allSongs.filter(
-    (s) =>
-      s.title.toLowerCase().includes(lower) ||
-      s.artist.name.toLowerCase().includes(lower)
-  );
-
-  // Extract unique artists that match the query
-  const artistMap = new Map<string, Artist>();
-  matchedSongs.forEach((s) => {
+  // Include artists from matched songs that the backend may have missed
+  const artistMap = new Map<string, Artist>(artists.map((a) => [a.id, a]));
+  songs.forEach((s) => {
     if (s.artist.name.toLowerCase().includes(lower)) {
       artistMap.set(s.artist.id, s.artist);
     }
   });
 
-  return { songs: matchedSongs, artists: Array.from(artistMap.values()) };
+  return { songs, artists: Array.from(artistMap.values()) };
 };
 
 // ─── Trending artists (extracted from trending songs) ─────────────────────────
@@ -84,4 +63,39 @@ export const getTrendingArtists = async (): Promise<Artist[]> => {
 export const getBrowseGenres = async (): Promise<Genre[]> => {
   const { data } = await apiClient.get("/genres");
   return data.data as Genre[];
+};
+
+// ─── Search History Items (rich) ──────────────────────────────────────────────
+
+export interface SearchHistoryItem {
+  id: string;
+  itemId: string;
+  itemType: "song" | "artist" | "album" | "playlist";
+  title: string;
+  subtitle: string;
+  coverUrl: string | null;
+  searchedAt: string;
+}
+
+export const getSearchHistoryItemsApi = async (): Promise<SearchHistoryItem[]> => {
+  const { data } = await apiClient.get("/search/history/items");
+  return data.data as SearchHistoryItem[];
+};
+
+export const addSearchHistoryItemApi = async (item: {
+  itemId: string;
+  itemType: string;
+  title: string;
+  subtitle: string;
+  coverUrl?: string | null;
+}): Promise<void> => {
+  await apiClient.post("/search/history/items", item);
+};
+
+export const removeSearchHistoryItemApi = async (id: string): Promise<void> => {
+  await apiClient.delete(`/search/history/items/${id}`);
+};
+
+export const clearSearchHistoryItemsApi = async (): Promise<void> => {
+  await apiClient.delete("/search/history/items");
 };
