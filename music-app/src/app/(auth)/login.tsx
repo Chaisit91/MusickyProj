@@ -56,8 +56,8 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 // ─── REPLACE with your real Client IDs from Google Cloud Console ──────────────
 // https://console.cloud.google.com/ → APIs & Services → Credentials
-const GOOGLE_WEB_CLIENT_ID = "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";
-//const GOOGLE_ANDROID_CLIENT_ID = "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_WEB_CLIENT_ID = "390954514798-7i5kqfklel0dd5csvpbi3v6ovcepf0c6.apps.googleusercontent.com";
+const GOOGLE_ANDROID_CLIENT_ID = "YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com";
 const GOOGLE_IOS_CLIENT_ID = "390954514798-v6u0toepv9iob5gmpq0feh1j15on23hj.apps.googleusercontent.com";
 
 export default function LoginScreen() {
@@ -73,7 +73,7 @@ export default function LoginScreen() {
   // ── Google Auth ──────────────────────────────────────────────────────────
   const [, response, promptAsync] = Google.useAuthRequest({
     webClientId: GOOGLE_WEB_CLIENT_ID,
-    //androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     iosClientId: GOOGLE_IOS_CLIENT_ID,
     scopes: ["profile", "email"],
   });
@@ -166,7 +166,7 @@ export default function LoginScreen() {
       >
         <Animated.View
           style={{
-            flex: 1,
+            flexGrow: 1,
             paddingHorizontal: 24,
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }],
@@ -179,7 +179,7 @@ export default function LoginScreen() {
           </View>
 
           {/* ── Title ── */}
-          <Text style={{ color: "#fff", fontSize: 28, fontWeight: "700", marginTop: 40, marginBottom: 8 }}>
+          <Text style={{ color: "#fff", fontSize: 28, fontWeight: "700", marginTop: 40, marginBottom: 8  }}>
             Log in
           </Text>
           <Text style={{ color: "#888", fontSize: 14, marginBottom: 32 }}>

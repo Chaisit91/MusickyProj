@@ -37,10 +37,6 @@
     "plugins": [
       "expo-router",
       [
-        "expo-auth-session",
-        { "scheme": "musicapp" }
-      ],
-      [
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",

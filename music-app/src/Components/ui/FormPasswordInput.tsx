@@ -45,7 +45,7 @@ export function FormPasswordInput<T extends FieldValues>({
         control={control}
         name={name}
         render={({ field: { onChange, value } }) => (
-          <View style={{ position: "relative" }}>
+          <View style={{ position: "relative", overflow: "hidden" }}>
             <TextInput
               style={{
                 backgroundColor: "#1e1e1e",
