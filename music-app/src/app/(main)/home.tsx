@@ -20,7 +20,6 @@ import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
 import CategoryContent, { CategoryName } from "../../Components/ui/Categorycontent";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { logoutThunk } from "../../store/authSlice";
 import { playSong } from "../../store/playerSlice";
 import { loadLibrary } from "../../store/librarySlice";
 import {
@@ -380,75 +379,6 @@ const PlaylistCard = ({
   </TouchableOpacity>
 );
 
-// ─── Logout Modal ─────────────────────────────────────────────────────────────
-
-const LogoutModal = ({
-  visible,
-  username,
-  email,
-  onClose,
-  onLogout,
-}: {
-  visible: boolean;
-  username: string;
-  email: string;
-  onClose: () => void;
-  onLogout: () => void;
-}) => (
-  <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-    <Pressable
-      style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
-      onPress={onClose}
-    >
-      <Pressable
-        style={{
-          backgroundColor: "#1a1a1a",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 24,
-          paddingBottom: 40,
-        }}
-        onPress={() => {}}
-      >
-        <View style={{ width: 40, height: 4, backgroundColor: "#333", borderRadius: 2, alignSelf: "center", marginBottom: 20 }} />
-        <View style={{ alignItems: "center", marginBottom: 16 }}>
-          <View
-            style={{
-              width: 64, height: 64, borderRadius: 32,
-              backgroundColor: "#5b4fcf",
-              alignItems: "center", justifyContent: "center", marginBottom: 12,
-            }}
-          >
-            <Text style={{ color: "#fff", fontSize: 26, fontWeight: "700" }}>
-              {username.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>{username}</Text>
-          <Text style={{ color: "#888", fontSize: 13, marginTop: 4 }}>{email}</Text>
-        </View>
-        <View style={{ height: 1, backgroundColor: "#2a2a2a", marginVertical: 16 }} />
-        <TouchableOpacity
-          onPress={onLogout}
-          activeOpacity={0.85}
-          style={{
-            backgroundColor: "#2a2a2a", borderRadius: 12,
-            paddingVertical: 14, alignItems: "center",
-            flexDirection: "row", justifyContent: "center", gap: 8,
-          }}
-        >
-          <Svg width={18} height={18} viewBox="0 0 24 24">
-            <Path fill="#ff4444" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-          </Svg>
-          <Text style={{ color: "#ff4444", fontWeight: "600", fontSize: 15 }}>Log out</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={{ alignItems: "center", marginTop: 12, paddingVertical: 10 }}>
-          <Text style={{ color: "#666", fontSize: 14 }}>Cancel</Text>
-        </TouchableOpacity>
-      </Pressable>
-    </Pressable>
-  </Modal>
-);
-
 // ─── Mixes / Genres Modal ─────────────────────────────────────────────────────
 
 const MixesModal = ({
@@ -664,7 +594,6 @@ export default function HomeScreen() {
 
   const [activeCategory, setActiveCategory] = useState<CategoryName>("For you");
   const [activeTab, setActiveTab] = useState<TabName>("Home");
-  const [showLogout, setShowLogout] = useState(false);
   const [showFeatured, setShowFeatured] = useState(false);
   const [showMixes, setShowMixes] = useState(false);
   const [showNewReleases, setShowNewReleases] = useState(false);
@@ -737,11 +666,6 @@ export default function HomeScreen() {
     } catch { /* silent */ }
   };
 
-  const handleLogout = async () => {
-    setShowLogout(false);
-    await dispatch(logoutThunk());
-  };
-
   const handleTabPress = (tab: TabName) => {
     setActiveTab(tab);
     if (tab === "Search") router.push("/search");
@@ -762,9 +686,11 @@ export default function HomeScreen() {
         <View style={{ paddingTop: 36 }}>
           <TopBar
             username={user?.name ?? ""}
+            avatarUrl={user?.avatarUrl}
             onPremiumPress={() => {}}
             onBellPress={() => {}}
-            onAvatarPress={() => setShowLogout(true)}
+            onSettingsPress={() => router.push("/settings")}
+            onAvatarPress={() => router.push("/settings")}
           />
         </View>
 
@@ -1042,13 +968,6 @@ export default function HomeScreen() {
         onPlay={handleSongPress}
       />
 
-      <LogoutModal
-        visible={showLogout}
-        username={user?.name ?? ""}
-        email={user?.email ?? ""}
-        onClose={() => setShowLogout(false)}
-        onLogout={handleLogout}
-      />
     </View>
   );
 }

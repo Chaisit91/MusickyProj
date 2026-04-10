@@ -17,6 +17,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: string;
+  avatarUrl?: string | null;
 }
 
 export interface LoginResponse {
@@ -41,4 +42,54 @@ export const loginApi = async (payload: LoginPayload) => {
 export const logoutApi = async () => {
   const { data } = await apiClient.post("/auth/logout");
   return data;
+};
+
+export interface GoogleLoginResponse {
+  success: boolean;
+  requiresName: boolean;
+  // กรณี requiresName = true
+  googleData?: {
+    googleId: string;
+    email: string;
+    suggestedName: string;
+    avatarUrl: string | null;
+    accessToken: string;
+  };
+  // กรณี requiresName = false
+  data?: {
+    accessToken: string;
+    refreshToken: string;
+    user: AuthUser;
+  };
+}
+
+export const googleLoginApi = async (params: { accessToken: string; name?: string }) => {
+  const { data } = await apiClient.post("/auth/google", params);
+  return data as GoogleLoginResponse;
+};
+
+export const fetchMeApi = async () => {
+  const { data } = await apiClient.get("/auth/me");
+  return data as { success: boolean; data: AuthUser };
+};
+
+export const updateProfileApi = async (params: {
+  name?: string;
+  avatarUri?: string;
+  avatarMimeType?: string;
+}) => {
+  const formData = new FormData();
+  if (params.name) formData.append("name", params.name);
+  if (params.avatarUri) {
+    const filename = params.avatarUri.split("/").pop() ?? "avatar.jpg";
+    formData.append("avatar", {
+      uri: params.avatarUri,
+      name: filename,
+      type: params.avatarMimeType ?? "image/jpeg",
+    } as any);
+  }
+  const { data } = await apiClient.patch("/auth/profile", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data as { success: boolean; data: AuthUser };
 };

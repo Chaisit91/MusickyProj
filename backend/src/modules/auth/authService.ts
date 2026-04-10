@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as AuthRepository from "./authRepository";
 import { hashPassword, comparePassword } from "../../utils/password";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
+import { uploadImageToCloudinary, deleteImageFromCloudinary } from "../../utils/uploadImage";
 
 // ── Cookie config ที่ใช้ซ้ำทุกที่ ให้ path ตรงกันเสมอ ──────────
 const REFRESH_COOKIE_OPTIONS = {
@@ -97,7 +98,7 @@ export const login = async (req: Request, res: Response) => {
     data: {
       accessToken,
       refreshToken,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl ?? null },
     },
   });
 };
@@ -244,6 +245,127 @@ export const logoutAll = async (req: Request, res: Response) => {
   res.json({ success: true, message: "Logged out from all devices" });
 };
 
+type GoogleUserShape = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatarUrl: string | null;
+};
+
+export const googleLogin = async (req: Request, res: Response) => {
+  const { accessToken, name } = req.body;
+
+  if (!accessToken) {
+    res.status(400).json({ success: false, message: "accessToken is required" });
+    return;
+  }
+
+  // ── ดึงข้อมูล user จาก Google API ──────────────────────────────
+  let googleProfile: { sub: string; email: string; name: string; picture?: string };
+  try {
+    const resp = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!resp.ok) {
+      res.status(401).json({ success: false, message: "Invalid Google access token" });
+      return;
+    }
+    googleProfile = (await resp.json()) as typeof googleProfile;
+  } catch {
+    res.status(500).json({ success: false, message: "Failed to verify Google token" });
+    return;
+  }
+
+  const { sub: googleId, email, name: googleName, picture } = googleProfile;
+
+  let user: GoogleUserShape | null = null;
+
+  // ── ค้นหา user ด้วย googleId ────────────────────────────────────
+  const byGoogleId = await AuthRepository.findUserByGoogleId(googleId);
+  if (byGoogleId) {
+    user = { id: byGoogleId.id, name: byGoogleId.name, email: byGoogleId.email, role: byGoogleId.role, avatarUrl: byGoogleId.avatarUrl ?? null };
+  }
+
+  // ── ค้นหา user ด้วย email (กรณีสมัครด้วย email/password มาก่อน) ──
+  if (!user) {
+    const emailUser = await AuthRepository.findUserByEmail(email);
+    if (emailUser) {
+      const linked = await AuthRepository.linkGoogleId(emailUser.id, googleId, picture);
+      user = { id: linked.id, name: linked.name, email: linked.email, role: linked.role, avatarUrl: linked.avatarUrl ?? null };
+    }
+  }
+
+  // ── ถ้ายังไม่มี user → ต้องตั้งชื่อก่อน ─────────────────────────
+  if (!user) {
+    if (!name || !(name as string).trim()) {
+      res.json({
+        success: true,
+        requiresName: true,
+        googleData: {
+          googleId,
+          email,
+          suggestedName: googleName,
+          avatarUrl: picture ?? null,
+          accessToken,
+        },
+      });
+      return;
+    }
+
+    const created = await AuthRepository.createGoogleUser({
+      name: (name as string).trim(),
+      email,
+      googleId,
+      avatarUrl: picture,
+    });
+    user = { id: created.id, name: created.name, email: created.email, role: created.role, avatarUrl: created.avatarUrl ?? null };
+  }
+
+  // ── ออก tokens ──────────────────────────────────────────────────
+  await AuthRepository.updateLastLogin(user.id);
+  const newAccessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
+  const refreshToken = generateRefreshToken({ id: user.id, role: user.role, email: user.email });
+  await AuthRepository.saveRefreshToken(user.id, refreshToken);
+
+  res.json({
+    success: true,
+    requiresName: false,
+    data: {
+      accessToken: newAccessToken,
+      refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl },
+    },
+  });
+};
+
+export const updateProfile = async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  const { name } = req.body;
+
+  const current = await AuthRepository.findUserById(userId);
+  if (!current) {
+    res.status(404).json({ success: false, message: "User not found" });
+    return;
+  }
+
+  let avatarUrl: string | undefined;
+  if (req.file) {
+    // ลบรูปเก่าออกก่อน (ถ้ามี)
+    if (current.avatarUrl) {
+      await deleteImageFromCloudinary(current.avatarUrl);
+    }
+    avatarUrl = await uploadImageToCloudinary(req.file.buffer, "avatars");
+  }
+
+  const updated = await AuthRepository.updateUserProfile(userId, {
+    ...(name ? { name: name as string } : {}),
+    ...(avatarUrl ? { avatarUrl } : {}),
+  });
+
+  res.json({ success: true, data: updated });
+};
+
 export const getMe = async (req: Request, res: Response) => {
   const userId = req.user!.id;
 
@@ -260,6 +382,7 @@ export const getMe = async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      avatarUrl: user.avatarUrl ?? null,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
     },

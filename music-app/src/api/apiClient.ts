@@ -3,7 +3,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const getBaseUrl = () => {
-  return "http://172.22.51.254:8080/api";
+  return "http://192.168.1.127:8080/api";
 };
 
 const BASE_URL = getBaseUrl();

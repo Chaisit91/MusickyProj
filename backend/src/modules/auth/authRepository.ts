@@ -37,6 +37,49 @@ export const updateLastLogin = async (id: string) => {
   });
 };
 
+export const findUserByGoogleId = async (googleId: string) => {
+  return prisma.user.findUnique({ where: { googleId } });
+};
+
+export const createGoogleUser = async (data: {
+  name: string;
+  email: string;
+  googleId: string;
+  avatarUrl?: string;
+}) => {
+  // สร้าง random password สำหรับ Google user (ไม่ได้ใช้ login ด้วย email)
+  const randomPass = Math.random().toString(36) + Math.random().toString(36);
+  return prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      password: randomPass,
+      googleId: data.googleId,
+      avatarUrl: data.avatarUrl,
+    },
+    select: { id: true, name: true, email: true, role: true, avatarUrl: true, googleId: true },
+  });
+};
+
+export const linkGoogleId = async (userId: string, googleId: string, avatarUrl?: string) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { googleId, ...(avatarUrl ? { avatarUrl } : {}) },
+    select: { id: true, name: true, email: true, role: true, avatarUrl: true },
+  });
+};
+
+export const updateUserProfile = async (
+  id: string,
+  data: { name?: string; avatarUrl?: string }
+) => {
+  return prisma.user.update({
+    where: { id },
+    data,
+    select: { id: true, name: true, email: true, role: true, avatarUrl: true },
+  });
+};
+
 // ── RefreshToken table ─────────────────────────────────────────
 
 export const saveRefreshToken = async (userId: string, token: string) => {

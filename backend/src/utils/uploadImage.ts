@@ -7,7 +7,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export type UploadFolder = "artists" | "albums" | "genres" | "ads" | "songs";
+export type UploadFolder = "artists" | "albums" | "genres" | "ads" | "songs" | "avatars";
 
 export const uploadImageToCloudinary = (
   buffer: Buffer,
