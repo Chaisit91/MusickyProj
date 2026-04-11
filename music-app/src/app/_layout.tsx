@@ -1,11 +1,13 @@
 import { useEffect } from "react";
+import { AppState } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import "../../global.css";
 import { Provider } from "react-redux";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { store } from "../store/store";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { restoreSession } from "../store/authSlice";
+import { restoreSession, fetchMeThunk } from "../store/authSlice";
+import { loadPreferences } from "../store/preferencesSlice";
 import AudioController from "../Components/player/AudioController";
 
 // ─── Public route segments (no login required) ────────────────────────────────
@@ -42,10 +44,26 @@ function AuthGuard() {
 // then renders the global AudioController + root Stack.
 function RootLayoutNav() {
   const dispatch = useAppDispatch();
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
   useEffect(() => {
-    dispatch(restoreSession());
+    dispatch(restoreSession()).then((result) => {
+      if (restoreSession.fulfilled.match(result) && result.payload) {
+        dispatch(loadPreferences());
+      }
+    });
   }, []);
+
+  // เช็คสถานะ Premium ทุกครั้งที่ app กลับมา foreground
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        dispatch(fetchMeThunk());
+      }
+    });
+    return () => sub.remove();
+  }, [isLoggedIn]);
 
   return (
     <>

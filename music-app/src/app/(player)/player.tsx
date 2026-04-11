@@ -165,6 +165,7 @@ export default function PlayerScreen() {
 
   const likedSongs = useAppSelector((s) => s.library.likedSongs);
   const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+  const showLyrics = useAppSelector((s) => s.preferences.showLyrics);
   const isLiked = currentSong ? likedSongs.some((s) => s.id === currentSong?.id) : false;
   const isDownloaded = currentSong ? downloadedSongs.some((s) => s.id === currentSong?.id) : false;
 
@@ -174,8 +175,12 @@ export default function PlayerScreen() {
 
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
-  const [activeTab, setActiveTab] = useState<"player" | "lyrics">("player");
+  const [activeTab, setActiveTab] = useState<"player" | "lyrics">(showLyrics ? "lyrics" : "player");
   const [showPlaylistSheet, setShowPlaylistSheet] = useState(false);
+
+  useEffect(() => {
+    setActiveTab(showLyrics ? "lyrics" : "player");
+  }, [showLyrics]);
 
   // ── Misc ──────────────────────────────────────────────────────────────────
   const duration = durationSeconds > 0 ? durationSeconds : (currentSong?.duration ?? 0);

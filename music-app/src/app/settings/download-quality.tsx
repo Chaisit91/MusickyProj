@@ -5,11 +5,13 @@ import {
   TouchableOpacity,
   StatusBar,
   ScrollView,
-  Platform,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { toggleDownload } from "../../store/librarySlice";
+import { savePreferences, setPreferenceLocal } from "../../store/preferencesSlice";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -69,21 +71,54 @@ const PremiumBadge = () => (
   </View>
 );
 
+const MB_PER_SONG: Record<string, number> = {
+  Normal: 4,
+  High: 9,
+  "Very High (Lossless)": 30,
+};
+
 export default function DownloadQualityScreen() {
-  const [selected, setSelected] = useState("High");
-  const usedGB = 2.4;
-  const totalGB = 32;
-  const usedPct = (usedGB / totalGB) * 100;
+  const dispatch = useAppDispatch();
+  const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
+  const downloadQuality = useAppSelector((s) => s.preferences.downloadQuality);
+  const [selected, setSelected] = useState(downloadQuality);
 
   useEffect(() => {
-    AsyncStorage.getItem("pref_downloadQuality").then((v) => {
-      if (v) setSelected(v);
-    });
-  }, []);
+    setSelected(downloadQuality);
+  }, [downloadQuality]);
 
-  const handleSelect = async (label: string) => {
+  const mbPerSong = MB_PER_SONG[selected] ?? 9;
+  const usedMB = downloadedSongs.length * mbPerSong;
+  const usedGB = usedMB / 1024;
+  const usedPct = Math.min((usedMB / (1024 * 4)) * 100, 100);
+
+  const handleSelect = (label: string) => {
     setSelected(label);
-    await AsyncStorage.setItem("pref_downloadQuality", label);
+    dispatch(setPreferenceLocal({ downloadQuality: label }));
+    dispatch(savePreferences({ downloadQuality: label }));
+  };
+
+  const handleDeleteAll = () => {
+    if (downloadedSongs.length === 0) {
+      Alert.alert("ไม่มีเพลงที่ดาวน์โหลด", "คุณยังไม่มีเพลงที่ดาวน์โหลดไว้");
+      return;
+    }
+    Alert.alert(
+      "ลบเพลงที่ดาวน์โหลดทั้งหมด",
+      `คุณต้องการลบเพลงที่ดาวน์โหลดทั้งหมด ${downloadedSongs.length} เพลงใช่ไหม?`,
+      [
+        { text: "ยกเลิก", style: "cancel" },
+        {
+          text: "ลบทั้งหมด",
+          style: "destructive",
+          onPress: () => {
+            downloadedSongs.forEach((song) =>
+              dispatch(toggleDownload({ song, wasDownloaded: true }))
+            );
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -127,7 +162,7 @@ export default function DownloadQualityScreen() {
               <Text style={{ color: "#e84393", fontSize: 12, marginTop: 2 }}>อุปกรณ์นี้</Text>
             </View>
             <Text style={{ color: "#fff", fontWeight: "700" }}>
-              {usedGB.toFixed(1)} GB / {totalGB} GB
+              {usedMB < 1024 ? `${usedMB} MB` : `${usedGB.toFixed(1)} GB`}
             </Text>
           </View>
           {/* Progress bar */}
@@ -142,6 +177,7 @@ export default function DownloadQualityScreen() {
             />
           </View>
           <TouchableOpacity
+            onPress={handleDeleteAll}
             activeOpacity={0.8}
             style={{
               marginTop: 14,
@@ -157,7 +193,9 @@ export default function DownloadQualityScreen() {
             <Svg width={16} height={16} viewBox="0 0 24 24">
               <Path fill="#e84393" d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
             </Svg>
-            <Text style={{ color: "#e84393", fontWeight: "600", fontSize: 13 }}>ลบเพลงที่ดาวน์โหลด</Text>
+            <Text style={{ color: "#e84393", fontWeight: "600", fontSize: 13 }}>
+              ลบเพลงที่ดาวน์โหลด ({downloadedSongs.length})
+            </Text>
           </TouchableOpacity>
         </View>
 

@@ -7,18 +7,22 @@ import {
   setDuration,
   nextSong,
   clearSeekRequest,
+  togglePlay,
 } from "../../store/playerSlice";
 
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
   const { currentSong, isPlaying, seekRequest, volume } = useAppSelector((s) => s.player);
+  const autoPlay = useAppSelector((s) => s.preferences.autoPlay);
 
   const playerRef = useRef<AudioPlayer | null>(null);
   const isPlayingRef = useRef(isPlaying);
   const volumeRef = useRef(volume);
+  const autoPlayRef = useRef(autoPlay);
 
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
+  useEffect(() => { autoPlayRef.current = autoPlay; }, [autoPlay]);
 
   // ── Set audio mode once ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -62,7 +66,11 @@ export default function AudioControllerImpl() {
         dispatch(setDuration(Math.floor(status.duration)));
       }
       if (status.didJustFinish) {
-        dispatch(nextSong());
+        if (autoPlayRef.current) {
+          dispatch(nextSong());
+        } else {
+          dispatch(togglePlay()); // หยุดเพลง ไม่เล่นต่อ
+        }
       }
     });
 

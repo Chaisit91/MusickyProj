@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Linking,
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
@@ -45,12 +46,23 @@ export default function HelpSupportScreen() {
       Alert.alert("กรุณากรอกข้อมูล", "โปรดอธิบายปัญหาของคุณ");
       return;
     }
+    if (!contactEmail.trim()) {
+      Alert.alert("กรุณากรอกข้อมูล", "โปรดกรอกอีเมลสำหรับติดต่อกลับ");
+      return;
+    }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
+    const subject = encodeURIComponent(`[Musicky] ${selectedType}`);
+    const body = encodeURIComponent(
+      `ประเภทปัญหา: ${selectedType}\n\nรายละเอียด:\n${description}\n\nอีเมลติดต่อกลับ: ${contactEmail}`
+    );
+    const mailUrl = `mailto:support@musicky.com?subject=${subject}&body=${body}`;
+    const canOpen = await Linking.canOpenURL(mailUrl);
     setLoading(false);
-    Alert.alert("ส่งสำเร็จ", "เราได้รับแจ้งปัญหาของคุณแล้ว ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง", [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    if (canOpen) {
+      await Linking.openURL(mailUrl);
+    } else {
+      Alert.alert("ไม่พบแอปอีเมล", "กรุณาติดต่อเราที่ support@musicky.com โดยตรง");
+    }
   };
 
   return (

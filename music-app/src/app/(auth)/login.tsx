@@ -13,6 +13,7 @@ import {
 import { router } from "expo-router";
 import { useAppDispatch } from "../../store/hooks";
 import { loginThunk } from "../../store/authSlice";
+import { loadPreferences } from "../../store/preferencesSlice";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,6 +68,8 @@ export default function LoginScreen() {
         const msg = (result.payload as string) || "Invalid email or password";
         setError("email", { message: " " });
         setError("password", { message: msg });
+      } else {
+        dispatch(loadPreferences());
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {

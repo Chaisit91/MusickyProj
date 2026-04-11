@@ -21,6 +21,8 @@ import adsRouter from "./modules/ads/adsRouter";
 import uploadRouter from "./modules/upload/uploadRouter"; // ✅ upload API
 import playHistoryRouter from "./modules/playHistory/playHistoryRouter";
 import artistFollowRouter from "./modules/artistFollow/artistFollowRouter";
+import notificationRouter from "./modules/notification/notificationRouter";
+import paymentRouter from "./modules/payment/paymentRouter";
 
 // Admin Routers
 import dashboardRouter from "./modules/admin/dashboard/dashboardRouter";
@@ -61,6 +63,8 @@ app.use("/api/ads", adsRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/play-history", playHistoryRouter);
 app.use("/api/artist-follows", artistFollowRouter);
+app.use("/api/notifications", notificationRouter);
+app.use("/api/payments", paymentRouter);
 
 // ── Admin Routes ──────────────────────────────────────────────
 app.use("/api/admin/dashboard", dashboardRouter);

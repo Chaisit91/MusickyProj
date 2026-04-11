@@ -22,6 +22,7 @@ import MiniPlayer from "../../Components/player/MiniPlayer";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { playSong } from "../../store/playerSlice";
 import { loadLibrary } from "../../store/librarySlice";
+import { fetchNotifications } from "../../store/notificationsSlice";
 import {
   getFeaturingSongs,
   getRecentlyPlayed,
@@ -591,6 +592,7 @@ const CATEGORIES: CategoryName[] = ["For you", "Relax", "Workout", "Travel", "Pa
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const unreadCount = useAppSelector((s) => s.notifications.items.filter((n) => !n.isRead).length);
 
   const [activeCategory, setActiveCategory] = useState<CategoryName>("For you");
   const [activeTab, setActiveTab] = useState<TabName>("Home");
@@ -647,6 +649,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       loadRecent();
+      dispatch(fetchNotifications());
     }, [loadRecent])
   );
 
@@ -687,8 +690,10 @@ export default function HomeScreen() {
           <TopBar
             username={user?.name ?? ""}
             avatarUrl={user?.avatarUrl}
-            onPremiumPress={() => {}}
-            onBellPress={() => {}}
+            isPremium={user?.isPremium ?? false}
+            unreadCount={unreadCount}
+            onPremiumPress={() => router.push("/premium")}
+            onBellPress={() => router.push("/notifications")}
             onSettingsPress={() => router.push("/settings")}
             onAvatarPress={() => router.push("/settings")}
           />

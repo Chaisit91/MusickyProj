@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { savePreferences, setPreferenceLocal } from "../../store/preferencesSlice";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -73,17 +74,18 @@ const PremiumBadge = () => (
 );
 
 export default function StreamingQualityScreen() {
-  const [selected, setSelected] = useState("Low");
+  const dispatch = useAppDispatch();
+  const streamingQuality = useAppSelector((s) => s.preferences.streamingQuality);
+  const [selected, setSelected] = useState(streamingQuality);
 
   useEffect(() => {
-    AsyncStorage.getItem("pref_streamingQuality").then((v) => {
-      if (v) setSelected(v);
-    });
-  }, []);
+    setSelected(streamingQuality);
+  }, [streamingQuality]);
 
-  const handleSelect = async (label: string) => {
+  const handleSelect = (label: string) => {
     setSelected(label);
-    await AsyncStorage.setItem("pref_streamingQuality", label);
+    dispatch(setPreferenceLocal({ streamingQuality: label }));
+    dispatch(savePreferences({ streamingQuality: label }));
   };
 
   return (

@@ -7,17 +7,19 @@ datasource db {
 }
 
 model User {
-  id                 String              @id @default(uuid())
+  id                 String               @id @default(uuid())
   name               String
-  email              String              @unique
+  email              String               @unique
   password           String
-  role               Role                @default(USER)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  isActive           Boolean             @default(true)
+  role               Role                 @default(USER)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  isActive           Boolean              @default(true)
   lastLogin          DateTime?
   avatarUrl          String?
-  googleId           String?             @unique
+  googleId           String?              @unique
+  isPremium          Boolean              @default(false)
+  premiumExpiresAt   DateTime?
   playlists          Playlist[]
   downloads          Download[]
   queues             Queue[]
@@ -27,6 +29,22 @@ model User {
   refreshTokens      RefreshToken[]
   playHistory        PlayHistory[]
   artistFollows      ArtistFollow[]
+  preference         UserPreference?
+  notifications      Notification[]
+  paymentTransactions PaymentTransaction[]
+}
+
+model UserPreference {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  streamingQuality String   @default("Normal")
+  downloadQuality  String   @default("High")
+  musicLanguages   String[] @default(["English", "Thai"])
+  autoPlay         Boolean  @default(true)
+  showLyrics       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RefreshToken {
@@ -53,6 +71,7 @@ model Song {
   playCount     Int            @default(0)  // เพิ่ม — จำนวนครั้งที่เปิด
   year          Int?           // เพิ่ม — ปีที่ลงเพลง
   lyrics        String?
+  language      String         @default("English") // ภาษาของเพลง
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   artist        Artist         @relation(fields: [artistId], references: [id])
@@ -227,7 +246,56 @@ model PlayHistory {
   @@index([songId])
 }
 
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  amount    String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PaymentTransaction {
+  id          String            @id @default(uuid())
+  userId      String
+  method      PaymentMethod
+  amount      Float             @default(149)
+  status      PaymentStatus     @default(PENDING)
+  accountName String?
+  accountNo   String?
+  slipUrl     String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 enum Role {
   USER
   ADMIN
+}
+
+enum NotificationType {
+  PAYMENT_SUCCESS
+  PAYMENT_PENDING
+  PAYMENT_FAILED
+  PREMIUM_ACTIVATED
+  PREMIUM_EXPIRING
+}
+
+enum PaymentMethod {
+  QR_CODE
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }

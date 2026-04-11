@@ -42,6 +42,8 @@ const CrownIcon = () => (
 interface TopBarProps {
   username?: string;
   avatarUrl?: string | null;
+  isPremium?: boolean;
+  unreadCount?: number;
   onPremiumPress?: () => void;
   onBellPress?: () => void;
   onSettingsPress?: () => void;
@@ -51,6 +53,8 @@ interface TopBarProps {
 export default function TopBar({
   username = "User",
   avatarUrl,
+  isPremium = false,
+  unreadCount = 0,
   onPremiumPress,
   onBellPress,
   onSettingsPress,
@@ -79,7 +83,7 @@ export default function TopBar({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: "#1e293b",
+            backgroundColor: isPremium ? "#1a3a1a" : "#1e293b",
             paddingHorizontal: 12,
             paddingVertical: 5,
             borderRadius: 20,
@@ -89,15 +93,38 @@ export default function TopBar({
           }}
         >
           <CrownIcon />
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
-            Get Premium
+          <Text style={{ color: isPremium ? "#4ade80" : "#fff", fontSize: 12, fontWeight: "600" }}>
+            {isPremium ? "Premium" : "Get Premium"}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-        <TouchableOpacity activeOpacity={0.7} onPress={onBellPress}>
+        <TouchableOpacity activeOpacity={0.7} onPress={onBellPress} style={{ position: "relative" }}>
           <BellIcon />
+          {unreadCount > 0 && (
+            <View
+              style={{
+                position: "absolute",
+                top: -3,
+                right: -3,
+                backgroundColor: "#ef4444",
+                borderRadius: 6,
+                minWidth: 12,
+                height: 12,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: unreadCount > 9 ? 3 : 0,
+              }}
+            >
+              {unreadCount <= 9 && (
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#ef4444" }} />
+              )}
+              {unreadCount > 9 && (
+                <Text style={{ color: "#fff", fontSize: 8, fontWeight: "700" }}>9+</Text>
+              )}
+            </View>
+          )}
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.7} onPress={onSettingsPress}>
           <GearIcon />

@@ -88,6 +88,17 @@ export const login = async (req: Request, res: Response) => {
 
   await AuthRepository.updateLastLogin(user.id);
 
+  // ── ตรวจสอบ Premium หมดอายุตอน login ────────────────────────
+  if (user.isPremium && user.premiumExpiresAt && user.premiumExpiresAt < new Date()) {
+    const { prisma } = await import("../../lib/prisma");
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { isPremium: false, premiumExpiresAt: null },
+    });
+    (user as any).isPremium = updated.isPremium;
+    (user as any).premiumExpiresAt = updated.premiumExpiresAt;
+  }
+
   const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
   const refreshToken = generateRefreshToken({ id: user.id, role: user.role, email: user.email });
 
@@ -98,7 +109,15 @@ export const login = async (req: Request, res: Response) => {
     data: {
       accessToken,
       refreshToken,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl ?? null },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatarUrl: user.avatarUrl ?? null,
+        isPremium: user.isPremium ?? false,
+        premiumExpiresAt: user.premiumExpiresAt ?? null,
+      },
     },
   });
 };
@@ -369,10 +388,28 @@ export const updateProfile = async (req: Request, res: Response) => {
 export const getMe = async (req: Request, res: Response) => {
   const userId = req.user!.id;
 
-  const user = await AuthRepository.findUserById(userId);
+  let user = await AuthRepository.findUserById(userId);
   if (!user) {
     res.status(404).json({ success: false, message: "User not found" });
     return;
+  }
+
+  // ── ตรวจสอบ Premium หมดอายุ ──────────────────────────────────
+  if (user.isPremium && user.premiumExpiresAt && user.premiumExpiresAt < new Date()) {
+    const { prisma } = await import("../../lib/prisma");
+    user = await prisma.user.update({
+      where: { id: userId },
+      data: { isPremium: false, premiumExpiresAt: null },
+    });
+
+    // แจ้งเตือนว่า premium หมดอายุ
+    const { createNotification } = await import("../notification/notificationRepository");
+    await createNotification({
+      userId,
+      type: "PREMIUM_EXPIRING",
+      title: "แพ็กเกจ Premium หมดอายุแล้ว",
+      body: "แพ็กเกจ Premium ของคุณหมดอายุแล้ว สมัครใหม่เพื่อใช้งานต่อได้เลย",
+    });
   }
 
   res.json({
@@ -383,6 +420,8 @@ export const getMe = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
       avatarUrl: user.avatarUrl ?? null,
+      isPremium: user.isPremium ?? false,
+      premiumExpiresAt: user.premiumExpiresAt ?? null,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
     },

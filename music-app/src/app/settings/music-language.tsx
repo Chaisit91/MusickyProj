@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { savePreferences, setPreferenceLocal } from "../../store/preferencesSlice";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -43,24 +44,25 @@ const LANGUAGES: Language[] = [
 ];
 
 export default function MusicLanguageScreen() {
-  const [selected, setSelected] = useState<string[]>(["English", "Thai"]);
+  const dispatch = useAppDispatch();
+  const musicLanguages = useAppSelector((s) => s.preferences.musicLanguages);
+  const [selected, setSelected] = useState<string[]>(musicLanguages);
 
   useEffect(() => {
-    AsyncStorage.getItem("pref_musicLanguages").then((v) => {
-      if (v) setSelected(JSON.parse(v));
-    });
-  }, []);
+    setSelected(musicLanguages);
+  }, [musicLanguages]);
 
-  const toggleLanguage = async (lang: string) => {
+  const toggleLanguage = (lang: string) => {
     let next: string[];
     if (selected.includes(lang)) {
-      if (selected.length === 1) return; // keep at least one
+      if (selected.length === 1) return;
       next = selected.filter((l) => l !== lang);
     } else {
       next = [...selected, lang];
     }
     setSelected(next);
-    await AsyncStorage.setItem("pref_musicLanguages", JSON.stringify(next));
+    dispatch(setPreferenceLocal({ musicLanguages: next }));
+    dispatch(savePreferences({ musicLanguages: next }));
   };
 
   return (

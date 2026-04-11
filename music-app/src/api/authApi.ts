@@ -18,6 +18,8 @@ export interface AuthUser {
   email: string;
   role: string;
   avatarUrl?: string | null;
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
 }
 
 export interface LoginResponse {

@@ -76,7 +76,7 @@ export const updateUserProfile = async (
   return prisma.user.update({
     where: { id },
     data,
-    select: { id: true, name: true, email: true, role: true, avatarUrl: true },
+    select: { id: true, name: true, email: true, role: true, avatarUrl: true, isPremium: true, premiumExpiresAt: true },
   });
 };
 

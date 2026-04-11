@@ -12,10 +12,10 @@ import {
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import Svg, { Path } from "react-native-svg";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { logoutThunk, fetchMeThunk } from "../../store/authSlice";
 import { loadLibrary } from "../../store/librarySlice";
+import { savePreferences, setPreferenceLocal } from "../../store/preferencesSlice";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
 
@@ -101,47 +101,28 @@ export default function SettingsScreen() {
   const likedSongs = useAppSelector((s) => s.library.likedSongs);
   const playlists = useAppSelector((s) => s.library.playlists);
   const followedArtists = useAppSelector((s) => s.library.followedArtists);
+  const prefs = useAppSelector((s) => s.preferences);
 
-  const [autoPlay, setAutoPlay] = useState(false);
-  const [showLyrics, setShowLyrics] = useState(false);
   const [activeTab, setActiveTab] = useState<TabName>("Home");
-  const [streamingQuality, setStreamingQuality] = useState("HD");
-  const [downloadQuality, setDownloadQuality] = useState("HD");
-  const [musicLanguages, setMusicLanguages] = useState(["English", "Thai"]);
 
   useEffect(() => {
     dispatch(loadLibrary());
-    loadPrefs();
   }, []);
 
-  // ดึงข้อมูล user ล่าสุดจาก API ทุกครั้งที่กลับมาที่หน้านี้
   useFocusEffect(
     useCallback(() => {
       dispatch(fetchMeThunk());
     }, [])
   );
 
-  const loadPrefs = async () => {
-    const ap = await AsyncStorage.getItem("pref_autoPlay");
-    const sl = await AsyncStorage.getItem("pref_showLyrics");
-    const sq = await AsyncStorage.getItem("pref_streamingQuality");
-    const dq = await AsyncStorage.getItem("pref_downloadQuality");
-    const ml = await AsyncStorage.getItem("pref_musicLanguages");
-    if (ap !== null) setAutoPlay(ap === "true");
-    if (sl !== null) setShowLyrics(sl === "true");
-    if (sq) setStreamingQuality(sq);
-    if (dq) setDownloadQuality(dq);
-    if (ml) setMusicLanguages(JSON.parse(ml));
+  const saveAutoPlay = (val: boolean) => {
+    dispatch(setPreferenceLocal({ autoPlay: val }));
+    dispatch(savePreferences({ autoPlay: val }));
   };
 
-  const saveAutoPlay = async (val: boolean) => {
-    setAutoPlay(val);
-    await AsyncStorage.setItem("pref_autoPlay", String(val));
-  };
-
-  const saveShowLyrics = async (val: boolean) => {
-    setShowLyrics(val);
-    await AsyncStorage.setItem("pref_showLyrics", String(val));
+  const saveShowLyrics = (val: boolean) => {
+    dispatch(setPreferenceLocal({ showLyrics: val }));
+    dispatch(savePreferences({ showLyrics: val }));
   };
 
   const handleLogout = () => {
@@ -165,7 +146,7 @@ export default function SettingsScreen() {
   };
 
   const initial = user?.name?.charAt(0)?.toUpperCase() ?? "?";
-  const langLabel = musicLanguages.join(", ");
+  const langLabel = prefs.musicLanguages.join(", ");
 
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
@@ -319,19 +300,19 @@ export default function SettingsScreen() {
           />
           <SettingRow
             label="Streaming Quality"
-            value={streamingQuality}
+            value={prefs.streamingQuality}
             onPress={() => router.push("/settings/streaming-quality")}
           />
           <SettingRow
             label="Download Quality"
-            value={downloadQuality}
+            value={prefs.downloadQuality}
             onPress={() => router.push("/settings/download-quality")}
           />
           <SettingRow
             label="Auto-Play"
             rightElement={
               <Switch
-                value={autoPlay}
+                value={prefs.autoPlay}
                 onValueChange={saveAutoPlay}
                 trackColor={{ false: "#333", true: "#7c3aed" }}
                 thumbColor="#fff"
@@ -349,7 +330,7 @@ export default function SettingsScreen() {
           >
             <Text style={{ color: "#fff", fontSize: 15 }}>Show Lyrics on Player</Text>
             <Switch
-              value={showLyrics}
+              value={prefs.showLyrics}
               onValueChange={saveShowLyrics}
               trackColor={{ false: "#333", true: "#7c3aed" }}
               thumbColor="#fff"

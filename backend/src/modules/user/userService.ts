@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as UserRepository from "./userRepository";
+import { prisma } from "../../lib/prisma";
 
 export const getAllUsers = async (req: Request, res: Response) => {
   const users = await UserRepository.findAllUsers();
@@ -29,4 +30,39 @@ export const deleteUser = async (req: Request, res: Response) => {
   const id = req.params.id as string;
   await UserRepository.deleteUser(id);
   res.json({ success: true, message: "User deleted" });
+};
+
+export const getMyPreferences = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  let pref = await prisma.userPreference.findUnique({ where: { userId } });
+  if (!pref) {
+    pref = await prisma.userPreference.create({
+      data: { userId },
+    });
+  }
+  res.json({ success: true, data: pref });
+};
+
+export const updateMyPreferences = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  const { streamingQuality, downloadQuality, musicLanguages, autoPlay, showLyrics } = req.body;
+  const pref = await prisma.userPreference.upsert({
+    where: { userId },
+    create: {
+      userId,
+      ...(streamingQuality !== undefined && { streamingQuality }),
+      ...(downloadQuality !== undefined && { downloadQuality }),
+      ...(musicLanguages !== undefined && { musicLanguages }),
+      ...(autoPlay !== undefined && { autoPlay }),
+      ...(showLyrics !== undefined && { showLyrics }),
+    },
+    update: {
+      ...(streamingQuality !== undefined && { streamingQuality }),
+      ...(downloadQuality !== undefined && { downloadQuality }),
+      ...(musicLanguages !== undefined && { musicLanguages }),
+      ...(autoPlay !== undefined && { autoPlay }),
+      ...(showLyrics !== undefined && { showLyrics }),
+    },
+  });
+  res.json({ success: true, data: pref });
 };
