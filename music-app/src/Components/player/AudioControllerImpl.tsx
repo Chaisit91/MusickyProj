@@ -64,17 +64,19 @@ export default function AudioControllerImpl() {
     player.volume = volumeRef.current;
     playerRef.current = player;
 
-    // Lock screen / Now Playing controls
-    player.setActiveForLockScreen(
-      true,
-      {
-        title: currentSong.title,
-        artist: (currentSong.artist as any)?.name ?? undefined,
-        albumTitle: (currentSong.album as any)?.title ?? undefined,
-        artworkUrl: currentSong.coverUrl ?? undefined,
-      },
-      { showSeekForward: true, showSeekBackward: true }
-    );
+    // Lock screen / Now Playing controls (expo-audio >= 2.x)
+    if (typeof player.setActiveForLockScreen === "function") {
+      player.setActiveForLockScreen(
+        true,
+        {
+          title: currentSong.title,
+          artist: (currentSong.artist as any)?.name ?? undefined,
+          albumTitle: (currentSong.album as any)?.title ?? undefined,
+          artworkUrl: currentSong.coverUrl ?? undefined,
+        },
+        { showSeekForward: true, showSeekBackward: true }
+      );
+    }
 
     if (isPlayingRef.current) {
       player.play();
@@ -105,7 +107,9 @@ export default function AudioControllerImpl() {
 
     return () => {
       subscription.remove();
-      player.clearLockScreenControls();
+      if (typeof player.clearLockScreenControls === "function") {
+        player.clearLockScreenControls();
+      }
       player.pause();
       player.remove();
       playerRef.current = null;
