@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import { useAppDispatch } from "../../store/hooks";
 import { loginThunk } from "../../store/authSlice";
 import { loadPreferences } from "../../store/preferencesSlice";
-import { showSplashAd } from "../../store/adsSlice";
+import { showSplashAd, setShowingPreHomeAd } from "../../store/adsSlice";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,13 +71,17 @@ export default function LoginScreen() {
         setError("password", { message: msg });
       } else {
         dispatch(loadPreferences());
-        // แสดง SPLASH ad สำหรับ user ที่ไม่ใช่ Premium
         const user = (result.payload as any)?.user;
+        console.log("[Login] user:", user?.email, "isPremium:", user?.isPremium);
         if (!user?.isPremium) {
+          // Block AuthGuard from navigating to home — ad screen will navigate instead
+          dispatch(setShowingPreHomeAd(true));
+          console.log("[Login] dispatching showSplashAd");
           dispatch(showSplashAd());
         }
       }
     } catch (err) {
+      dispatch(setShowingPreHomeAd(false));
       if (axios.isAxiosError(err)) {
         setServerError(`Cannot reach server (${err.message})`);
       } else {

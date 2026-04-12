@@ -18,6 +18,7 @@ interface Ad {
   advertiser: string;
   impressions: number;
   isActive: boolean;
+  priority: number;
   createdAt: string;
   updatedAt: string;
 }

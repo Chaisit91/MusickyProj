@@ -9,8 +9,19 @@ export const getAllAds = async (req: Request, res: Response) => {
 export const getActiveAds = async (req: Request, res: Response) => {
   const adType = req.query.type as string | undefined;
   const ads = await AdsRepository.findActiveAds(adType);
-  // สุ่มเลือก 1 อัน จาก ads ที่เจอ
-  const picked = ads.length > 0 ? ads[Math.floor(Math.random() * ads.length)] : null;
+
+  // Weighted random ตาม priority: ad ที่ priority สูงกว่ามีโอกาสถูกเลือกมากกว่า
+  // สร้าง pool โดยใส่แต่ละ ad ซ้ำตาม priority value
+  let picked = null;
+  if (ads.length > 0) {
+    const pool: typeof ads = [];
+    for (const ad of ads) {
+      const weight = Math.max(1, ad.priority ?? 1);
+      for (let i = 0; i < weight; i++) pool.push(ad);
+    }
+    picked = pool[Math.floor(Math.random() * pool.length)];
+  }
+
   res.json({ success: true, data: picked });
 };
 

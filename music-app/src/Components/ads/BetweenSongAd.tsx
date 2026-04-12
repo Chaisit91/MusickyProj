@@ -23,21 +23,40 @@ export default function BetweenSongAd() {
   const dispatch = useAppDispatch();
   const { currentAd, adVisible, adContext } = useAppSelector((s) => s.ads);
 
-  const [timeLeft, setTimeLeft] = useState(0);
+  // -1 = ยังไม่เริ่ม countdown, ≥0 = นับถอยหลัง
+  const [timeLeft, setTimeLeft] = useState(-1);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const visible = adVisible && adContext === "AFTER_SONG" && !!currentAd;
+  const visible =
+    adVisible &&
+    (adContext === "AFTER_SONG" || adContext === "AFTER_MULTIPLE") &&
+    !!currentAd;
+
+  console.log("[BetweenSongAd] visible:", visible, "adContext:", adContext, "adId:", currentAd?.id ?? "null");
 
   useEffect(() => {
     if (!visible || !currentAd) return;
 
+    console.log("[BetweenSongAd] starting — ad:", currentAd.id, "duration:", currentAd.adDuration);
     dispatch(trackImpression(currentAd.id));
 
     const duration = currentAd.adDuration ?? 15;
-    setTimeLeft(duration);
+
+    // รีเซ็ต animation
+    fadeAnim.setValue(0);
+    progressAnim.setValue(0);
 
     Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+    Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: duration * 1000,
+      useNativeDriver: false,
+    }).start();
+
+    // เริ่ม countdown (ต้อง set ก่อน interval เพื่อให้ dismiss effect ทำงานถูก)
+    setTimeLeft(duration);
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -51,12 +70,14 @@ export default function BetweenSongAd() {
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      progressAnim.stopAnimation();
     };
   }, [visible, currentAd?.id]);
 
-  // เมื่อ countdown ถึง 0 → ปิด ad แล้วเล่นเพลงถัดไป
+  // dismiss เมื่อ countdown จบ (timeLeft ต้อง ≥ 0 ก่อน ถึงจะ dismiss เมื่อเป็น 0)
   useEffect(() => {
-    if (!visible || timeLeft !== 0) return;
+    if (!visible || timeLeft < 0 || timeLeft !== 0) return;
+    console.log("[BetweenSongAd] countdown done → dismiss + nextSong");
     const timer = setTimeout(() => {
       dispatch(dismissAd());
       dispatch(setPendingNextSong(false));
@@ -65,34 +86,29 @@ export default function BetweenSongAd() {
     return () => clearTimeout(timer);
   }, [timeLeft, visible]);
 
+  // reset timeLeft เมื่อ modal ปิด
+  useEffect(() => {
+    if (!visible) {
+      setTimeLeft(-1);
+    }
+  }, [visible]);
+
   if (!visible || !currentAd) return null;
 
   const isVideo = isVideoUrl(currentAd.imageUrl);
-  const duration = currentAd.adDuration ?? 15;
-  const progress = (duration - timeLeft) / duration;
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent>
       <Animated.View style={{ flex: 1, backgroundColor: "#000", opacity: fadeAnim }}>
 
-        {/* Media */}
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          {isVideo ? (
-            <Video
-              source={{ uri: currentAd.imageUrl }}
-              style={{ width, height: height * 0.7 }}
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay
-              isLooping={false}
-              isMuted={false}
-            />
-          ) : (
-            <Image
-              source={{ uri: currentAd.imageUrl }}
-              style={{ width, height: height * 0.7 }}
-              resizeMode="contain"
-            />
-          )}
+        {/* Progress bar */}
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, backgroundColor: "rgba(255,255,255,0.15)", zIndex: 10 }}>
+          <Animated.View style={{ height: 3, backgroundColor: "#7c3aed", width: progressWidth }} />
         </View>
 
         {/* Top bar */}
@@ -106,47 +122,56 @@ export default function BetweenSongAd() {
             justifyContent: "space-between",
             alignItems: "center",
             paddingHorizontal: 16,
+            zIndex: 10,
           }}
         >
           <View style={{ backgroundColor: "rgba(0,0,0,0.65)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
             <Text style={{ color: "#aaa", fontSize: 11 }}>โฆษณา • {currentAd.advertiser}</Text>
           </View>
-
-          {/* ข้ามไม่ได้ */}
           <View style={{ backgroundColor: "rgba(0,0,0,0.65)", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 }}>
-            <Text style={{ color: "#888", fontSize: 13 }}>อีก {timeLeft} วิ</Text>
+            <Text style={{ color: "#888", fontSize: 13 }}>
+              {timeLeft > 0 ? `อีก ${timeLeft} วิ` : "กำลังโหลด..."}
+            </Text>
           </View>
         </View>
 
-        {/* Progress bar */}
-        <View style={{ position: "absolute", top: 44, left: 0, right: 0, height: 3, backgroundColor: "rgba(255,255,255,0.15)" }}>
-          <Animated.View
-            style={{
-              height: 3,
-              backgroundColor: "#7c3aed",
-              width: `${progress * 100}%`,
-            }}
-          />
+        {/* Media */}
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          {isVideo ? (
+            <Video
+              source={{ uri: currentAd.imageUrl }}
+              style={{ width, height: height * 0.65 }}
+              resizeMode={ResizeMode.CONTAIN}
+              shouldPlay
+              isLooping={false}
+              isMuted={false}
+            />
+          ) : (
+            <Image
+              source={{ uri: currentAd.imageUrl }}
+              style={{ width, height: height * 0.65 }}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+
+        {/* Ad title + advertiser */}
+        <View style={{ position: "absolute", bottom: 120, left: 0, right: 0, paddingHorizontal: 24, gap: 4 }}>
+          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }} numberOfLines={2}>
+            {currentAd.title}
+          </Text>
+          <Text style={{ color: "#aaa", fontSize: 14 }}>{currentAd.advertiser}</Text>
         </View>
 
         {/* Bottom */}
         <View style={{ position: "absolute", bottom: 40, left: 0, right: 0, alignItems: "center", gap: 10 }}>
-          <Text style={{ color: "#888", fontSize: 12 }}>
-            ต้องดูโฆษณาจนจบก่อนเพลงถัดไปจะเล่น
-          </Text>
+          <Text style={{ color: "#666", fontSize: 12 }}>ต้องดูโฆษณาจนจบก่อนเพลงถัดไปจะเล่น</Text>
           <TouchableOpacity
             onPress={() => router.push("/premium")}
             activeOpacity={0.8}
-            style={{
-              backgroundColor: "#7c3aed",
-              paddingHorizontal: 20,
-              paddingVertical: 8,
-              borderRadius: 20,
-            }}
+            style={{ backgroundColor: "#7c3aed", paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20 }}
           >
-            <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>
-              ✦ สมัคร Premium — ไม่มีโฆษณา
-            </Text>
+            <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>✦ สมัคร Premium — ไม่มีโฆษณา</Text>
           </TouchableOpacity>
         </View>
 

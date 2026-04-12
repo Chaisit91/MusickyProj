@@ -228,6 +228,7 @@ model Ads {
   adDuration  Int       @default(30)
   impressions Int       @default(0)
   isActive    Boolean   @default(true)
+  priority    Int       @default(1)   // 1–10: ยิ่งสูงยิ่งได้แสดงก่อน
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime  @default(now())

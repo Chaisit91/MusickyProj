@@ -6,6 +6,7 @@ export interface AdsCreateInput {
   adDuration: number;
   advertiser: string;
   isActive?: boolean;
+  priority?: number;
   startDate?: string;
   endDate?: string;
 }
@@ -18,6 +19,7 @@ export interface AdsUpdateInput {
   adDuration?: number;
   advertiser?: string;
   isActive?: boolean;
+  priority?: number;
   startDate?: string;
   endDate?: string;
 }

@@ -18,6 +18,7 @@ export const createAdsApi = async (data: {
   adDuration: number;
   advertiser: string;
   isActive?: boolean;
+  priority?: number;
   startDate?: string;
   endDate?: string;
   mediaFile: File;
@@ -28,6 +29,7 @@ export const createAdsApi = async (data: {
   fd.append("adDuration", String(data.adDuration));
   fd.append("advertiser", data.advertiser);
   if (data.isActive !== undefined) fd.append("isActive", String(data.isActive));
+  if (data.priority !== undefined) fd.append("priority", String(data.priority));
   if (data.startDate) fd.append("startDate", data.startDate);
   if (data.endDate) fd.append("endDate", data.endDate);
   fd.append("media", data.mediaFile);
@@ -40,6 +42,7 @@ export const updateAdsApi = async (id: string, data: {
   adDuration?: number;
   advertiser?: string;
   isActive?: boolean;
+  priority?: number;
   startDate?: string;
   endDate?: string;
   mediaFile?: File;
@@ -50,6 +53,7 @@ export const updateAdsApi = async (id: string, data: {
   if (data.adDuration !== undefined) fd.append("adDuration", String(data.adDuration));
   if (data.advertiser !== undefined) fd.append("advertiser", data.advertiser);
   if (data.isActive !== undefined) fd.append("isActive", String(data.isActive));
+  if (data.priority !== undefined) fd.append("priority", String(data.priority));
   if (data.startDate !== undefined) fd.append("startDate", data.startDate);
   if (data.endDate !== undefined) fd.append("endDate", data.endDate);
   if (data.mediaFile) fd.append("media", data.mediaFile);

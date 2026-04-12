@@ -36,6 +36,7 @@ export const createAds = async (data: {
   adDuration: number;
   advertiser: string;
   isActive?: boolean;
+  priority?: number;
   startDate?: string;
   endDate?: string;
 }) => {
@@ -56,6 +57,7 @@ export const updateAds = async (id: string, data: {
   adDuration?: number;
   advertiser?: string;
   isActive?: boolean;
+  priority?: number;
   startDate?: string;
   endDate?: string;
 }) => {

@@ -24,6 +24,7 @@ const PUBLIC_SEGMENTS = new Set<string | undefined>([undefined, "index", "(auth)
 // • Guest on a protected route        → push to /login
 function AuthGuard() {
   const { isLoggedIn, isLoading } = useAppSelector((s) => s.auth);
+  const showingPreHomeAd = useAppSelector((s) => s.ads.showingPreHomeAd);
   const router = useRouter();
   const segments = useSegments();
 
@@ -34,11 +35,13 @@ function AuthGuard() {
     const isPublic = PUBLIC_SEGMENTS.has(rootSegment);
 
     if (isLoggedIn && isPublic) {
+      // Don't redirect yet — splash ad screen will navigate to home when done
+      if (showingPreHomeAd) return;
       router.replace("/home");
     } else if (!isLoggedIn && !isPublic) {
       router.replace("/login");
     }
-  }, [isLoggedIn, isLoading, segments]);
+  }, [isLoggedIn, isLoading, segments, showingPreHomeAd]);
 
   return null;
 }

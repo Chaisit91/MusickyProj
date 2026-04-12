@@ -10,7 +10,10 @@ import {
   clearSeekRequest,
   togglePlay,
 } from "../../store/playerSlice";
-import { showAfterSongAd } from "../../store/adsSlice";
+import {
+  showAfterMultipleAd,
+  resetAdCounter,
+} from "../../store/adsSlice";
 
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
@@ -88,19 +91,21 @@ export default function AudioControllerImpl() {
         dispatch(setDuration(Math.floor(status.duration)));
       }
       if (status.didJustFinish) {
+        console.log("[AudioController] didJustFinish — isPremium:", isPremiumRef.current, "autoPlay:", autoPlayRef.current);
         if (!autoPlayRef.current) {
           dispatch(togglePlay());
-        } else if (!isPremiumRef.current) {
-          // Free user → แสดง ad ก่อน (BetweenSongAd จะ dispatch nextSong เมื่อ ad จบ)
-          // ถ้าไม่มี ad ใน backend → showAfterSongAd.fulfilled จะ return null → nextSong เอง
-          dispatch(showAfterSongAd()).then((result: any) => {
+        } else if (isPremiumRef.current) {
+          dispatch(nextSong());
+        } else {
+          // Free user → แสดงโฆษณาหลังทุกเพลง
+          console.log("[AudioController] dispatching showAfterMultipleAd");
+          dispatch(resetAdCounter());
+          dispatch(showAfterMultipleAd()).then((result: any) => {
+            console.log("[AudioController] showAfterMultipleAd resolved, payload:", result.payload?.id ?? "null");
             if (!result.payload) {
-              // ไม่มี ad → เล่นเพลงถัดไปทันที
               dispatch(nextSong());
             }
           });
-        } else {
-          dispatch(nextSong());
         }
       }
     });

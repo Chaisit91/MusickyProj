@@ -11,8 +11,14 @@ export interface Ad {
   isActive: boolean;
 }
 
-export const fetchAdByType = async (type: "SPLASH" | "AFTER_SONG"): Promise<Ad | null> => {
+export const fetchAdByType = async (type: "SPLASH" | "AFTER_SONG" | "AFTER_MULTIPLE"): Promise<Ad | null> => {
   const { data } = await apiClient.get(`/ads/active?type=${type}`);
+  return (data as { success: boolean; data: Ad | null }).data;
+};
+
+// ดึง ad ใดก็ได้ที่ active (ไม่ filter type) — ใช้ fallback ตอน splash
+export const fetchAnyActiveAd = async (): Promise<Ad | null> => {
+  const { data } = await apiClient.get(`/ads/active`);
   return (data as { success: boolean; data: Ad | null }).data;
 };
 

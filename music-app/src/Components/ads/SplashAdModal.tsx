@@ -9,8 +9,9 @@ import {
   Animated,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
+import { router } from "expo-router";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { dismissAd, trackImpression } from "../../store/adsSlice";
+import { dismissAd, trackImpression, setShowingPreHomeAd } from "../../store/adsSlice";
 
 const { width, height } = Dimensions.get("window");
 
@@ -21,28 +22,28 @@ export default function SplashAdModal() {
   const dispatch = useAppDispatch();
   const { currentAd, adVisible, adContext } = useAppSelector((s) => s.ads);
 
-  const [countdown, setCountdown] = useState(0);
+  // -1 = ยังไม่เริ่ม countdown, ≥0 = นับถอยหลัง
+  const [countdown, setCountdown] = useState(-1);
   const [canSkip, setCanSkip] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const visible = adVisible && adContext === "SPLASH" && !!currentAd;
 
+  console.log("[SplashAdModal] visible:", visible, "adContext:", adContext, "adId:", currentAd?.id ?? "null");
+
   useEffect(() => {
     if (!visible || !currentAd) return;
 
-    // บันทึก impression
+    console.log("[SplashAdModal] starting — ad:", currentAd.id, "duration:", currentAd.adDuration);
     dispatch(trackImpression(currentAd.id));
 
     const duration = currentAd.adDuration ?? 5;
-    setCountdown(duration);
+    fadeAnim.setValue(0);
     setCanSkip(false);
+    setCountdown(duration);
 
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
 
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -60,13 +61,21 @@ export default function SplashAdModal() {
     };
   }, [visible, currentAd?.id]);
 
+  // reset เมื่อ modal ปิด
+  useEffect(() => {
+    if (!visible) {
+      setCountdown(-1);
+      setCanSkip(false);
+    }
+  }, [visible]);
+
   const handleSkip = () => {
     if (!canSkip) return;
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => dispatch(dismissAd()));
+    Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
+      dispatch(dismissAd());
+      dispatch(setShowingPreHomeAd(false));
+      router.replace("/home");
+    });
   };
 
   if (!visible || !currentAd) return null;
@@ -110,18 +119,10 @@ export default function SplashAdModal() {
             paddingHorizontal: 16,
           }}
         >
-          <View
-            style={{
-              backgroundColor: "rgba(0,0,0,0.6)",
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 8,
-            }}
-          >
+          <View style={{ backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
             <Text style={{ color: "#aaa", fontSize: 11 }}>โฆษณา • {currentAd.advertiser}</Text>
           </View>
 
-          {/* Skip button */}
           <TouchableOpacity
             onPress={handleSkip}
             activeOpacity={canSkip ? 0.7 : 1}
@@ -138,28 +139,24 @@ export default function SplashAdModal() {
             {canSkip ? (
               <Text style={{ color: "#000", fontSize: 13, fontWeight: "700" }}>ข้าม ✕</Text>
             ) : (
-              <Text style={{ color: "#fff", fontSize: 13 }}>ข้ามได้ใน {countdown} วิ</Text>
+              <Text style={{ color: "#fff", fontSize: 13 }}>
+                ข้ามได้ใน {countdown > 0 ? countdown : "..."} วิ
+              </Text>
             )}
           </TouchableOpacity>
         </View>
 
+        {/* Ad title */}
+        <View style={{ position: "absolute", bottom: 90, left: 0, right: 0, paddingHorizontal: 24, gap: 4 }}>
+          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }} numberOfLines={2}>
+            {currentAd.title}
+          </Text>
+          <Text style={{ color: "#aaa", fontSize: 13 }}>{currentAd.advertiser}</Text>
+        </View>
+
         {/* Bottom info */}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 48,
-            left: 0,
-            right: 0,
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <Text style={{ color: "#888", fontSize: 12 }}>
-            {canSkip ? "กดปุ่มด้านบนเพื่อข้ามโฆษณา" : `โฆษณา ${currentAd.adDuration - countdown}/${currentAd.adDuration} วินาที`}
-          </Text>
-          <Text style={{ color: "#555", fontSize: 11 }}>
-            สมัคร Premium เพื่อฟังเพลงโดยไม่มีโฆษณา
-          </Text>
+        <View style={{ position: "absolute", bottom: 48, left: 0, right: 0, alignItems: "center", gap: 6 }}>
+          <Text style={{ color: "#555", fontSize: 11 }}>สมัคร Premium เพื่อฟังเพลงโดยไม่มีโฆษณา</Text>
         </View>
 
       </Animated.View>
