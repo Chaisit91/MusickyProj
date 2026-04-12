@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
 import type { AudioPlayer } from "expo-audio";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { getLocalAudioFile } from "../../store/librarySlice";
 import {
   setProgress,
   setDuration,
@@ -9,11 +10,15 @@ import {
   clearSeekRequest,
   togglePlay,
 } from "../../store/playerSlice";
+import { showAfterSongAd } from "../../store/adsSlice";
 
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
   const { currentSong, isPlaying, seekRequest, volume } = useAppSelector((s) => s.player);
   const autoPlay = useAppSelector((s) => s.preferences.autoPlay);
+  const isPremium = useAppSelector((s) => s.auth.user?.isPremium ?? false);
+  const isPremiumRef = useRef(isPremium);
+  useEffect(() => { isPremiumRef.current = isPremium; }, [isPremium]);
 
   const playerRef = useRef<AudioPlayer | null>(null);
   const isPlayingRef = useRef(isPlaying);
@@ -52,9 +57,24 @@ export default function AudioControllerImpl() {
 
     console.log("AudioController: loading", currentSong.filePath);
 
-    const player = createAudioPlayer({ uri: currentSong.filePath });
+    // ใช้ local file ถ้ามี (offline playback) ไม่งั้นใช้ remote URL
+    const localFile = getLocalAudioFile(currentSong.id);
+    const audioUri = localFile.exists ? localFile.uri : currentSong.filePath;
+    const player = createAudioPlayer({ uri: audioUri });
     player.volume = volumeRef.current;
     playerRef.current = player;
+
+    // Lock screen / Now Playing controls
+    player.setActiveForLockScreen(
+      true,
+      {
+        title: currentSong.title,
+        artist: (currentSong.artist as any)?.name ?? undefined,
+        albumTitle: (currentSong.album as any)?.title ?? undefined,
+        artworkUrl: currentSong.coverUrl ?? undefined,
+      },
+      { showSeekForward: true, showSeekBackward: true }
+    );
 
     if (isPlayingRef.current) {
       player.play();
@@ -66,16 +86,26 @@ export default function AudioControllerImpl() {
         dispatch(setDuration(Math.floor(status.duration)));
       }
       if (status.didJustFinish) {
-        if (autoPlayRef.current) {
-          dispatch(nextSong());
+        if (!autoPlayRef.current) {
+          dispatch(togglePlay());
+        } else if (!isPremiumRef.current) {
+          // Free user → แสดง ad ก่อน (BetweenSongAd จะ dispatch nextSong เมื่อ ad จบ)
+          // ถ้าไม่มี ad ใน backend → showAfterSongAd.fulfilled จะ return null → nextSong เอง
+          dispatch(showAfterSongAd()).then((result: any) => {
+            if (!result.payload) {
+              // ไม่มี ad → เล่นเพลงถัดไปทันที
+              dispatch(nextSong());
+            }
+          });
         } else {
-          dispatch(togglePlay()); // หยุดเพลง ไม่เล่นต่อ
+          dispatch(nextSong());
         }
       }
     });
 
     return () => {
       subscription.remove();
+      player.clearLockScreenControls();
       player.pause();
       player.remove();
       playerRef.current = null;

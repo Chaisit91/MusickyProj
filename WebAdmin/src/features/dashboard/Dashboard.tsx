@@ -108,6 +108,8 @@ const Dashboard = () => {
     { label: "เพลงทั้งหมด", value: stats ? fmt(stats.totalSongs) : "—", sub: "เพลงในระบบ", color: "text-blue-400" },
     { label: "ศิลปินทั้งหมด", value: stats ? fmt(stats.totalArtists) : "—", sub: "ศิลปินในระบบ", color: "text-yellow-400" },
     { label: "การเล่นทั้งหมด", value: stats ? fmt(stats.totalPlays) : "—", sub: "จำนวนครั้งที่เปิดฟัง", color: "text-purple-400" },
+    { label: "สมาชิก Premium", value: stats ? fmt(stats.totalPremium) : "—", sub: `Conversion ${stats?.conversionRate ?? "—"}%`, color: "text-pink-400" },
+    { label: "รายได้เดือนนี้", value: stats ? `฿${stats.monthlyRevenue.toLocaleString()}` : "—", sub: "จากการสมัคร Premium", color: "text-amber-400" },
   ];
 
   return (
@@ -121,7 +123,7 @@ const Dashboard = () => {
             {loading && <div className="text-center py-4 text-gray-300 text-sm">กำลังโหลด...</div>}
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
               {statCards.map((c) => (
                 <div key={c.label} className="bg-gray-800 p-5 rounded-xl shadow-lg">
                   <p className="text-gray-400 text-xs mb-1">{c.label}</p>

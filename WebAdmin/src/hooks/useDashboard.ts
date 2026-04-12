@@ -6,6 +6,9 @@ interface DashboardStats {
   totalSongs: number;
   totalPlays: number;
   totalArtists: number;
+  totalPremium: number;
+  monthlyRevenue: number;
+  conversionRate: string;
 }
 
 interface Activity {

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
+import {View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -8,15 +7,14 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
   ActionSheetIOS,
-  Platform,
-} from "react-native";
+  Platform} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { updateProfileThunk } from "../../store/authSlice";
+import { Image } from "expo-image";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -189,7 +187,7 @@ export default function EditProfileScreen() {
                     borderWidth: 3,
                     borderColor: "#2a2a2a",
                   }}
-                  resizeMode="cover"
+                  contentFit="cover"
                 />
               ) : (
                 <View

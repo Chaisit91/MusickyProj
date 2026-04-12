@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
+import {View,
   Text,
   ScrollView,
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
-  Image,
-  Dimensions,
-} from "react-native";
+  Dimensions} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { recordPlay, Song } from "../../api/homeApi";
 import { getArtistSongs } from "../../api/detailApi";
@@ -27,6 +24,7 @@ import { toggleFollowArtist, toggleLikeSong, toggleDownload, loadLibrary } from 
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 280;
@@ -73,7 +71,7 @@ const SongRow = ({
       }}
     >
       {song.coverUrl ? (
-        <Image source={{ uri: song.coverUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+        <Image source={{ uri: song.coverUrl }} style={{ width: 48, height: 48 }} contentFit="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#ffffff60", fontSize: 16 }}>♪</Text>
@@ -165,7 +163,7 @@ export default function ArtistScreen() {
             <Image
               source={{ uri: artistImageUrl }}
               style={{ width, height: HERO_HEIGHT }}
-              resizeMode="cover"
+              contentFit="cover"
             />
           ) : (
             <View

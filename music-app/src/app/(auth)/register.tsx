@@ -13,8 +13,11 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
-import { registerApi } from "../../api/authApi";
-import axios from "axios";
+import { useAppDispatch } from "../../store/hooks";
+import { registerThunk } from "../../store/authSlice";
+import { loadPreferences } from "../../store/preferencesSlice";
+import { showSplashAd } from "../../store/adsSlice";
+
 
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -86,6 +89,7 @@ export default function RegisterScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -123,23 +127,21 @@ export default function RegisterScreen() {
     setServerError("");
     setLoading(true);
     try {
-      await registerApi({ name: data.name.trim(), email: data.email.trim(), password: data.password });
-      router.replace("/login");
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const msg: string = err.response?.data?.message ?? "Registration failed";
-        const isEmailTaken =
-          err.response?.status === 409 ||
-          msg.toLowerCase().includes("email") ||
-          msg.toLowerCase().includes("already");
+      const result = await dispatch(registerThunk({ name: data.name.trim(), email: data.email.trim(), password: data.password }));
+      if (registerThunk.rejected.match(result)) {
+        const msg = (result.payload as string) || "Registration failed";
+        const isEmailTaken = msg.toLowerCase().includes("email") || msg.toLowerCase().includes("already");
         if (isEmailTaken) {
           setError("email", { message: "This email is already registered" });
         } else {
           setServerError(msg);
         }
-      } else {
-        setServerError("Unable to connect to server");
+        return;
       }
+      dispatch(loadPreferences());
+      dispatch(showSplashAd()); // ผู้ใช้ใหม่ = free user เสมอ
+    } catch (err) {
+      setServerError("Unable to connect to server");
     } finally {
       setLoading(false);
     }

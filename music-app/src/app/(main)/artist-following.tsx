@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
+import {View,
   Text,
   FlatList,
   TouchableOpacity,
   StatusBar,
   TextInput,
-  Image,
-  Dimensions,
-} from "react-native";
+  Dimensions} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -16,6 +13,7 @@ import { loadLibrary } from "../../store/librarySlice";
 import { Artist } from "../../api/homeApi";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
 const ITEM_W = (width - 48) / 3;
@@ -78,7 +76,7 @@ const ArtistItem = ({
         <Image
           source={{ uri: artist.imageUrl }}
           style={{ width: ITEM_W - 8, height: ITEM_W - 8 }}
-          resizeMode="cover"
+          contentFit="cover"
         />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

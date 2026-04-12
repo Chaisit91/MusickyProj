@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  View,
+import {View,
   Text,
   ScrollView,
   TouchableOpacity,
@@ -8,10 +7,8 @@ import {
   Modal,
   Pressable,
   ActivityIndicator,
-  Image,
   RefreshControl,
-  Dimensions,
-} from "react-native";
+  Dimensions} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { useFocusEffect } from "@react-navigation/native";
@@ -37,6 +34,7 @@ import {
 } from "../../api/homeApi";
 import { colorFor } from "../../constants";
 import { PlayIcon } from "../../Components/ui/icons";
+import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
 
@@ -83,7 +81,7 @@ const FeaturingBannerCard = ({
               return (
                 <View key={row} style={{ flex: 1, backgroundColor: colorFor(idx) }}>
                   {cover ? (
-                    <Image source={{ uri: cover }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                    <Image source={{ uri: cover }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
                   ) : null}
                 </View>
               );
@@ -142,7 +140,7 @@ const RecentCard = ({
         }}
       >
         {cover ? (
-          <Image source={{ uri: cover }} style={{ width: 100, height: 100 }} resizeMode="cover" />
+          <Image source={{ uri: cover }} style={{ width: 100, height: 100 }} contentFit="cover" />
         ) : null}
         {/* Play overlay */}
         <View
@@ -198,14 +196,14 @@ const MixCard = ({
         }}
       >
         {genre.imageUrl ? (
-          <Image source={{ uri: genre.imageUrl }} style={{ width: 140, height: 140 }} resizeMode="cover" />
+          <Image source={{ uri: genre.imageUrl }} style={{ width: 140, height: 140 }} contentFit="cover" />
         ) : (
           /* 2×2 mosaic */
           <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap" }}>
             {[0, 1, 2, 3].map((i) => (
               <View key={i} style={{ width: 70, height: 70, backgroundColor: colorFor(index + i + 1) }}>
                 {covers[i] ? (
-                  <Image source={{ uri: covers[i]! }} style={{ width: 70, height: 70 }} resizeMode="cover" />
+                  <Image source={{ uri: covers[i]! }} style={{ width: 70, height: 70 }} contentFit="cover" />
                 ) : null}
               </View>
             ))}
@@ -289,7 +287,7 @@ const ArtistCard = ({
       }}
     >
       {artist.imageUrl ? (
-        <Image source={{ uri: artist.imageUrl }} style={{ width: 110, height: 110 }} resizeMode="cover" />
+        <Image source={{ uri: artist.imageUrl }} style={{ width: 110, height: 110 }} contentFit="cover" />
       ) : null}
     </View>
     <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600", textAlign: "center" }} numberOfLines={1}>
@@ -325,7 +323,7 @@ const NewReleaseCard = ({
       }}
     >
       {song.coverUrl ? (
-        <Image source={{ uri: song.coverUrl }} style={{ width: 120, height: 120 }} resizeMode="cover" />
+        <Image source={{ uri: song.coverUrl }} style={{ width: 120, height: 120 }} contentFit="cover" />
       ) : null}
     </View>
     <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }} numberOfLines={1}>
@@ -368,7 +366,7 @@ const PlaylistCard = ({
       }}
     >
       {coverUrl ? (
-        <Image source={{ uri: coverUrl }} style={{ width: 140, height: 140 }} resizeMode="cover" />
+        <Image source={{ uri: coverUrl }} style={{ width: 140, height: 140 }} contentFit="cover" />
       ) : null}
     </View>
     <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }} numberOfLines={1}>
@@ -433,7 +431,7 @@ const MixesModal = ({
             >
               <View style={{ width: 56, height: 56, borderRadius: 10, overflow: "hidden", backgroundColor: genre.color ?? colorFor(i) }}>
                 {genre.imageUrl ? (
-                  <Image source={{ uri: genre.imageUrl }} style={{ width: 56, height: 56 }} resizeMode="cover" />
+                  <Image source={{ uri: genre.imageUrl }} style={{ width: 56, height: 56 }} contentFit="cover" />
                 ) : (
                   <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                     <Text style={{ color: "#ffffff30", fontSize: 22, fontWeight: "900" }}>{genre.name.charAt(0).toUpperCase()}</Text>
@@ -500,7 +498,7 @@ const NewReleasesModal = ({
               <Text style={{ color: "#555", fontWeight: "700", fontSize: 14, width: 24 }}>{i + 1}</Text>
               <View style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: colorFor(i), marginRight: 12, overflow: "hidden" }}>
                 {song.coverUrl ? (
-                  <Image source={{ uri: song.coverUrl }} style={{ width: 52, height: 52 }} resizeMode="cover" />
+                  <Image source={{ uri: song.coverUrl }} style={{ width: 52, height: 52 }} contentFit="cover" />
                 ) : null}
               </View>
               <View style={{ flex: 1 }}>
@@ -565,7 +563,7 @@ const FeaturedSongsModal = ({
               </Text>
               <View style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: colorFor(i), marginRight: 12, overflow: "hidden" }}>
                 {song.coverUrl ? (
-                  <Image source={{ uri: song.coverUrl }} style={{ width: 52, height: 52 }} resizeMode="cover" />
+                  <Image source={{ uri: song.coverUrl }} style={{ width: 52, height: 52 }} contentFit="cover" />
                 ) : null}
               </View>
               <View style={{ flex: 1 }}>

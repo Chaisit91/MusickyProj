@@ -1,15 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import {
-  View,
+import {View,
   Text,
   TextInput,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   Dimensions,
-  StatusBar,
-} from "react-native";
+  StatusBar} from "react-native";
 import Svg, { Path, Circle } from "react-native-svg";
 import { router } from "expo-router";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
@@ -30,6 +27,7 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { playSong } from "../../store/playerSlice";
 import { toggleLikeSong, toggleDownload } from "../../store/librarySlice";
 import { colorFor } from "../../constants";
+import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -147,7 +145,7 @@ const ArtistCircle = ({
       }}
     >
       {artist.imageUrl ? (
-        <Image source={{ uri: artist.imageUrl }} style={{ width: 56, height: 56 }} resizeMode="cover" />
+        <Image source={{ uri: artist.imageUrl }} style={{ width: 56, height: 56 }} contentFit="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700" }}>
@@ -188,7 +186,7 @@ const GenreCard = ({
       <Image
         source={{ uri: genre.imageUrl }}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-        resizeMode="cover"
+        contentFit="cover"
       />
     ) : null}
     <View style={{ backgroundColor: "rgba(0,0,0,0.35)", position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
@@ -243,7 +241,7 @@ const RecentItem = ({
       }}
     >
       {item.coverUrl ? (
-        <Image source={{ uri: item.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+        <Image source={{ uri: item.coverUrl }} style={{ width: 44, height: 44 }} contentFit="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#555", fontSize: 18 }}>♪</Text>
@@ -322,7 +320,7 @@ const SearchResultItem = ({
         }}
       >
         {song.coverUrl ? (
-          <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+          <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} contentFit="cover" />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: "#555", fontSize: 18 }}>♪</Text>
@@ -391,7 +389,7 @@ const ArtistResultItem = ({
       }}
     >
       {artist.imageUrl ? (
-        <Image source={{ uri: artist.imageUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+        <Image source={{ uri: artist.imageUrl }} style={{ width: 44, height: 44 }} contentFit="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }}>

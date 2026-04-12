@@ -31,9 +31,19 @@ export interface LoginResponse {
   };
 }
 
+export const forgotPasswordApi = async (email: string) => {
+  const { data } = await apiClient.post("/auth/forgot-password", { email });
+  return data as { success: boolean; message: string; data?: { otp: string } };
+};
+
+export const resetPasswordApi = async (email: string, otp: string, newPassword: string) => {
+  const { data } = await apiClient.post("/auth/reset-password", { email, otp, newPassword });
+  return data as { success: boolean; message: string };
+};
+
 export const registerApi = async (payload: RegisterPayload) => {
   const { data } = await apiClient.post("/auth/register", payload);
-  return data as { success: boolean; message: string };
+  return data as LoginResponse; // backend now returns tokens on register
 };
 
 export const loginApi = async (payload: LoginPayload) => {

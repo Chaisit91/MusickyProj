@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
+import {View,
   Text,
   ScrollView,
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
-  Image,
-  Dimensions,
-} from "react-native";
+  Dimensions} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { recordPlay, Song } from "../../api/homeApi";
 import { getGenreSongs } from "../../api/detailApi";
@@ -26,6 +23,7 @@ import { toggleLikeSong, toggleDownload } from "../../store/librarySlice";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
+import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
 const HERO_HEIGHT = 220;
@@ -59,7 +57,7 @@ const SongRow = ({
   >
     <View style={{ width: 48, height: 48, borderRadius: 6, overflow: "hidden", backgroundColor: colorFor(index) }}>
       {song.coverUrl ? (
-        <Image source={{ uri: song.coverUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+        <Image source={{ uri: song.coverUrl }} style={{ width: 48, height: 48 }} contentFit="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#ffffff60", fontSize: 16 }}>♪</Text>
@@ -145,7 +143,7 @@ export default function GenreScreen() {
         {/* ── Hero ── */}
         <View style={{ width, height: HERO_HEIGHT, position: "relative" }}>
           {genreImageUrl ? (
-            <Image source={{ uri: genreImageUrl }} style={{ width, height: HERO_HEIGHT }} resizeMode="cover" />
+            <Image source={{ uri: genreImageUrl }} style={{ width, height: HERO_HEIGHT }} contentFit="cover" />
           ) : (
             <View style={{ width, height: HERO_HEIGHT, backgroundColor: genreColor, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: "#ffffff20", fontSize: 72, fontWeight: "900" }}>

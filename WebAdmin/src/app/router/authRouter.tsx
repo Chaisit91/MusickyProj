@@ -10,6 +10,7 @@ import GenreManagementPage from "../../features/dashboard/GenreManagement";
 import AdManagementPage from "../../features/dashboard/Admanagement";
 import ArtistManagementPage from "../../features/dashboard/ArtistManagement";
 import AlbumManagementPage from "../../features/dashboard/AlbumManagement";
+import PaymentManagementPage from "../../features/dashboard/PaymentManagement";
 
 const AuthRouter = () => {
   return (
@@ -24,6 +25,7 @@ const AuthRouter = () => {
       <Route path="/songs" element={<AdminRoute><SongManagementPage /></AdminRoute>} />
       <Route path="/Genres" element={<AdminRoute><GenreManagementPage /></AdminRoute>} />
       <Route path="/ads" element={<AdminRoute><AdManagementPage /></AdminRoute>} />
+      <Route path="/payments" element={<AdminRoute><PaymentManagementPage /></AdminRoute>} />
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<NotFoundPage />} />

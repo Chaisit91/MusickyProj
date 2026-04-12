@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
+import {View,
   Text,
   FlatList,
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
-  Image,
   RefreshControl,
-  Alert,
-} from "react-native";
+  Alert} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { getAllPlayHistory, recordPlay, deleteHistoryRecord, deleteAllHistory, PlayHistoryItem } from "../../api/homeApi";
 import { colorFor } from "../../constants";
+import { Image } from "expo-image";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -158,7 +156,7 @@ export default function RecentlyPlayedScreen() {
             <Image
               source={{ uri: item.song.coverUrl }}
               style={{ width: 54, height: 54 }}
-              resizeMode="cover"
+              contentFit="cover"
             />
           ) : (
             <Text

@@ -5,10 +5,33 @@ export const findAllAds = async () => {
   return prisma.ads.findMany({ orderBy: { createdAt: "desc" } });
 };
 
-export const findActiveAds = async () => {
+export const findActiveAds = async (adType?: string) => {
+  const now = new Date();
   return prisma.ads.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(adType && { adType }),
+      OR: [
+        { startDate: null },
+        { startDate: { lte: now } },
+      ],
+      AND: [
+        {
+          OR: [
+            { endDate: null },
+            { endDate: { gte: now } },
+          ],
+        },
+      ],
+    },
     orderBy: { createdAt: "desc" },
+  });
+};
+
+export const recordImpression = async (id: string) => {
+  return prisma.ads.update({
+    where: { id },
+    data: { impressions: { increment: 1 } },
   });
 };
 

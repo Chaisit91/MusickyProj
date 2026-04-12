@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import {View, Text, TouchableOpacity} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,6 +13,7 @@ import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { togglePlay, stopSong } from "../../store/playerSlice";
+import { Image } from "expo-image";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -144,7 +145,7 @@ export default function MiniPlayer() {
           ]}
         >
           {coverUri ? (
-            <Image source={{ uri: coverUri }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+            <Image source={{ uri: coverUri }} style={{ width: 48, height: 48 }} contentFit="cover" />
           ) : (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: "#555", fontSize: 20 }}>♪</Text>

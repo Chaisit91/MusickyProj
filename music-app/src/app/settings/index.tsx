@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  View,
+import {View,
   Text,
   ScrollView,
   TouchableOpacity,
   StatusBar,
   Switch,
-  Alert,
-  Image,
-} from "react-native";
+  Alert} from "react-native";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import Svg, { Path } from "react-native-svg";
@@ -18,6 +15,7 @@ import { loadLibrary } from "../../store/librarySlice";
 import { savePreferences, setPreferenceLocal } from "../../store/preferencesSlice";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import { Image } from "expo-image";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -206,7 +204,7 @@ export default function SettingsScreen() {
               <Image
                 source={{ uri: user.avatarUrl }}
                 style={{ width: 90, height: 90 }}
-                resizeMode="cover"
+                contentFit="cover"
               />
             ) : (
               <Text style={{ color: "#fff", fontSize: 36, fontWeight: "700" }}>{initial}</Text>

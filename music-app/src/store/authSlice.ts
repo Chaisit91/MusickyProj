@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { loginApi, logoutApi, fetchMeApi, updateProfileApi, googleLoginApi, AuthUser, LoginPayload } from "../api/authApi";
+import { loginApi, registerApi, logoutApi, fetchMeApi, updateProfileApi, googleLoginApi, AuthUser, LoginPayload, RegisterPayload } from "../api/authApi";
 import { setCachedToken } from "../api/apiClient";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -77,6 +77,24 @@ export const fetchMeThunk = createAsyncThunk("auth/fetchMe", async (_, { rejectW
   }
 });
 
+// Register → auto-login (backend returns tokens)
+export const registerThunk = createAsyncThunk(
+  "auth/register",
+  async (payload: RegisterPayload, { rejectWithValue }) => {
+    try {
+      const res = await registerApi(payload);
+      const { accessToken, refreshToken, user } = res.data;
+      await AsyncStorage.setItem("accessToken", accessToken);
+      await AsyncStorage.setItem("refreshToken", refreshToken);
+      await AsyncStorage.setItem("user", JSON.stringify(user));
+      setCachedToken(accessToken);
+      return { accessToken, user };
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message ?? "Registration failed");
+    }
+  }
+);
+
 // Login
 export const loginThunk = createAsyncThunk(
   "auth/login",
@@ -145,6 +163,23 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(restoreSession.rejected, (state) => {
+        state.isLoading = false;
+      });
+
+    // register (auto-login)
+    builder
+      .addCase(registerThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(registerThunk.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
+        state.isLoggedIn = true;
+        state.isLoading = false;
+      })
+      .addCase(registerThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
         state.isLoading = false;
       });
 

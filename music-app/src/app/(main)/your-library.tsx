@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
+import {View,
   Text,
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  ActivityIndicator,
-  Image,
-} from "react-native";
+  ActivityIndicator} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
 import { getRecentlyPlayed, recordPlay, PlayHistoryItem, Song } from "../../api/homeApi";
@@ -17,6 +14,7 @@ import { loadLibrary } from "../../store/librarySlice";
 import { colorFor } from "../../constants";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import { Image } from "expo-image";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -136,7 +134,7 @@ const SongRow = ({
         }}
       >
         {coverUri ? (
-          <Image source={{ uri: coverUri }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+          <Image source={{ uri: coverUri }} style={{ width: 48, height: 48 }} contentFit="cover" />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: "#ffffff60", fontSize: 18 }}>♪</Text>

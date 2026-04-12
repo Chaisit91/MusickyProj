@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
+import {View,
   Text,
   TouchableOpacity,
-  Image,
   Dimensions,
   StatusBar,
-  ScrollView,
-} from "react-native";
+  ScrollView} from "react-native";
 import Slider from "@react-native-community/slider";
 import Svg, { Path, Circle } from "react-native-svg";
 import { router } from "expo-router";
@@ -23,6 +20,7 @@ import {
 } from "../../store/playerSlice";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
+import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
 const ART_SIZE = width - 64;
@@ -290,7 +288,7 @@ export default function PlayerScreen() {
                   <Image
                     source={{ uri: currentSong.coverUrl }}
                     style={{ width: ART_SIZE, height: ART_SIZE }}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 ) : (
                   <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -457,7 +455,7 @@ export default function PlayerScreen() {
                 <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <View style={{ width: 36, height: 36, borderRadius: 6, overflow: "hidden", backgroundColor: "#333" }}>
                     {upNext.coverUrl ? (
-                      <Image source={{ uri: upNext.coverUrl }} style={{ width: 36, height: 36 }} resizeMode="cover" />
+                      <Image source={{ uri: upNext.coverUrl }} style={{ width: 36, height: 36 }} contentFit="cover" />
                     ) : (
                       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                         <Text style={{ color: "#555" }}>♪</Text>
@@ -494,7 +492,7 @@ export default function PlayerScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 28 }}>
               <View style={{ width: 48, height: 48, borderRadius: 8, overflow: "hidden", backgroundColor: "#1a1a3e" }}>
                 {currentSong.coverUrl ? (
-                  <Image source={{ uri: currentSong.coverUrl }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+                  <Image source={{ uri: currentSong.coverUrl }} style={{ width: 48, height: 48 }} contentFit="cover" />
                 ) : (
                   <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                     <Text style={{ color: "#ffffff40" }}>♪</Text>

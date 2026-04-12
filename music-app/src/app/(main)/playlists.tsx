@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
+import {View,
   Text,
   FlatList,
   TouchableOpacity,
@@ -8,15 +7,14 @@ import {
   TextInput,
   Modal,
   Pressable,
-  Dimensions,
-  Image,
-} from "react-native";
+  Dimensions} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { createPlaylistThunk, deletePlaylistThunk, loadLibrary, Playlist } from "../../store/librarySlice";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
+import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
 const CARD_W = (width - 48) / 2;
@@ -99,7 +97,7 @@ const PlaylistCard = ({
       }}
     >
       {playlist.coverUrl ? (
-        <Image source={{ uri: playlist.coverUrl }} style={{ width: CARD_W, height: CARD_W }} resizeMode="cover" />
+        <Image source={{ uri: playlist.coverUrl }} style={{ width: CARD_W, height: CARD_W }} contentFit="cover" />
       ) : (
         <MusicNoteIcon />
       )}

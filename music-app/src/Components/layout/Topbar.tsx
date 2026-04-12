@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import {View, Text, TouchableOpacity} from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { Image } from "expo-image";
 
 const BellIcon = () => (
   <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
@@ -147,7 +148,7 @@ export default function TopBar({
               <Image
                 source={{ uri: avatarUrl }}
                 style={{ width: 40, height: 40 }}
-                resizeMode="cover"
+                contentFit="cover"
               />
             ) : (
               <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>

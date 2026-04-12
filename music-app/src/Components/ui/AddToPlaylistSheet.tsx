@@ -1,14 +1,11 @@
 import React from "react";
-import {
-  View,
+import {View,
   Text,
   FlatList,
   TouchableOpacity,
   Modal,
   Pressable,
-  TextInput,
-  Image,
-} from "react-native";
+  TextInput} from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +18,7 @@ import {
 } from "../../store/librarySlice";
 import { Song } from "../../api/homeApi";
 import { playlistSchema } from "../../schema/authSchema";
+import { Image } from "expo-image";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -174,7 +172,7 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 16, gap: 12 }}>
             <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#2a2a2a" }}>
               {song.coverUrl ? (
-                <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+                <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} contentFit="cover" />
               ) : (
                 <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                   <MusicIcon />
@@ -230,7 +228,7 @@ export default function AddToPlaylistSheet({ song, onClose }: Props) {
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#2a2a2a" }}>
                     {cover ? (
-                      <Image source={{ uri: cover }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+                      <Image source={{ uri: cover }} style={{ width: 44, height: 44 }} contentFit="cover" />
                     ) : (
                       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                         <MusicIcon />

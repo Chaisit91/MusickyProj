@@ -1,4 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { File, Directory, Paths } from "expo-file-system";
+const downloadsDir = new Directory(Paths.document, "downloads");
 import {
   Song,
   Artist,
@@ -109,12 +111,27 @@ export const toggleLikeSong = createAsyncThunk(
 
 // ─── Downloads thunk (optimistic) ─────────────────────────────────────────────
 
+// Local file helper using expo-file-system v2 API
+export const getLocalAudioFile = (songId: string) =>
+  new File(downloadsDir, `${songId}.mp3`);
+
 export const toggleDownload = createAsyncThunk(
   "library/toggleDownload",
   async ({ song, wasDownloaded }: { song: Song; wasDownloaded: boolean }) => {
+    const localFile = getLocalAudioFile(song.id);
+
     if (wasDownloaded) {
       await removeDownloadApi(song.id);
+      if (localFile.exists) {
+        localFile.delete();
+      }
     } else {
+      // สร้าง folder ถ้ายังไม่มี
+      if (!downloadsDir.exists) {
+        downloadsDir.create();
+      }
+      // ดาวน์โหลด MP3 ลงเครื่อง
+      await File.downloadFileAsync(song.filePath, localFile, { idempotent: true });
       await addDownloadApi(song.id);
     }
     return { song, wasDownloaded };

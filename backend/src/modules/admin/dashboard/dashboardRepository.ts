@@ -1,13 +1,25 @@
 import { prisma } from "../../../lib/prisma";
 
 export const getDashboardStats = async () => {
-  const [totalUsers, totalSongs, totalPlays, totalArtists] = await Promise.all([
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [totalUsers, totalSongs, totalPlays, totalArtists, totalPremium, monthlyRevenue] = await Promise.all([
     prisma.user.count(),
     prisma.song.count(),
     prisma.playHistory.count(),
     prisma.artist.count(),
+    prisma.user.count({ where: { isPremium: true } }),
+    prisma.paymentTransaction.aggregate({
+      where: { status: "SUCCESS", createdAt: { gte: startOfMonth } },
+      _sum: { amount: true },
+    }),
   ]);
-  return { totalUsers, totalSongs, totalPlays, totalArtists };
+
+  const revenue = monthlyRevenue._sum.amount ?? 0;
+  const conversionRate = totalUsers > 0 ? ((totalPremium / totalUsers) * 100).toFixed(1) : "0.0";
+
+  return { totalUsers, totalSongs, totalPlays, totalArtists, totalPremium, monthlyRevenue: revenue, conversionRate };
 };
 
 export const getRecentActivities = async () => {

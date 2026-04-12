@@ -48,10 +48,27 @@ export const register = async (req: Request, res: Response) => {
     birthDate: birthDate ? new Date(birthDate as string) : undefined,
   });
 
+  // Auto-login after register — return tokens so client doesn't need an extra round-trip
+  const accessToken = generateAccessToken({ id: user.id, role: user.role, email: user.email });
+  const refreshToken = generateRefreshToken({ id: user.id, role: user.role, email: user.email });
+  await AuthRepository.saveRefreshToken(user.id, refreshToken);
+
   res.status(201).json({
     success: true,
-    message: "Register successful, please login",
-    data: { user },
+    message: "Register successful",
+    data: {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatarUrl: null,
+        isPremium: false,
+        premiumExpiresAt: null,
+      },
+    },
   });
 };
 
@@ -120,6 +137,67 @@ export const login = async (req: Request, res: Response) => {
       },
     },
   });
+};
+
+// ── OTP store (in-memory, expires 5 min) ─────────────────────
+const otpStore = new Map<string, { otp: string; expiresAt: number }>();
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email?.trim()) {
+    res.status(400).json({ success: false, message: "email is required" });
+    return;
+  }
+
+  const user = await AuthRepository.findUserByEmail((email as string).toLowerCase());
+  // ไม่บอกว่า email มีอยู่หรือไม่ (security)
+  if (!user) {
+    res.json({ success: true, message: "If the email exists, a reset code has been sent." });
+    return;
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore.set(user.email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+
+  // Production: ส่ง OTP ทาง email
+  // Demo: ส่งกลับใน response ให้ user เห็น
+  res.json({
+    success: true,
+    message: "Reset code generated",
+    data: { otp }, // remove in production
+  });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { email, otp, newPassword } = req.body;
+
+  if (!email?.trim() || !otp?.trim() || !newPassword?.trim()) {
+    res.status(400).json({ success: false, message: "email, otp and newPassword are required" });
+    return;
+  }
+
+  const emailLower = (email as string).toLowerCase();
+  const entry = otpStore.get(emailLower);
+
+  if (!entry || entry.otp !== otp || Date.now() > entry.expiresAt) {
+    res.status(400).json({ success: false, message: "Invalid or expired reset code" });
+    return;
+  }
+
+  if ((newPassword as string).length < 8) {
+    res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+    return;
+  }
+
+  const hashedPassword = await hashPassword(newPassword as string);
+  await (await import("../../lib/prisma")).prisma.user.update({
+    where: { email: emailLower },
+    data: { password: hashedPassword },
+  });
+
+  otpStore.delete(emailLower);
+
+  res.json({ success: true, message: "Password reset successfully" });
 };
 
 export const adminLogin = async (req: Request, res: Response) => {

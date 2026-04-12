@@ -7,8 +7,17 @@ export const getAllAds = async (req: Request, res: Response) => {
 };
 
 export const getActiveAds = async (req: Request, res: Response) => {
-  const ads = await AdsRepository.findActiveAds();
-  res.json({ success: true, data: ads });
+  const adType = req.query.type as string | undefined;
+  const ads = await AdsRepository.findActiveAds(adType);
+  // สุ่มเลือก 1 อัน จาก ads ที่เจอ
+  const picked = ads.length > 0 ? ads[Math.floor(Math.random() * ads.length)] : null;
+  res.json({ success: true, data: picked });
+};
+
+export const recordImpression = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  await AdsRepository.recordImpression(id);
+  res.json({ success: true });
 };
 
 export const getAdsById = async (req: Request, res: Response) => {

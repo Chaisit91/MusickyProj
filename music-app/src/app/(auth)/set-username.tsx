@@ -1,20 +1,18 @@
 import React, { useState } from "react";
-import {
-  View,
+import {View,
   Text,
   TextInput,
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-} from "react-native";
+  ScrollView} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { useAppDispatch } from "../../store/hooks";
 import { googleLoginThunk } from "../../store/authSlice";
+import { Image } from "expo-image";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -91,7 +89,7 @@ export default function SetUsernameScreen() {
                 borderWidth: 3,
                 borderColor: "#2a2a2a",
               }}
-              resizeMode="cover"
+              contentFit="cover"
             />
           ) : (
             <View

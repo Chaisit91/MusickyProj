@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
+import "./cron/premiumExpiry";
 
 dotenv.config();
 
@@ -30,6 +32,8 @@ import adminUserRouter from "./modules/admin/users/adminUserRouter";
 import adminSongRouter from "./modules/admin/songs/adminSongRouter";
 import adminGenreRouter from "./modules/admin/genres/adminGenreRouter";
 import adminAdsRouter from "./modules/admin/ads/adminAdsRouter";
+import adminPaymentRouter from "./modules/admin/payments/adminPaymentRouter";
+import adminNotificationRouter from "./modules/admin/notifications/adminNotificationRouter";
 
 // Middleware
 import { errorMiddleware } from "./middleware/errorMiddleware";
@@ -37,6 +41,23 @@ import { thaiTimeMiddleware } from "./middleware/thaiTimeMiddleware";
 
 const app = express();
 const port = process.env.PORT || 8080;
+
+// ── Rate Limiting ─────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many requests, please try again later." },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many login attempts, please try again in 15 minutes." },
+});
 
 // ── Global Middleware ──────────────────────────────────────────
 app.use(cors({
@@ -46,9 +67,10 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 app.use(thaiTimeMiddleware);
+app.use(globalLimiter);
 
 // ── Routes ────────────────────────────────────────────────────
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/artists", artistRouter);
 app.use("/api/genres", genreRouter);
 app.use("/api/albums", albumRouter);
@@ -72,6 +94,8 @@ app.use("/api/admin/users", adminUserRouter);
 app.use("/api/admin/songs", adminSongRouter);
 app.use("/api/admin/genres", adminGenreRouter);
 app.use("/api/admin/ads", adminAdsRouter);
+app.use("/api/admin/payments", adminPaymentRouter);
+app.use("/api/admin/notifications", adminNotificationRouter);
 
 // ── 404 Handler ───────────────────────────────────────────────
 app.use((req, res) => {

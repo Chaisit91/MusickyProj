@@ -1,16 +1,14 @@
 import React from "react";
-import {
-  View,
+import {View,
   Text,
   ScrollView,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+  TouchableOpacity} from "react-native";
 import { router } from "expo-router";
 import { Song, PlayHistoryItem, Genre, Artist } from "../../api/homeApi";
 import { Playlist } from "../../store/librarySlice";
 import { colorFor } from "../../constants";
 import { PlayIcon } from "./icons";
+import { Image } from "expo-image";
 
 export type CategoryName = "For you" | "Relax" | "Workout" | "Travel" | "Party";
 
@@ -118,7 +116,7 @@ const BannerCard = ({
               return (
                 <View key={row} style={{ flex: 1, backgroundColor: colorFor(idx) }}>
                   {cover ? (
-                    <Image source={{ uri: cover }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                    <Image source={{ uri: cover }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
                   ) : null}
                 </View>
               );
@@ -161,7 +159,7 @@ const RecentCard = ({
       }}
     >
       {song.coverUrl ? (
-        <Image source={{ uri: song.coverUrl }} style={{ width: 100, height: 100 }} resizeMode="cover" />
+        <Image source={{ uri: song.coverUrl }} style={{ width: 100, height: 100 }} contentFit="cover" />
       ) : null}
       <View
         style={{
@@ -204,13 +202,13 @@ const MixCard = ({
         }}
       >
         {genre.imageUrl ? (
-          <Image source={{ uri: genre.imageUrl }} style={{ width: 140, height: 140 }} resizeMode="cover" />
+          <Image source={{ uri: genre.imageUrl }} style={{ width: 140, height: 140 }} contentFit="cover" />
         ) : (
           <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap" }}>
             {[0, 1, 2, 3].map((i) => (
               <View key={i} style={{ width: 70, height: 70, backgroundColor: colorFor(index + i + 1) }}>
                 {covers[i] ? (
-                  <Image source={{ uri: covers[i]! }} style={{ width: 70, height: 70 }} resizeMode="cover" />
+                  <Image source={{ uri: covers[i]! }} style={{ width: 70, height: 70 }} contentFit="cover" />
                 ) : null}
               </View>
             ))}
@@ -250,7 +248,7 @@ const ArtistCard = ({
       }}
     >
       {artist.imageUrl ? (
-        <Image source={{ uri: artist.imageUrl }} style={{ width: 110, height: 110 }} resizeMode="cover" />
+        <Image source={{ uri: artist.imageUrl }} style={{ width: 110, height: 110 }} contentFit="cover" />
       ) : null}
     </View>
     <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600", textAlign: "center" }} numberOfLines={1}>
@@ -276,7 +274,7 @@ const NewReleaseCard = ({
       }}
     >
       {song.coverUrl ? (
-        <Image source={{ uri: song.coverUrl }} style={{ width: 120, height: 120 }} resizeMode="cover" />
+        <Image source={{ uri: song.coverUrl }} style={{ width: 120, height: 120 }} contentFit="cover" />
       ) : null}
     </View>
     <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }} numberOfLines={1}>
@@ -305,7 +303,7 @@ const PlaylistCard = ({
       }}
     >
       {playlist.coverUrl ? (
-        <Image source={{ uri: playlist.coverUrl }} style={{ width: 140, height: 140 }} resizeMode="cover" />
+        <Image source={{ uri: playlist.coverUrl }} style={{ width: 140, height: 140 }} contentFit="cover" />
       ) : null}
     </View>
     <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }} numberOfLines={1}>

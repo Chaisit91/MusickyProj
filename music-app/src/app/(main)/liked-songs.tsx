@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
+import {View,
   Text,
   FlatList,
   TouchableOpacity,
-  StatusBar,
-  Image,
-} from "react-native";
+  StatusBar} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -16,6 +13,7 @@ import { recordPlay, Song } from "../../api/homeApi";
 import { colorFor } from "../../constants";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
+import { Image } from "expo-image";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -194,7 +192,7 @@ export default function LikedSongsScreen() {
                   }}
                 >
                   {cover ? (
-                    <Image source={{ uri: cover }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+                    <Image source={{ uri: cover }} style={{ width: 48, height: 48 }} contentFit="cover" />
                   ) : (
                     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                       <Text style={{ color: "#ffffff60", fontSize: 16 }}>♪</Text>

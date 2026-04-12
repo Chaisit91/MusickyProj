@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { useAppDispatch } from "../../store/hooks";
 import { loginThunk } from "../../store/authSlice";
 import { loadPreferences } from "../../store/preferencesSlice";
+import { showSplashAd } from "../../store/adsSlice";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,6 +71,11 @@ export default function LoginScreen() {
         setError("password", { message: msg });
       } else {
         dispatch(loadPreferences());
+        // แสดง SPLASH ad สำหรับ user ที่ไม่ใช่ Premium
+        const user = (result.payload as any)?.user;
+        if (!user?.isPremium) {
+          dispatch(showSplashAd());
+        }
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -163,6 +169,15 @@ export default function LoginScreen() {
                 Log in
               </Text>
             )}
+          </TouchableOpacity>
+
+          {/* ── Forgot Password ── */}
+          <TouchableOpacity
+            onPress={() => router.push("/forgot-password")}
+            style={{ alignItems: "flex-end", marginBottom: 24, marginTop: -8 }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ color: "#888", fontSize: 13 }}>ลืมรหัสผ่าน?</Text>
           </TouchableOpacity>
 
           {/* ── Sign Up Link ── */}

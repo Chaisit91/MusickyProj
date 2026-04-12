@@ -8,6 +8,7 @@ const router = Router();
 const admin = [authMiddleware, roleMiddleware("ADMIN")];
 
 router.get("/active", asyncHandler(AdsService.getActiveAds));
+router.post("/:id/impression", asyncHandler(AdsService.recordImpression));
 router.get("/stats", ...admin, asyncHandler(AdsService.getAdsStats));      // เพิ่ม
 router.get("/", ...admin, asyncHandler(AdsService.getAllAds));
 router.get("/:id", ...admin, asyncHandler(AdsService.getAdsById));

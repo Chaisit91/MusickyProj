@@ -1,16 +1,13 @@
 import React, { useState } from "react";
-import {
-  View,
+import {View,
   Text,
   ScrollView,
   FlatList,
   TouchableOpacity,
-  Image,
   StatusBar,
   Modal,
   TextInput,
-  ActivityIndicator,
-} from "react-native";
+  ActivityIndicator} from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 import { router } from "expo-router";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -25,6 +22,7 @@ import {
 import { Song } from "../../api/homeApi";
 import { colorFor } from "../../constants";
 import { searchAll } from "../../api/searchApi";
+import { Image } from "expo-image";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -163,7 +161,7 @@ const QueueRow = ({
     )}
     <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: colorFor(index) }}>
       {song.coverUrl ? (
-        <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+        <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} contentFit="cover" />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: "#ffffff60" }}>♪</Text>
@@ -263,7 +261,7 @@ const AddSongsModal = ({
                 >
                   <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#1a1a3e" }}>
                     {song.coverUrl ? (
-                      <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+                      <Image source={{ uri: song.coverUrl }} style={{ width: 44, height: 44 }} contentFit="cover" />
                     ) : (
                       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                         <Text style={{ color: "#ffffff40" }}>♪</Text>
@@ -342,7 +340,7 @@ export default function QueueScreen() {
         <ChevronDown />
         <View style={{ width: 44, height: 44, borderRadius: 6, overflow: "hidden", backgroundColor: "#1a1a3e" }}>
           {currentSong.coverUrl ? (
-            <Image source={{ uri: currentSong.coverUrl }} style={{ width: 44, height: 44 }} resizeMode="cover" />
+            <Image source={{ uri: currentSong.coverUrl }} style={{ width: 44, height: 44 }} contentFit="cover" />
           ) : (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: "#ffffff30" }}>♪</Text>

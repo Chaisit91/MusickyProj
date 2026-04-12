@@ -4,6 +4,8 @@ import playerReducer from "./playerSlice";
 import libraryReducer from "./librarySlice";
 import preferencesReducer from "./preferencesSlice";
 import notificationsReducer from "./notificationsSlice";
+import adsReducer from "./adsSlice";
+import networkReducer from "./networkSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +14,8 @@ export const store = configureStore({
     library: libraryReducer,
     preferences: preferencesReducer,
     notifications: notificationsReducer,
+    ads: adsReducer,
+    network: networkReducer,
   },
 });
 
