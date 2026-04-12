@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import { useAppDispatch } from "../../store/hooks";
 import { loginThunk } from "../../store/authSlice";
 import { loadPreferences } from "../../store/preferencesSlice";
-import { showSplashAd, setShowingPreHomeAd } from "../../store/adsSlice";
+import { setShowingPreHomeAd } from "../../store/adsSlice";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,7 +73,9 @@ export default function LoginScreen() {
         dispatch(loadPreferences());
         const user = (result.payload as any)?.user;
         if (!user?.isPremium) {
-          dispatch(showSplashAd());
+          // showingPreHomeAd=true ถูกตั้งใน adsSlice.extraReducers (loginThunk.fulfilled)
+          // home-ads page จะ fetch และแสดงโฆษณาเอง
+          router.replace("/home-ads" as any);
         }
       }
     } catch (err) {

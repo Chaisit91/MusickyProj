@@ -9,8 +9,17 @@ import {
   TouchableOpacity,
   Linking,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { router } from "expo-router";
+
+function AdVideo({ uri, style }: { uri: string; style: any }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = false;
+    p.muted = false;
+    p.play();
+  });
+  return <VideoView player={player} style={style} contentFit="contain" />;
+}
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { dismissAd, setPendingNextSong, trackImpression } from "../../store/adsSlice";
 import { nextSong } from "../../store/playerSlice";
@@ -145,14 +154,7 @@ export default function BetweenSongAd() {
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
           {isVideo ? (
-            <Video
-              source={{ uri: currentAd.imageUrl }}
-              style={{ width, height: height * 0.65 }}
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay
-              isLooping={false}
-              isMuted={false}
-            />
+            <AdVideo uri={currentAd.imageUrl} style={{ width, height: height * 0.65 }} />
           ) : (
             <Image
               source={{ uri: currentAd.imageUrl }}

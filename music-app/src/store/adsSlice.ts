@@ -2,16 +2,12 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Ad, fetchAdByType, fetchAnyActiveAd, recordImpressionApi } from "../api/adsApi";
 import { loginThunk } from "./authSlice";
 
-const randomThreshold = () => Math.floor(Math.random() * 4) + 2; // 2–5 เพลง
-
 interface AdsState {
   currentAd: Ad | null;
   adVisible: boolean;
   adContext: "SPLASH" | "AFTER_SONG" | "AFTER_MULTIPLE" | null;
   pendingNextSong: boolean;
-  songsPlayedCount: number;
-  nextAdThreshold: number;
-  showingPreHomeAd: boolean; // true = block AuthGuard from navigating to home
+  showingPreHomeAd: boolean; // true = block AuthGuard จาก navigate ไป home ก่อนโฆษณาแสดง
 }
 
 const initialState: AdsState = {
@@ -19,13 +15,10 @@ const initialState: AdsState = {
   adVisible: false,
   adContext: null,
   pendingNextSong: false,
-  songsPlayedCount: 0,
-  nextAdThreshold: randomThreshold(),
   showingPreHomeAd: false,
 };
 
-// ─── SPLASH ad (ตอน login) ─────────────────────────────────────────────────────
-// ลอง SPLASH → any active
+// ─── SPLASH ad (ตอน login → home-ads page) ────────────────────────────────────
 export const showSplashAd = createAsyncThunk(
   "ads/showSplash",
   async (_, { rejectWithValue }) => {
@@ -34,13 +27,13 @@ export const showSplashAd = createAsyncThunk(
         (await fetchAdByType("SPLASH")) ??
         (await fetchAnyActiveAd());
       return ad;
-    } catch (err) {
+    } catch {
       return rejectWithValue(null);
     }
   }
 );
 
-// ─── AFTER_SONG ad (สำรอง) ────────────────────────────────────────────────────
+// ─── AFTER_SONG ad (หลังจบเพลง) ──────────────────────────────────────────────
 export const showAfterSongAd = createAsyncThunk(
   "ads/showAfterSong",
   async (_, { rejectWithValue }) => {
@@ -53,8 +46,7 @@ export const showAfterSongAd = createAsyncThunk(
   }
 );
 
-// ─── AFTER_MULTIPLE ad (หลังเล่น N เพลง) ─────────────────────────────────────
-// ลอง AFTER_MULTIPLE → AFTER_SONG → any active
+// ─── AFTER_MULTIPLE ad (fallback เมื่อไม่มี AFTER_SONG) ──────────────────────
 export const showAfterMultipleAd = createAsyncThunk(
   "ads/showAfterMultiple",
   async (_, { rejectWithValue }) => {
@@ -64,7 +56,7 @@ export const showAfterMultipleAd = createAsyncThunk(
         (await fetchAdByType("AFTER_SONG")) ??
         (await fetchAnyActiveAd());
       return ad;
-    } catch (err) {
+    } catch {
       return rejectWithValue(null);
     }
   }
@@ -90,13 +82,6 @@ const adsSlice = createSlice({
     setPendingNextSong(state, action: PayloadAction<boolean>) {
       state.pendingNextSong = action.payload;
     },
-    songPlayed(state) {
-      state.songsPlayedCount += 1;
-    },
-    resetAdCounter(state) {
-      state.songsPlayedCount = 0;
-      state.nextAdThreshold = randomThreshold();
-    },
     setShowingPreHomeAd(state, action: PayloadAction<boolean>) {
       state.showingPreHomeAd = action.payload;
     },
@@ -109,12 +94,10 @@ const adsSlice = createSlice({
           state.adVisible = true;
           state.adContext = "SPLASH";
         } else {
-          // No ad found — release the hold so AuthGuard can navigate to home
           state.showingPreHomeAd = false;
         }
       })
       .addCase(showSplashAd.rejected, (state) => {
-        // Error fetching ad — release hold so AuthGuard can navigate to home
         state.showingPreHomeAd = false;
       })
       .addCase(showAfterSongAd.fulfilled, (state, action) => {
@@ -133,8 +116,7 @@ const adsSlice = createSlice({
           state.pendingNextSong = true;
         }
       })
-      // ── ตั้ง showingPreHomeAd ในจังหวะเดียวกับที่ isLoggedIn=true ──────────────
-      // เพื่อป้องกัน race condition ที่ AuthGuard navigate ไป /home ก่อนโฆษณาแสดง
+      // ตั้ง showingPreHomeAd=true พร้อมกับ isLoggedIn=true เพื่อกัน race condition กับ AuthGuard
       .addCase(loginThunk.fulfilled, (state, action) => {
         const user = (action.payload as any)?.user;
         if (user && !user.isPremium) {
@@ -144,5 +126,5 @@ const adsSlice = createSlice({
   },
 });
 
-export const { dismissAd, setPendingNextSong, songPlayed, resetAdCounter, setShowingPreHomeAd } = adsSlice.actions;
+export const { dismissAd, setPendingNextSong, setShowingPreHomeAd } = adsSlice.actions;
 export default adsSlice.reducer;

@@ -1,3 +1,7 @@
+# Environment variables (แต่ละ developer ตั้งค่าเอง ห้าม commit)
+.env
+.env.*
+
 # Logs
 logs
 *.log

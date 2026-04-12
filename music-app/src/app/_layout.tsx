@@ -9,7 +9,6 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { restoreSession, fetchMeThunk } from "../store/authSlice";
 import { loadPreferences } from "../store/preferencesSlice";
 import AudioController from "../Components/player/AudioController";
-import SplashAdModal from "../Components/ads/SplashAdModal";
 import BetweenSongAd from "../Components/ads/BetweenSongAd";
 import OfflineBanner from "../Components/ui/OfflineBanner";
 import ErrorBoundary from "../Components/ui/ErrorBoundary";
@@ -76,7 +75,6 @@ function RootLayoutNav() {
     <>
       <AuthGuard />
       <AudioController />
-      <SplashAdModal />
       <BetweenSongAd />
       <OfflineBanner />
       <Stack screenOptions={{ headerShown: false, animation: "fade", animationDuration: 200 }} />
