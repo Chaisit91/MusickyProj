@@ -10,10 +10,7 @@ import {
   clearSeekRequest,
   togglePlay,
 } from "../../store/playerSlice";
-import {
-  showAfterMultipleAd,
-  resetAdCounter,
-} from "../../store/adsSlice";
+import { showAfterSongAd, showAfterMultipleAd } from "../../store/adsSlice";
 
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
@@ -58,8 +55,6 @@ export default function AudioControllerImpl() {
 
     if (!currentSong) return;
 
-    console.log("AudioController: loading", currentSong.filePath);
-
     // ใช้ local file ถ้ามี (offline playback) ไม่งั้นใช้ remote URL
     const localFile = getLocalAudioFile(currentSong.id);
     const audioUri = localFile.exists ? localFile.uri : currentSong.filePath;
@@ -91,19 +86,18 @@ export default function AudioControllerImpl() {
         dispatch(setDuration(Math.floor(status.duration)));
       }
       if (status.didJustFinish) {
-        console.log("[AudioController] didJustFinish — isPremium:", isPremiumRef.current, "autoPlay:", autoPlayRef.current);
         if (!autoPlayRef.current) {
           dispatch(togglePlay());
         } else if (isPremiumRef.current) {
           dispatch(nextSong());
         } else {
-          // Free user → แสดงโฆษณาหลังทุกเพลง
-          console.log("[AudioController] dispatching showAfterMultipleAd");
-          dispatch(resetAdCounter());
-          dispatch(showAfterMultipleAd()).then((result: any) => {
-            console.log("[AudioController] showAfterMultipleAd resolved, payload:", result.payload?.id ?? "null");
+          // Free user → แสดงโฆษณาหลังจบทุก 1 เพลง (AFTER_SONG → AFTER_MULTIPLE fallback → any)
+          dispatch(showAfterSongAd()).then((result: any) => {
             if (!result.payload) {
-              dispatch(nextSong());
+              // ไม่มี AFTER_SONG ad → ลอง AFTER_MULTIPLE fallback
+              dispatch(showAfterMultipleAd()).then((r: any) => {
+                if (!r.payload) dispatch(nextSong());
+              });
             }
           });
         }

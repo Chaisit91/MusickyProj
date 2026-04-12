@@ -33,7 +33,7 @@ export const getAdById = async (req: MulterRequest, res: Response) => {
 };
 
 export const createAd = async (req: MulterRequest, res: Response) => {
-  const { title, adType, adDuration, advertiser, priority, startDate, endDate } = req.body;
+  const { title, adType, adDuration, advertiser, linkUrl, isActive, priority, startDate, endDate } = req.body;
 
   if (!title || !adType) {
     res.status(400).json({ success: false, message: "title and adType are required" });
@@ -53,10 +53,11 @@ export const createAd = async (req: MulterRequest, res: Response) => {
   const ad = await AdminAdsRepository.createAds({
     title,
     imageUrl: mediaUrl,
-    linkUrl: "",
+    linkUrl: linkUrl || "",
     adType,
     adDuration: adDuration ? Number(adDuration) : 30,
     advertiser: advertiser || "",
+    isActive: isActive !== undefined ? isActive === "true" || isActive === true : true,
     priority: priority ? Math.min(10, Math.max(1, Number(priority))) : 1,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
@@ -71,7 +72,7 @@ export const updateAd = async (req: MulterRequest, res: Response) => {
     return;
   }
 
-  const { title, adType, adDuration, isActive, advertiser, priority, startDate, endDate } = req.body;
+  const { title, adType, adDuration, isActive, advertiser, linkUrl, priority, startDate, endDate } = req.body;
 
   let imageUrl: string | undefined;
   if (req.file) {
@@ -84,6 +85,7 @@ export const updateAd = async (req: MulterRequest, res: Response) => {
     adType,
     adDuration: adDuration ? Number(adDuration) : undefined,
     advertiser,
+    linkUrl: linkUrl !== undefined ? linkUrl : undefined,
     isActive: isActive !== undefined ? isActive === "true" || isActive === true : undefined,
     priority: priority !== undefined ? Math.min(10, Math.max(1, Number(priority))) : undefined,
     startDate: startDate || undefined,

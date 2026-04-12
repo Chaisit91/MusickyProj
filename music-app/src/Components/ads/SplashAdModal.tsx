@@ -5,15 +5,15 @@ import {
   Modal,
   TouchableOpacity,
   Image,
-  Dimensions,
+  StyleSheet,
   Animated,
+  Linking,
+  StatusBar,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { router } from "expo-router";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { dismissAd, trackImpression, setShowingPreHomeAd } from "../../store/adsSlice";
-
-const { width, height } = Dimensions.get("window");
 
 const isVideoUrl = (url: string) =>
   url.includes("/video/upload/") || /\.(mp4|webm|mov)(\?|$)/i.test(url);
@@ -22,7 +22,6 @@ export default function SplashAdModal() {
   const dispatch = useAppDispatch();
   const { currentAd, adVisible, adContext } = useAppSelector((s) => s.ads);
 
-  // -1 = ยังไม่เริ่ม countdown, ≥0 = นับถอยหลัง
   const [countdown, setCountdown] = useState(-1);
   const [canSkip, setCanSkip] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -30,15 +29,12 @@ export default function SplashAdModal() {
 
   const visible = adVisible && adContext === "SPLASH" && !!currentAd;
 
-  console.log("[SplashAdModal] visible:", visible, "adContext:", adContext, "adId:", currentAd?.id ?? "null");
-
   useEffect(() => {
     if (!visible || !currentAd) return;
 
-    console.log("[SplashAdModal] starting — ad:", currentAd.id, "duration:", currentAd.adDuration);
     dispatch(trackImpression(currentAd.id));
 
-    const duration = currentAd.adDuration ?? 5;
+    const duration = currentAd.adDuration ?? 3;
     fadeAnim.setValue(0);
     setCanSkip(false);
     setCountdown(duration);
@@ -56,17 +52,11 @@ export default function SplashAdModal() {
       });
     }, 1000);
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [visible, currentAd?.id]);
 
-  // reset เมื่อ modal ปิด
   useEffect(() => {
-    if (!visible) {
-      setCountdown(-1);
-      setCanSkip(false);
-    }
+    if (!visible) { setCountdown(-1); setCanSkip(false); }
   }, [visible]);
 
   const handleSkip = () => {
@@ -78,21 +68,38 @@ export default function SplashAdModal() {
     });
   };
 
+  const handleAdPress = () => {
+    if (currentAd?.linkUrl) {
+      Linking.openURL(currentAd.linkUrl).catch(() => {});
+    }
+  };
+
   if (!visible || !currentAd) return null;
 
   const isVideo = isVideoUrl(currentAd.imageUrl);
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent>
-      <Animated.View style={{ flex: 1, backgroundColor: "#000", opacity: fadeAnim }}>
+    <Modal
+      visible
+      transparent={false}
+      animationType="none"
+      statusBarTranslucent
+      hardwareAccelerated
+    >
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
+      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
 
-        {/* Media */}
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        {/* ── Full-screen media (กดเพื่อเปิด link) ── */}
+        <TouchableOpacity
+          activeOpacity={currentAd.linkUrl ? 0.92 : 1}
+          onPress={handleAdPress}
+          style={StyleSheet.absoluteFill}
+        >
           {isVideo ? (
             <Video
               source={{ uri: currentAd.imageUrl }}
-              style={{ width, height: height * 0.75 }}
-              resizeMode={ResizeMode.CONTAIN}
+              style={StyleSheet.absoluteFill}
+              resizeMode={ResizeMode.COVER}
               shouldPlay
               isLooping={false}
               isMuted={false}
@@ -100,66 +107,148 @@ export default function SplashAdModal() {
           ) : (
             <Image
               source={{ uri: currentAd.imageUrl }}
-              style={{ width, height: height * 0.75 }}
-              resizeMode="contain"
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
             />
           )}
-        </View>
 
-        {/* Top bar */}
-        <View
-          style={{
-            position: "absolute",
-            top: 52,
-            left: 0,
-            right: 0,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingHorizontal: 16,
-          }}
-        >
-          <View style={{ backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-            <Text style={{ color: "#aaa", fontSize: 11 }}>โฆษณา • {currentAd.advertiser}</Text>
+          {/* gradient overlay ล่าง */}
+          <View style={styles.gradientOverlay} />
+        </TouchableOpacity>
+
+        {/* ── Top bar: badge + skip ── */}
+        <View style={styles.topBar}>
+          <View style={styles.adBadge}>
+            <Text style={styles.adBadgeText}>โฆษณา • {currentAd.advertiser}</Text>
           </View>
 
           <TouchableOpacity
             onPress={handleSkip}
             activeOpacity={canSkip ? 0.7 : 1}
-            style={{
-              backgroundColor: canSkip ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.6)",
-              paddingHorizontal: 14,
-              paddingVertical: 7,
-              borderRadius: 20,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            }}
+            style={[styles.skipBtn, canSkip && styles.skipBtnActive]}
           >
             {canSkip ? (
-              <Text style={{ color: "#000", fontSize: 13, fontWeight: "700" }}>ข้าม ✕</Text>
+              <Text style={styles.skipTextActive}>ข้าม  ✕</Text>
             ) : (
-              <Text style={{ color: "#fff", fontSize: 13 }}>
-                ข้ามได้ใน {countdown > 0 ? countdown : "..."} วิ
-              </Text>
+              <Text style={styles.skipTextCountdown}>ข้ามได้ใน {countdown > 0 ? countdown : "…"} วิ</Text>
             )}
           </TouchableOpacity>
         </View>
 
-        {/* Ad title */}
-        <View style={{ position: "absolute", bottom: 90, left: 0, right: 0, paddingHorizontal: 24, gap: 4 }}>
-          <Text style={{ color: "#fff", fontSize: 18, fontWeight: "700" }} numberOfLines={2}>
-            {currentAd.title}
-          </Text>
-          <Text style={{ color: "#aaa", fontSize: 13 }}>{currentAd.advertiser}</Text>
-        </View>
+        {/* ── Bottom info ── */}
+        <View style={styles.bottomInfo}>
+          <Text style={styles.adTitle} numberOfLines={2}>{currentAd.title}</Text>
+          <Text style={styles.adAdvertiser}>{currentAd.advertiser}</Text>
 
-        {/* Bottom info */}
-        <View style={{ position: "absolute", bottom: 48, left: 0, right: 0, alignItems: "center", gap: 6 }}>
-          <Text style={{ color: "#555", fontSize: 11 }}>สมัคร Premium เพื่อฟังเพลงโดยไม่มีโฆษณา</Text>
+          {currentAd.linkUrl ? (
+            <TouchableOpacity onPress={handleAdPress} style={styles.learnMoreBtn} activeOpacity={0.8}>
+              <Text style={styles.learnMoreText}>ดูเพิ่มเติม ›</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <Text style={styles.premiumHint}>สมัคร Premium เพื่อฟังเพลงโดยไม่มีโฆษณา</Text>
         </View>
 
       </Animated.View>
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  gradientOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 260,
+    // gradient มืดจากล่างขึ้นบน — ใช้ View ซ้อน 2 ชั้นแทน LinearGradient
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
+  topBar: {
+    position: "absolute",
+    top: 52,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+  adBadge: {
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  adBadgeText: {
+    color: "#ccc",
+    fontSize: 12,
+  },
+  skipBtn: {
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
+  skipBtnActive: {
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderColor: "transparent",
+  },
+  skipTextCountdown: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  skipTextActive: {
+    color: "#000",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  bottomInfo: {
+    position: "absolute",
+    bottom: 48,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 24,
+    gap: 6,
+  },
+  adTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "800",
+    lineHeight: 28,
+    textShadowColor: "rgba(0,0,0,0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  adAdvertiser: {
+    color: "#ccc",
+    fontSize: 14,
+  },
+  learnMoreBtn: {
+    alignSelf: "flex-start",
+    marginTop: 4,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+  },
+  learnMoreText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  premiumHint: {
+    color: "#666",
+    fontSize: 11,
+    marginTop: 8,
+  },
+});

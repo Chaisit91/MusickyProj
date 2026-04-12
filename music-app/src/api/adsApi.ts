@@ -7,6 +7,7 @@ export interface Ad {
   adType: "SPLASH" | "AFTER_SONG" | "AFTER_MULTIPLE";
   adDuration: number;
   imageUrl: string;
+  linkUrl?: string;
   impressions: number;
   isActive: boolean;
 }

@@ -8,38 +8,23 @@ export const findAllAds = async () => {
 export const findActiveAds = async (adType?: string) => {
   const now = new Date();
 
-  // Step 1: try full date-aware query
-  const results = await prisma.ads.findMany({
+  // ดึง active ads ทั้งหมด (filter adType ถ้ามี) แล้วกรองวันที่ใน JS
+  // เพื่อหลีกเลี่ยงปัญหา Prisma AND/OR date query ที่อาจ generate SQL ผิด
+  const candidates = await prisma.ads.findMany({
     where: {
       isActive: true,
       ...(adType ? { adType } : {}),
-      AND: [
-        { OR: [{ startDate: null }, { startDate: { lte: now } }] },
-        { OR: [{ endDate: null }, { endDate: { gte: now } }] },
-      ],
     },
     orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
   });
-  console.log(`[AdsRepo] findActiveAds(type=${adType ?? "any"}) step1 → ${results.length} results`);
-  if (results.length > 0) return results;
 
-  // Step 2: fallback — ignore date range (for ads with null dates)
-  const fallback = await prisma.ads.findMany({
-    where: {
-      isActive: true,
-      ...(adType ? { adType } : {}),
-      startDate: null,
-      endDate: null,
-    },
-    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+  const results = candidates.filter((ad) => {
+    const afterStart = !ad.startDate || ad.startDate.getTime() <= now.getTime();
+    const beforeEnd  = !ad.endDate   || ad.endDate.getTime()   >= now.getTime();
+    return afterStart && beforeEnd;
   });
-  console.log(`[AdsRepo] findActiveAds(type=${adType ?? "any"}) step2-fallback → ${fallback.length} results`);
-  if (fallback.length > 0) return fallback;
 
-  // Step 3: debug — dump ALL ads to see what's in DB
-  const allAds = await prisma.ads.findMany();
-  console.log(`[AdsRepo] ALL ads in DB (${allAds.length}):`, allAds.map(a => `id=${a.id.slice(0,8)} type=${a.adType} active=${a.isActive} startDate=${a.startDate} endDate=${a.endDate}`));
-  return fallback;
+  return results;
 };
 
 export const recordImpression = async (id: string) => {

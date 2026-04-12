@@ -17,6 +17,7 @@ export const createAdsApi = async (data: {
   adType: string;
   adDuration: number;
   advertiser: string;
+  linkUrl?: string;
   isActive?: boolean;
   priority?: number;
   startDate?: string;
@@ -28,6 +29,7 @@ export const createAdsApi = async (data: {
   fd.append("adType", data.adType);
   fd.append("adDuration", String(data.adDuration));
   fd.append("advertiser", data.advertiser);
+  if (data.linkUrl !== undefined) fd.append("linkUrl", data.linkUrl);
   if (data.isActive !== undefined) fd.append("isActive", String(data.isActive));
   if (data.priority !== undefined) fd.append("priority", String(data.priority));
   if (data.startDate) fd.append("startDate", data.startDate);
@@ -41,6 +43,7 @@ export const updateAdsApi = async (id: string, data: {
   adType?: string;
   adDuration?: number;
   advertiser?: string;
+  linkUrl?: string;
   isActive?: boolean;
   priority?: number;
   startDate?: string;
@@ -52,6 +55,7 @@ export const updateAdsApi = async (id: string, data: {
   if (data.adType !== undefined) fd.append("adType", data.adType);
   if (data.adDuration !== undefined) fd.append("adDuration", String(data.adDuration));
   if (data.advertiser !== undefined) fd.append("advertiser", data.advertiser);
+  if (data.linkUrl !== undefined) fd.append("linkUrl", data.linkUrl);
   if (data.isActive !== undefined) fd.append("isActive", String(data.isActive));
   if (data.priority !== undefined) fd.append("priority", String(data.priority));
   if (data.startDate !== undefined) fd.append("startDate", data.startDate);

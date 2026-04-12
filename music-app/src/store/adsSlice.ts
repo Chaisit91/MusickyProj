@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Ad, fetchAdByType, fetchAnyActiveAd, recordImpressionApi } from "../api/adsApi";
+import { loginThunk } from "./authSlice";
 
 const randomThreshold = () => Math.floor(Math.random() * 4) + 2; // 2–5 เพลง
 
@@ -32,10 +33,8 @@ export const showSplashAd = createAsyncThunk(
       const ad =
         (await fetchAdByType("SPLASH")) ??
         (await fetchAnyActiveAd());
-      console.log("[AdsSlice] showSplashAd result:", ad ? `id=${ad.id} type=${ad.adType}` : "null");
       return ad;
     } catch (err) {
-      console.warn("[AdsSlice] showSplashAd error:", err);
       return rejectWithValue(null);
     }
   }
@@ -64,10 +63,8 @@ export const showAfterMultipleAd = createAsyncThunk(
         (await fetchAdByType("AFTER_MULTIPLE")) ??
         (await fetchAdByType("AFTER_SONG")) ??
         (await fetchAnyActiveAd());
-      console.log("[AdsSlice] showAfterMultipleAd result:", ad ? `id=${ad.id} type=${ad.adType}` : "null");
       return ad;
     } catch (err) {
-      console.warn("[AdsSlice] showAfterMultipleAd error:", err);
       return rejectWithValue(null);
     }
   }
@@ -107,7 +104,6 @@ const adsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(showSplashAd.fulfilled, (state, action) => {
-        console.log("[AdsSlice] showSplashAd.fulfilled payload:", action.payload?.id ?? "null");
         if (action.payload) {
           state.currentAd = action.payload;
           state.adVisible = true;
@@ -130,12 +126,19 @@ const adsSlice = createSlice({
         }
       })
       .addCase(showAfterMultipleAd.fulfilled, (state, action) => {
-        console.log("[AdsSlice] showAfterMultipleAd.fulfilled payload:", action.payload?.id ?? "null");
         if (action.payload) {
           state.currentAd = action.payload;
           state.adVisible = true;
           state.adContext = "AFTER_MULTIPLE";
           state.pendingNextSong = true;
+        }
+      })
+      // ── ตั้ง showingPreHomeAd ในจังหวะเดียวกับที่ isLoggedIn=true ──────────────
+      // เพื่อป้องกัน race condition ที่ AuthGuard navigate ไป /home ก่อนโฆษณาแสดง
+      .addCase(loginThunk.fulfilled, (state, action) => {
+        const user = (action.payload as any)?.user;
+        if (user && !user.isPremium) {
+          state.showingPreHomeAd = true;
         }
       });
   },

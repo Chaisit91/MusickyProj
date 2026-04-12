@@ -16,6 +16,7 @@ interface Ad {
   adType: string;
   adDuration: number;
   imageUrl: string;
+  linkUrl?: string;
   impressions: number;
   isActive: boolean;
   priority: number;
@@ -25,7 +26,7 @@ interface Ad {
 }
 
 const AD_TYPE_LABEL: Record<string, string> = {
-  SPLASH: "ตอนเปิดแอป",
+  SPLASH: "หลังจาก Login",
   AFTER_SONG: "หลังจบ 1 เพลง",
   AFTER_MULTIPLE: "หลังจบหลายเพลง",
 };
@@ -103,6 +104,7 @@ const AdModal: React.FC<{
     advertiser: ad.advertiser || "",
     adType: ad.adType || "SPLASH",
     adDuration: ad.adDuration ?? 30,
+    linkUrl: ad.linkUrl || "",
     isActive: ad.isActive ?? true,
     priority: ad.priority ?? 1,
     startDate: toDateInputValue(ad.startDate),
@@ -313,12 +315,25 @@ const AdModal: React.FC<{
             </div>
           </div>
 
+          {/* URL ปลายทาง (ถ้ากดโฆษณา) */}
+          <div>
+            <label className={labelCls}>URL เมื่อกดโฆษณา <span className="text-gray-300 font-normal">(ไม่บังคับ)</span></label>
+            <input
+              type="url"
+              placeholder="https://example.com"
+              value={form.linkUrl}
+              onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
+              className={inputCls()}
+            />
+            <p className="text-xs text-gray-400 mt-1">ผู้ใช้สามารถกดที่โฆษณาเพื่อเปิด URL นี้ได้</p>
+          </div>
+
           {/* ประเภทโฆษณา + ความยาว */}
           <div className={`grid gap-3 ${durationDetected ? "grid-cols-2" : "grid-cols-1"}`}>
             <div>
               <label className={labelCls}>ประเภทโฆษณา</label>
               <select value={form.adType} onChange={(e) => setForm({ ...form, adType: e.target.value })} className={inputCls()}>
-                <option value="SPLASH">ตอนเปิดแอป</option>
+                <option value="SPLASH">หลังจาก Login</option>
                 <option value="AFTER_SONG">หลังจบ 1 เพลง</option>
                 <option value="AFTER_MULTIPLE">หลังจบหลายเพลง</option>
               </select>

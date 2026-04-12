@@ -72,11 +72,7 @@ export default function LoginScreen() {
       } else {
         dispatch(loadPreferences());
         const user = (result.payload as any)?.user;
-        console.log("[Login] user:", user?.email, "isPremium:", user?.isPremium);
         if (!user?.isPremium) {
-          // Block AuthGuard from navigating to home — ad screen will navigate instead
-          dispatch(setShowingPreHomeAd(true));
-          console.log("[Login] dispatching showSplashAd");
           dispatch(showSplashAd());
         }
       }

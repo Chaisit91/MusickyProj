@@ -7,6 +7,7 @@ import {
   Dimensions,
   Animated,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { router } from "expo-router";
@@ -34,12 +35,9 @@ export default function BetweenSongAd() {
     (adContext === "AFTER_SONG" || adContext === "AFTER_MULTIPLE") &&
     !!currentAd;
 
-  console.log("[BetweenSongAd] visible:", visible, "adContext:", adContext, "adId:", currentAd?.id ?? "null");
-
   useEffect(() => {
     if (!visible || !currentAd) return;
 
-    console.log("[BetweenSongAd] starting — ad:", currentAd.id, "duration:", currentAd.adDuration);
     dispatch(trackImpression(currentAd.id));
 
     const duration = currentAd.adDuration ?? 15;
@@ -77,7 +75,6 @@ export default function BetweenSongAd() {
   // dismiss เมื่อ countdown จบ (timeLeft ต้อง ≥ 0 ก่อน ถึงจะ dismiss เมื่อเป็น 0)
   useEffect(() => {
     if (!visible || timeLeft < 0 || timeLeft !== 0) return;
-    console.log("[BetweenSongAd] countdown done → dismiss + nextSong");
     const timer = setTimeout(() => {
       dispatch(dismissAd());
       dispatch(setPendingNextSong(false));
@@ -96,6 +93,12 @@ export default function BetweenSongAd() {
   if (!visible || !currentAd) return null;
 
   const isVideo = isVideoUrl(currentAd.imageUrl);
+
+  const handleAdPress = () => {
+    if (currentAd.linkUrl) {
+      Linking.openURL(currentAd.linkUrl).catch(() => {});
+    }
+  };
 
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
@@ -135,8 +138,12 @@ export default function BetweenSongAd() {
           </View>
         </View>
 
-        {/* Media */}
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        {/* Media — กดเพื่อเปิด link โฆษณา */}
+        <TouchableOpacity
+          activeOpacity={currentAd.linkUrl ? 0.85 : 1}
+          onPress={handleAdPress}
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           {isVideo ? (
             <Video
               source={{ uri: currentAd.imageUrl }}
@@ -153,7 +160,12 @@ export default function BetweenSongAd() {
               resizeMode="contain"
             />
           )}
-        </View>
+          {currentAd.linkUrl ? (
+            <View style={{ position: "absolute", bottom: 8, right: 12, backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+              <Text style={{ color: "#fff", fontSize: 11 }}>แตะเพื่อดูเพิ่มเติม ›</Text>
+            </View>
+          ) : null}
+        </TouchableOpacity>
 
         {/* Ad title + advertiser */}
         <View style={{ position: "absolute", bottom: 120, left: 0, right: 0, paddingHorizontal: 24, gap: 4 }}>
