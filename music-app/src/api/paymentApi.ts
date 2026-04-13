@@ -46,18 +46,16 @@ export interface CancelPremiumError {
 }
 
 export const cancelPremiumApi = async (): Promise<{ success: true } | { success: false; data: CancelPremiumError }> => {
-  try {
-    await apiClient.delete("/payments/cancel");
-    return { success: true };
-  } catch (err: any) {
-    const body = err?.response?.data;
-    return {
-      success: false,
-      data: {
-        message: body?.message ?? "เกิดข้อผิดพลาด",
-        subscribedAt: body?.subscribedAt ?? null,
-        premiumExpiresAt: body?.premiumExpiresAt ?? null,
-      },
-    };
-  }
+  const { data, status } = await apiClient.delete("/payments/cancel", {
+    validateStatus: (s) => s < 500,
+  });
+  if (status === 200 && data?.success) return { success: true };
+  return {
+    success: false,
+    data: {
+      message: data?.message ?? "เกิดข้อผิดพลาด",
+      subscribedAt: data?.subscribedAt ?? null,
+      premiumExpiresAt: data?.premiumExpiresAt ?? null,
+    },
+  };
 };

@@ -76,3 +76,31 @@ export const deleteUser = async (req: Request, res: Response) => {
   await AdminUserRepository.deleteUser(id);
   res.json({ success: true, message: "User deleted" });
 };
+
+// ─── SSE: real-time premium stats ─────────────────────────────────────────────
+
+export const premiumStatsStream = async (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.flushHeaders();
+
+  const sendStats = async () => {
+    try {
+      const stats = await AdminUserRepository.getPremiumStats();
+      res.write(`data: ${JSON.stringify(stats)}\n\n`);
+    } catch {
+      // ignore DB error — keep connection alive
+    }
+  };
+
+  // ส่งทันทีเมื่อ connect
+  await sendStats();
+
+  // ส่งทุก 5 วินาที
+  const interval = setInterval(sendStats, 5000);
+
+  // cleanup เมื่อ client ตัด connection
+  req.on("close", () => clearInterval(interval));
+};

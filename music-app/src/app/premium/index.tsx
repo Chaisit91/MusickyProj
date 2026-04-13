@@ -194,12 +194,17 @@ export default function PremiumScreen() {
     premiumExpiresAt: string;
   } | null>(null);
 
-  const expiryText = premiumExpiresAt
-    ? new Date(premiumExpiresAt).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })
-    : null;
+  const THAI_MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+                       "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 
-  const fmt = (d: string | null) =>
-    d ? new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" }) : "-";
+  const fmt = (d: string | null | undefined): string => {
+    if (!d) return "-";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "-";
+    return `${date.getDate()} ${THAI_MONTHS[date.getMonth()]} ${date.getFullYear() + 543}`;
+  };
+
+  const expiryText = fmt(premiumExpiresAt);
 
   const handleCancel = async () => {
     setCancelLoading(true);
@@ -207,8 +212,11 @@ export default function PremiumScreen() {
     setCancelLoading(false);
     if (result.success) {
       await dispatch(fetchMeThunk());
-    } else if (result.data.premiumExpiresAt) {
-      setInfoModal({ subscribedAt: result.data.subscribedAt, premiumExpiresAt: result.data.premiumExpiresAt });
+    } else {
+      setInfoModal({
+        subscribedAt: result.data.subscribedAt,
+        premiumExpiresAt: result.data.premiumExpiresAt ?? "",
+      });
     }
   };
 
@@ -277,7 +285,7 @@ export default function PremiumScreen() {
               <View style={{ backgroundColor: "#16a34a", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, marginTop: 12 }}>
                 <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>✓ คุณเป็นสมาชิก Premium แล้ว</Text>
               </View>
-              {expiryText && (
+              {expiryText !== "-" && (
                 <Text style={{ color: "#888", fontSize: 13, marginTop: 6, textAlign: "center" }}>
                   ใช้งานได้ถึง {expiryText}
                 </Text>

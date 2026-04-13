@@ -146,8 +146,8 @@ export const cancelPremium = async (req: Request, res: Response) => {
     res.status(409).json({
       success: false,
       message: "ยังไม่ครบรอบบิล",
-      subscribedAt: lastPayment?.createdAt ?? null,
-      premiumExpiresAt: user.premiumExpiresAt,
+      subscribedAt: lastPayment?.createdAt ? lastPayment.createdAt.toISOString() : null,
+      premiumExpiresAt: user.premiumExpiresAt ? user.premiumExpiresAt.toISOString() : null,
     });
     return;
   }

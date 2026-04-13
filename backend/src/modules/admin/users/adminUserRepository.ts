@@ -19,6 +19,8 @@ export const findAllUsers = async (search?: string, status?: string) => {
       email: true,
       role: true,
       isActive: true,
+      isPremium: true,
+      premiumExpiresAt: true,
       createdAt: true,
       lastLogin: true,
       _count: {
@@ -83,4 +85,16 @@ export const unbanUser = async (id: string) => {
 
 export const deleteUser = async (id: string) => {
   return prisma.user.delete({ where: { id } });
+};
+
+export const getPremiumStats = async () => {
+  const now = new Date();
+  const [total, premium, banned] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({
+      where: { isPremium: true, premiumExpiresAt: { gt: now } },
+    }),
+    prisma.user.count({ where: { isActive: false } }),
+  ]);
+  return { total, premium, active: total - banned, banned, free: total - premium };
 };

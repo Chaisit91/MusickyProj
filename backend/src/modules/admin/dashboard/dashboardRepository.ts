@@ -9,7 +9,7 @@ export const getDashboardStats = async () => {
     prisma.song.count(),
     prisma.playHistory.count(),
     prisma.artist.count(),
-    prisma.user.count({ where: { isPremium: true } }),
+    prisma.user.count({ where: { isPremium: true, premiumExpiresAt: { gt: now } } }),
     prisma.paymentTransaction.aggregate({
       where: { status: "SUCCESS", createdAt: { gte: startOfMonth } },
       _sum: { amount: true },

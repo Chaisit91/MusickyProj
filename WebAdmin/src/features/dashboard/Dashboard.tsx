@@ -117,7 +117,7 @@ const Dashboard = () => {
       <div className="flex">
         <Sidebar />
         <div className="flex-1 flex flex-col">
-          <TopBar lang="ไทย" onLangChange={() => {}} />
+          <TopBar />
           <div className="flex-1 p-8 flex flex-col bg-gray-500 gap-6">
 
             {loading && <div className="text-center py-4 text-gray-300 text-sm">กำลังโหลด...</div>}

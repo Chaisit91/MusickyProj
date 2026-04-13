@@ -56,9 +56,34 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
   }
 };
 
+// SSE auth — รองรับ token ทั้งจาก header และ query param (EventSource ไม่ support custom headers)
+export const sseAuthMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers.authorization;
+  const queryToken = req.query.token as string | undefined;
+  const raw = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : queryToken;
+
+  if (!raw) {
+    res.status(403).json({ success: false, message: "No token provided" });
+    return;
+  }
+
+  try {
+    const decoded = jwt.verify(raw, process.env.ACCESS_TOKEN_SECRET as string) as AuthPayload;
+    const userId = decoded.sub;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Invalid token payload" });
+      return;
+    }
+    req.user = { id: userId, role: decoded.role ?? "USER", email: decoded.email ?? "" };
+    next();
+  } catch {
+    res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+};
+
 // Optional login — ถ้ามี token ก็ decode ใส่ req.user แต่ถ้าไม่มีก็ผ่านได้
 // ใช้กับ search — ทุกคนค้นหาได้ แต่ถ้า login จะบันทึก history ด้วย
-export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+export const optionalAuthMiddleware = (req: Request, _res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

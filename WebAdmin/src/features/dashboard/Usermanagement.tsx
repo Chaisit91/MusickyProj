@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-import { Search, Pencil, CheckCircle2, Ban, X, Shield, User as UserIcon } from "lucide-react";
+import { Search, Pencil, CheckCircle2, Ban, X, Shield, User as UserIcon, Crown, Users } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import { useUsers } from "../../hooks/useUsers";
+import { usePremiumStats } from "../../hooks/usePremiumStats";
 
 interface User {
   id: string;
   name: string;
   email: string;
   isActive: boolean;
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
   role: string;
   createdAt: string;
   lastLogin?: string;
@@ -34,6 +37,24 @@ const StatusBadge: React.FC<{ isActive: boolean }> = ({ isActive }) => (
     {isActive ? "ใช้งาน" : "ถูกระงับ"}
   </span>
 );
+
+const PremiumBadge: React.FC<{ isPremium?: boolean; expiresAt?: string | null }> = ({ isPremium, expiresAt }) => {
+  const expired = expiresAt ? new Date(expiresAt) < new Date() : false;
+  if (isPremium && !expired) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-yellow-400/15 text-yellow-400 border border-yellow-400/30">
+        <Crown size={10} />
+        พรีเมียม
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-700 text-gray-400 border border-gray-600">
+      <Users size={10} />
+      ฟรี
+    </span>
+  );
+};
 
 const RoleBadge: React.FC<{ role: string }> = ({ role }) => (
   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${role === "ADMIN" ? "bg-purple-500/15 text-purple-400 border border-purple-500/30" : "bg-gray-700 text-gray-300 border border-gray-600"}`}>
@@ -129,6 +150,7 @@ const UserManagementPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const { users, loading, error, updateUser, banUser, unbanUser } = useUsers(search);
+  const stats = usePremiumStats();
 
   return (
     <div className="flex min-h-screen">
@@ -140,9 +162,10 @@ const UserManagementPage: React.FC = () => {
             {error && <div className="bg-red-900 text-red-300 p-3 rounded-lg text-sm">{error}</div>}
             {loading && <div className="text-center py-4 text-gray-300 text-sm">กำลังโหลด...</div>}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <StatCard label="ผู้ใช้งาน" count={users.filter((u: User) => u.isActive).length} iconBg="bg-blue-50" icon={<CheckCircle2 size={20} className="text-blue-500" />} />
-              <StatCard label="ถูกระงับ" count={users.filter((u: User) => !u.isActive).length} iconBg="bg-red-50" icon={<Ban size={20} className="text-red-400" />} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <StatCard label="ผู้ใช้ทั้งหมด" count={stats?.total ?? users.length} iconBg="bg-blue-50" icon={<CheckCircle2 size={20} className="text-blue-500" />} />
+              <StatCard label="พรีเมียม" count={stats?.premium ?? users.filter((u: User) => u.isPremium && (!u.premiumExpiresAt || new Date(u.premiumExpiresAt) > new Date())).length} iconBg="bg-yellow-100" icon={<Crown size={20} className="text-yellow-500" />} />
+              <StatCard label="ถูกระงับ" count={stats?.banned ?? users.filter((u: User) => !u.isActive).length} iconBg="bg-red-50" icon={<Ban size={20} className="text-red-400" />} />
             </div>
 
             <div className="bg-gray-800 rounded-xl overflow-hidden">
@@ -160,6 +183,7 @@ const UserManagementPage: React.FC = () => {
                     <tr className="border-b border-gray-700 bg-gray-800">
                       <th className="text-left px-5 py-3 text-white font-medium text-xs">ผู้ใช้</th>
                       <th className="text-left px-4 py-3 text-white font-medium text-xs">Role</th>
+                      <th className="text-left px-4 py-3 text-white font-medium text-xs">ประเภท</th>
                       <th className="text-left px-4 py-3 text-white font-medium text-xs">สถานะ</th>
                       <th className="text-left px-4 py-3 text-white font-medium text-xs">วันที่สมัคร</th>
                       <th className="text-left px-4 py-3 text-white font-medium text-xs">ใช้งานล่าสุด</th>
@@ -175,6 +199,7 @@ const UserManagementPage: React.FC = () => {
                           <p className="text-gray-400 text-xs mt-0.5">{user.email}</p>
                         </td>
                         <td className="px-4 py-3.5"><RoleBadge role={user.role} /></td>
+                        <td className="px-4 py-3.5"><PremiumBadge isPremium={user.isPremium} expiresAt={user.premiumExpiresAt} /></td>
                         <td className="px-4 py-3.5"><StatusBadge isActive={user.isActive} /></td>
                         <td className="px-4 py-3.5 text-white text-xs">{formatDate(user.createdAt)}</td>
                         <td className="px-4 py-3.5 text-white text-xs">{formatDate(user.lastLogin)}</td>
@@ -190,7 +215,7 @@ const UserManagementPage: React.FC = () => {
                       </tr>
                     ))}
                     {!loading && users.length === 0 && (
-                      <tr><td colSpan={7} className="text-center py-12 text-gray-400 text-sm">ไม่พบผู้ใช้</td></tr>
+                      <tr><td colSpan={8} className="text-center py-12 text-gray-400 text-sm">ไม่พบผู้ใช้</td></tr>
                     )}
                   </tbody>
                 </table>

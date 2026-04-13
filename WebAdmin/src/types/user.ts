@@ -4,6 +4,8 @@ export interface User {
   email: string;
   role: "USER" | "ADMIN";
   isActive: boolean;
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
   createdAt: string;
   updatedAt: string;
   lastLogin?: string;

@@ -93,8 +93,31 @@ const NotifIconComp = ({ type }: { type: NotifType }) => {
   return <PremiumIcon />;
 };
 
-const formatTime = (iso: string) => {
-  const diff = Date.now() - new Date(iso).getTime();
+const THAI_MONTHS_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.",
+                           "ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+
+// parse ทั้ง ISO string และ "DD/MM/YYYY HH:MM:SS" (Thai BE format จาก backend)
+const parseDate = (str: string): Date => {
+  const iso = new Date(str);
+  if (!isNaN(iso.getTime())) return iso;
+  // split "14/04/2569 03:24:34" → ["14","04","2569","03","24","34"]
+  const parts = str.split(/[\/\s:]/).filter(Boolean);
+  if (parts.length === 6) {
+    const d = parseInt(parts[0], 10);
+    const mo = parseInt(parts[1], 10);
+    const yBE = parseInt(parts[2], 10);
+    const h = parseInt(parts[3], 10);
+    const mi = parseInt(parts[4], 10);
+    const s = parseInt(parts[5], 10);
+    return new Date(yBE - 543, mo - 1, d, h, mi, s);
+  }
+  return new Date(NaN);
+};
+
+const formatTime = (str: string) => {
+  const date = parseDate(str);
+  if (isNaN(date.getTime())) return "-";
+  const diff = Date.now() - date.getTime();
   const m = Math.floor(diff / 60000);
   if (m < 1) return "เมื่อกี้";
   if (m < 60) return `${m} นาทีที่แล้ว`;
@@ -102,7 +125,7 @@ const formatTime = (iso: string) => {
   if (h < 24) return `${h} ชั่วโมงที่แล้ว`;
   const d = Math.floor(h / 24);
   if (d < 7) return `${d} วันที่แล้ว`;
-  return new Date(iso).toLocaleDateString("th-TH");
+  return `${date.getDate()} ${THAI_MONTHS_SHORT[date.getMonth()]} ${date.getFullYear() + 543}`;
 };
 
 // ─── Notification Card ────────────────────────────────────────────────────────

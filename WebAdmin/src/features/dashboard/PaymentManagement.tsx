@@ -111,7 +111,7 @@ export default function PaymentManagementPage() {
     <div className="min-h-screen bg-gray-900 text-white flex">
       <Sidebar />
       <div className="flex-1 flex flex-col">
-        <Topbar lang="ไทย" onLangChange={() => {}} />
+        <Topbar />
         <div className="flex-1 p-8 bg-gray-500 flex flex-col gap-6">
 
           {/* Header */}
