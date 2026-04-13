@@ -211,10 +211,9 @@ export default function SettingsScreen() {
             )}
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700" }}>{user?.name ?? ""}</Text>
-            <CrownIcon />
-          </View>
+          <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 4 }}>
+            {user?.name ?? ""}
+          </Text>
         </View>
 
         {/* ── User Info ── */}
@@ -291,11 +290,6 @@ export default function SettingsScreen() {
           Settings
         </Text>
         <View style={{ backgroundColor: "#161616", borderRadius: 14, marginHorizontal: 16, overflow: "hidden" }}>
-          <SettingRow
-            label="Music Language(s)"
-            value={langLabel}
-            onPress={() => router.push("/settings/music-language")}
-          />
           <SettingRow
             label="Streaming Quality"
             value={prefs.streamingQuality}

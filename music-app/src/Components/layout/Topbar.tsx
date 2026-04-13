@@ -75,9 +75,19 @@ export default function TopBar({
       }}
     >
       <View>
-        <Text style={{ fontSize: 18, color: "#fff" }}>
-          👋 <Text style={{ fontWeight: "700" }}>Hi {username},</Text>
-        </Text>
+        {/* ── Musicky Logo ── */}
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ color: "#fff", fontSize: 26, fontWeight: "700", letterSpacing: 0.5 }}>
+            Musicky
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 6, gap: 4 }}>
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#166534" }} />
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#15803d" }} />
+            <View style={{ width: 13, height: 13, borderRadius: 7, backgroundColor: "#22c55e" }} />
+          </View>
+        </View>
+
+        {/* ── Premium button ── */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={onPremiumPress}
@@ -130,33 +140,31 @@ export default function TopBar({
         <TouchableOpacity activeOpacity={0.7} onPress={onSettingsPress}>
           <GearIcon />
         </TouchableOpacity>
-        <TouchableOpacity activeOpacity={0.8} onPress={onAvatarPress}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "#5b4fcf",
-              borderWidth: 2,
-              borderColor: "#444",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-            }}
-          >
-            {avatarUrl ? (
-              <Image
-                source={{ uri: avatarUrl }}
-                style={{ width: 40, height: 40 }}
-                contentFit="cover"
-              />
-            ) : (
-              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
-                {initial}
-              </Text>
-            )}
-          </View>
-        </TouchableOpacity>
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: "#5b4fcf",
+            borderWidth: 2,
+            borderColor: "#444",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+        >
+          {avatarUrl ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              style={{ width: 40, height: 40 }}
+              contentFit="cover"
+            />
+          ) : (
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+              {initial}
+            </Text>
+          )}
+        </View>
       </View>
     </View>
   );
