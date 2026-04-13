@@ -1,14 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
+import { fetchMeThunk } from "../../store/authSlice";
+import { cancelPremiumApi } from "../../api/paymentApi";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +73,7 @@ const PlanCard = ({
   period,
   features,
   isPopular,
+  isActive,
   onPress,
 }: {
   type: "Free" | "Premium";
@@ -76,6 +81,7 @@ const PlanCard = ({
   period: string;
   features: Feature[];
   isPopular?: boolean;
+  isActive?: boolean;
   onPress?: () => void;
 }) => {
   const isPremium = type === "Premium";
@@ -138,20 +144,37 @@ const PlanCard = ({
         </View>
 
         {isPremium && (
-          <TouchableOpacity
-            onPress={onPress}
-            activeOpacity={0.85}
-            style={{
-              backgroundColor: "#7c3aed",
-              borderRadius: 14,
-              paddingVertical: 14,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>
-              สมัคร Premium Now!
-            </Text>
-          </TouchableOpacity>
+          isActive ? (
+            <View
+              style={{
+                backgroundColor: "#16a34a22",
+                borderRadius: 14,
+                paddingVertical: 14,
+                alignItems: "center",
+                borderWidth: 1,
+                borderColor: "#16a34a",
+              }}
+            >
+              <Text style={{ color: "#16a34a", fontSize: 15, fontWeight: "700" }}>
+                ✓ ใช้งานอยู่แล้ว
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={onPress}
+              activeOpacity={0.85}
+              style={{
+                backgroundColor: "#7c3aed",
+                borderRadius: 14,
+                paddingVertical: 14,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>
+                สมัคร Premium Now!
+              </Text>
+            </TouchableOpacity>
+          )
         )}
       </View>
     </View>
@@ -161,11 +184,69 @@ const PlanCard = ({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function PremiumScreen() {
+  const dispatch = useAppDispatch();
   const userIsPremium = useAppSelector((s) => s.auth.user?.isPremium ?? false);
+  const premiumExpiresAt = useAppSelector((s) => s.auth.user?.premiumExpiresAt ?? null);
+
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [infoModal, setInfoModal] = useState<{
+    subscribedAt: string | null;
+    premiumExpiresAt: string;
+  } | null>(null);
+
+  const expiryText = premiumExpiresAt
+    ? new Date(premiumExpiresAt).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  const fmt = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" }) : "-";
+
+  const handleCancel = async () => {
+    setCancelLoading(true);
+    const result = await cancelPremiumApi();
+    setCancelLoading(false);
+    if (result.success) {
+      await dispatch(fetchMeThunk());
+    } else if (result.data.premiumExpiresAt) {
+      setInfoModal({ subscribedAt: result.data.subscribedAt, premiumExpiresAt: result.data.premiumExpiresAt });
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+      {/* ── Info Modal (ยังอยู่ในรอบบิล) ── */}
+      <Modal visible={!!infoModal} transparent animationType="fade" onRequestClose={() => setInfoModal(null)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", paddingHorizontal: 32 }}>
+          <View style={{ backgroundColor: "#1a1a1a", borderRadius: 20, padding: 24, width: "100%", borderWidth: 1, borderColor: "#7c3aed33" }}>
+            <Text style={{ color: "#FFD700", fontSize: 16, fontWeight: "800", textAlign: "center", marginBottom: 16 }}>
+              ไม่สามารถยกเลิกได้ตอนนี้
+            </Text>
+            <View style={{ backgroundColor: "#161616", borderRadius: 12, padding: 16, gap: 10, marginBottom: 20 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ color: "#888", fontSize: 13 }}>วันที่สมัคร</Text>
+                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>{fmt(infoModal?.subscribedAt ?? null)}</Text>
+              </View>
+              <View style={{ height: 1, backgroundColor: "#2a2a2a" }} />
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={{ color: "#888", fontSize: 13 }}>ครบรอบบิล</Text>
+                <Text style={{ color: "#a78bfa", fontSize: 13, fontWeight: "600" }}>{fmt(infoModal?.premiumExpiresAt ?? null)}</Text>
+              </View>
+            </View>
+            <Text style={{ color: "#888", fontSize: 13, textAlign: "center", lineHeight: 20, marginBottom: 20 }}>
+              คุณสามารถยกเลิก Premium ได้หลังจากวันครบรอบบิล{"\n"}โดยยังใช้งาน Premium ได้จนถึงวันนั้น
+            </Text>
+            <TouchableOpacity
+              onPress={() => setInfoModal(null)}
+              activeOpacity={0.85}
+              style={{ backgroundColor: "#7c3aed", borderRadius: 12, paddingVertical: 13, alignItems: "center" }}
+            >
+              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>รับทราบ</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 48 }}>
 
@@ -196,9 +277,25 @@ export default function PremiumScreen() {
               <View style={{ backgroundColor: "#16a34a", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, marginTop: 12 }}>
                 <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>✓ คุณเป็นสมาชิก Premium แล้ว</Text>
               </View>
-              <Text style={{ color: "#888", fontSize: 13, marginTop: 8, textAlign: "center" }}>
+              {expiryText && (
+                <Text style={{ color: "#888", fontSize: 13, marginTop: 6, textAlign: "center" }}>
+                  ใช้งานได้ถึง {expiryText}
+                </Text>
+              )}
+              <Text style={{ color: "#888", fontSize: 13, marginTop: 4, textAlign: "center" }}>
                 ขอบคุณที่เลือกใช้ Musicky Premium
               </Text>
+              <TouchableOpacity
+                onPress={handleCancel}
+                disabled={cancelLoading}
+                activeOpacity={0.7}
+                style={{ marginTop: 14, paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#ffffff30", flexDirection: "row", alignItems: "center", gap: 6 }}
+              >
+                {cancelLoading
+                  ? <ActivityIndicator size={14} color="#888" />
+                  : <Text style={{ color: "#888", fontSize: 13 }}>ยกเลิก Premium</Text>
+                }
+              </TouchableOpacity>
             </>
           ) : (
             <>
@@ -220,6 +317,7 @@ export default function PremiumScreen() {
             period="เดือน"
             features={FEATURES}
             isPopular
+            isActive={userIsPremium}
             onPress={() => router.push("/premium/payment")}
           />
           <PlanCard

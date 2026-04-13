@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as SearchRepository from "./searchRepository";
+import { findSongIdsByLyrics, SongWithLyrics } from "../../utils/lyricsSearch";
 
 export const search = async (req: Request, res: Response) => {
   const { q } = req.query;
@@ -64,4 +65,46 @@ export const clearSearchHistoryItems = async (req: Request, res: Response) => {
   const userId = req.user!.id;
   await SearchRepository.clearSearchHistoryItems(userId);
   res.json({ success: true, message: "Search history cleared" });
+};
+
+// ─── AI lyrics search ─────────────────────────────────────────────────────────
+
+export const lyricsSearch = async (req: Request, res: Response) => {
+  const { q } = req.query;
+
+  if (!q || typeof q !== "string" || q.trim() === "") {
+    res.status(400).json({ success: false, message: "Query parameter 'q' is required" });
+    return;
+  }
+
+  // ดึงเพลงที่มี lyrics จาก DB
+  const songsWithLyrics = await SearchRepository.getSongsWithLyrics();
+
+  if (songsWithLyrics.length === 0) {
+    res.json({ success: true, data: { songs: [], artists: [], albums: [] }, aiUsed: true });
+    return;
+  }
+
+  // ให้ Claude เปรียบเทียบ query กับเนื้อเพลงใน DB
+  const mapped: SongWithLyrics[] = songsWithLyrics.map((s) => ({
+    id: s.id,
+    title: s.title,
+    artistName: s.artist.name,
+    lyrics: s.lyrics!,
+  }));
+
+  const matchedIds = await findSongIdsByLyrics(mapped, q.trim());
+
+  if (matchedIds.length === 0) {
+    res.json({ success: true, data: { songs: [], artists: [], albums: [] }, aiUsed: true });
+    return;
+  }
+
+  const songs = await SearchRepository.getSongsByIds(matchedIds);
+
+  res.json({
+    success: true,
+    data: { songs, artists: [], albums: [] },
+    aiUsed: true,
+  });
 };

@@ -38,3 +38,26 @@ export const getMyTransactionsApi = async () => {
   const { data } = await apiClient.get("/payments/my");
   return (data as { success: boolean; data: any[] }).data;
 };
+
+export interface CancelPremiumError {
+  message: string;
+  subscribedAt: string | null;
+  premiumExpiresAt: string;
+}
+
+export const cancelPremiumApi = async (): Promise<{ success: true } | { success: false; data: CancelPremiumError }> => {
+  try {
+    await apiClient.delete("/payments/cancel");
+    return { success: true };
+  } catch (err: any) {
+    const body = err?.response?.data;
+    return {
+      success: false,
+      data: {
+        message: body?.message ?? "เกิดข้อผิดพลาด",
+        subscribedAt: body?.subscribedAt ?? null,
+        premiumExpiresAt: body?.premiumExpiresAt ?? null,
+      },
+    };
+  }
+};

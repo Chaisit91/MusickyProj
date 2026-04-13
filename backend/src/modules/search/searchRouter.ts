@@ -9,6 +9,9 @@ const router = Router();
 // Search — ทุกคนค้นหาได้ แต่ถ้า login จะบันทึก history ด้วย
 router.get("/", optionalAuthMiddleware, asyncHandler(SearchService.search));
 
+// AI lyrics search — ค้นหาจากเนื้อเพลงด้วย Claude AI
+router.get("/lyrics", optionalAuthMiddleware, asyncHandler(SearchService.lyricsSearch));
+
 // Search history — ต้อง login
 router.get("/history", authMiddleware, asyncHandler(SearchService.getSearchHistory));
 router.delete("/history", authMiddleware, asyncHandler(SearchService.clearSearchHistory));

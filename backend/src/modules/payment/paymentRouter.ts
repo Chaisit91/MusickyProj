@@ -10,5 +10,6 @@ router.use(authMiddleware);
 
 router.post("/", upload.single("slip"), asyncHandler(PaymentService.submitPayment));
 router.get("/my", asyncHandler(PaymentService.getMyTransactions));
+router.delete("/cancel", asyncHandler(PaymentService.cancelPremium));
 
 export default router;

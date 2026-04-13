@@ -75,7 +75,7 @@ export default function LoginScreen() {
         if (!user?.isPremium) {
           // showingPreHomeAd=true ถูกตั้งใน adsSlice.extraReducers (loginThunk.fulfilled)
           // home-ads page จะ fetch และแสดงโฆษณาเอง
-          router.replace("/home-ads" as any);
+          router.replace("/home-ads");
         }
       }
     } catch (err) {

@@ -16,7 +16,9 @@ import {
   getTrendingArtists,
   getBrowseGenres,
   searchAll,
+  searchByLyrics,
   SearchResult,
+  LyricsSearchResult,
   SearchHistoryItem,
   getSearchHistoryItemsApi,
   addSearchHistoryItemApi,
@@ -423,6 +425,9 @@ export default function SearchScreen() {
   const [searchResults, setSearchResults] = useState<SearchResult>({ songs: [], artists: [] });
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
 
+  const [aiResult, setAiResult] = useState<LyricsSearchResult | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+
   const [loadingArtists, setLoadingArtists] = useState(true);
   const [loadingGenres, setLoadingGenres] = useState(true);
   const [loadingResults, setLoadingResults] = useState(false);
@@ -445,14 +450,31 @@ export default function SearchScreen() {
   useEffect(() => {
     if (!query.trim()) {
       setSearchResults({ songs: [], artists: [] });
+      setAiResult(null);
       return;
     }
     if (searchTimer.current) clearTimeout(searchTimer.current);
     setLoadingResults(true);
+    setAiResult(null);
     searchTimer.current = setTimeout(async () => {
       try {
         const results = await searchAll(query.trim());
         setSearchResults(results);
+        // AI fallback: no results and looks like lyrics (≥3 words)
+        if (results.songs.length === 0 && results.artists.length === 0) {
+          const words = query.trim().split(/\s+/);
+          if (words.length >= 3) {
+            setLoadingAI(true);
+            try {
+              const ai = await searchByLyrics(query.trim());
+              setAiResult(ai);
+            } catch {
+              // AI unavailable — silent
+            } finally {
+              setLoadingAI(false);
+            }
+          }
+        }
       } catch {
         setSearchResults({ songs: [], artists: [] });
       } finally {
@@ -615,9 +637,62 @@ export default function SearchScreen() {
               {loadingResults ? (
                 <ActivityIndicator color="#fff" style={{ marginTop: 24 }} />
               ) : searchResults.songs.length === 0 && searchResults.artists.length === 0 ? (
-                <Text style={{ color: "#555", paddingHorizontal: 20, marginTop: 20, fontSize: 13 }}>
-                  ไม่พบผลลัพธ์สำหรับ "{query}"
-                </Text>
+                <>
+                  {loadingAI ? (
+                    <View style={{ alignItems: "center", marginTop: 24, gap: 8 }}>
+                      <ActivityIndicator color="#a78bfa" />
+                      <Text style={{ color: "#a78bfa", fontSize: 12 }}>AI กำลังวิเคราะห์เนื้อเพลง...</Text>
+                    </View>
+                  ) : aiResult && (aiResult.songs.length > 0 || aiResult.artists.length > 0) ? (
+                    <>
+                      {/* ── AI badge ── */}
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 20, marginTop: 16, marginBottom: 4 }}>
+                        <View style={{ backgroundColor: "#3b1f7a", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
+                          <Text style={{ color: "#c4b5fd", fontSize: 11, fontWeight: "700" }}>AI</Text>
+                        </View>
+                        <Text style={{ color: "#888", fontSize: 12 }}>ผลจาก AI (จากเนื้อเพลง)</Text>
+                      </View>
+
+                      {/* ── AI Artists section ── */}
+                      {aiResult.artists.length > 0 && (
+                        <>
+                          <Text style={{ color: "#aaa", fontSize: 12, fontWeight: "700", letterSpacing: 1, paddingHorizontal: 20, marginTop: 10, marginBottom: 6 }}>
+                            ศิลปิน
+                          </Text>
+                          {aiResult.artists.map((artist, i) => (
+                            <ArtistResultItem
+                              key={artist.id}
+                              artist={artist}
+                              index={i}
+                              onPress={handleSelectArtist}
+                            />
+                          ))}
+                        </>
+                      )}
+
+                      {/* ── AI Songs section ── */}
+                      {aiResult.songs.length > 0 && (
+                        <>
+                          <Text style={{ color: "#aaa", fontSize: 12, fontWeight: "700", letterSpacing: 1, paddingHorizontal: 20, marginTop: 10, marginBottom: 6 }}>
+                            เพลง
+                          </Text>
+                          {aiResult.songs.map((song) => (
+                            <SearchResultItem
+                              key={song.id}
+                              song={song}
+                              query={query}
+                              onPress={handleSelectSong}
+                            />
+                          ))}
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <Text style={{ color: "#555", paddingHorizontal: 20, marginTop: 20, fontSize: 13 }}>
+                      ไม่พบผลลัพธ์สำหรับ "{query}"
+                    </Text>
+                  )}
+                </>
               ) : (
                 <>
                   {/* ── Artists section ── */}

@@ -7,6 +7,21 @@ export const submitPayment = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id as string;
   const { method, accountName, accountNo } = req.body;
 
+  // ─── ตรวจสอบว่า premium ยังไม่หมดอายุ ────────────────────────────────────
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isPremium: true, premiumExpiresAt: true },
+  });
+
+  if (existingUser?.isPremium && existingUser.premiumExpiresAt && existingUser.premiumExpiresAt > new Date()) {
+    res.status(409).json({
+      success: false,
+      message: "คุณมีแพ็กเกจ Premium ที่ใช้งานอยู่แล้ว",
+      premiumExpiresAt: existingUser.premiumExpiresAt,
+    });
+    return;
+  }
+
   if (!method || !["QR_CODE", "BANK_TRANSFER"].includes(method)) {
     res.status(400).json({ success: false, message: "method must be QR_CODE or BANK_TRANSFER" });
     return;
@@ -103,4 +118,45 @@ export const getMyTransactions = async (req: Request, res: Response) => {
     orderBy: { createdAt: "desc" },
   });
   res.json({ success: true, data: transactions });
+};
+
+export const cancelPremium = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id as string;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isPremium: true, premiumExpiresAt: true },
+  });
+
+  if (!user?.isPremium) {
+    res.status(400).json({ success: false, message: "คุณไม่มีแพ็กเกจ Premium" });
+    return;
+  }
+
+  const now = new Date();
+
+  // ยังอยู่ในรอบบิล — แจ้งวันที่สมัครและวันครบรอบ
+  if (user.premiumExpiresAt && user.premiumExpiresAt > now) {
+    const lastPayment = await prisma.paymentTransaction.findFirst({
+      where: { userId, status: "SUCCESS" },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+
+    res.status(409).json({
+      success: false,
+      message: "ยังไม่ครบรอบบิล",
+      subscribedAt: lastPayment?.createdAt ?? null,
+      premiumExpiresAt: user.premiumExpiresAt,
+    });
+    return;
+  }
+
+  // ครบรอบบิลแล้ว — ยกเลิกได้
+  await prisma.user.update({
+    where: { id: userId },
+    data: { isPremium: false, premiumExpiresAt: null },
+  });
+
+  res.json({ success: true, message: "ยกเลิก Premium เรียบร้อยแล้ว" });
 };

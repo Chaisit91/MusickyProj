@@ -76,3 +76,25 @@ export const deleteSearchHistoryItem = async (userId: string, id: string) => {
 export const clearSearchHistoryItems = async (userId: string) => {
   return prisma.searchHistoryItem.deleteMany({ where: { userId } });
 };
+
+// ─── ดึงเพลงที่มี lyrics สำหรับ AI lyrics search ─────────────────────────────
+
+export const getSongsWithLyrics = async () => {
+  return prisma.song.findMany({
+    where: { lyrics: { not: null } },
+    select: {
+      id: true,
+      title: true,
+      lyrics: true,
+      artist: { select: { name: true } },
+    },
+    take: 200,
+  });
+};
+
+export const getSongsByIds = async (ids: string[]) => {
+  return prisma.song.findMany({
+    where: { id: { in: ids } },
+    include: { artist: true, album: true, genre: true },
+  });
+};

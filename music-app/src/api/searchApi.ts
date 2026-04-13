@@ -65,6 +65,23 @@ export const getBrowseGenres = async (): Promise<Genre[]> => {
   return data.data as Genre[];
 };
 
+// ─── AI lyrics search ─────────────────────────────────────────────────────────
+
+export interface LyricsSearchResult extends SearchResult {
+  aiUsed: true;
+}
+
+export const searchByLyrics = async (query: string): Promise<LyricsSearchResult> => {
+  const q = query.normalize("NFC").trim();
+  const { data } = await apiClient.get("/search/lyrics", {
+    params: { q },
+    paramsSerializer: serialize,
+  });
+  const songs = (data.data?.songs ?? []) as Song[];
+  const artists = (data.data?.artists ?? []) as Artist[];
+  return { songs, artists, aiUsed: true };
+};
+
 // ─── Search History Items (rich) ──────────────────────────────────────────────
 
 export interface SearchHistoryItem {
