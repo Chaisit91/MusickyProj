@@ -13,6 +13,7 @@ interface PlayerState {
   isShuffle: boolean;
   repeatMode: "none" | "all" | "one";
   volume: number; // 0.0 – 1.0
+  reloadCount: number; // เพิ่มขึ้นทุกครั้งที่ต้องการ force reload player (เช่น หลังโฆษณา)
 }
 
 const initialState: PlayerState = {
@@ -26,6 +27,7 @@ const initialState: PlayerState = {
   isShuffle: false,
   repeatMode: "none",
   volume: 1.0,
+  reloadCount: 0,
 };
 
 const playerSlice = createSlice({
@@ -158,6 +160,11 @@ const playerSlice = createSlice({
       state.queue = [];
       state.currentIndex = 0;
     },
+
+    bumpReload(state) {
+      state.reloadCount += 1;
+      state.isPlaying = true;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(logoutThunk.fulfilled, () => initialState);
@@ -182,6 +189,7 @@ export const {
   removeFromQueue,
   moveQueueItem,
   setQueue,
+  bumpReload,
 } = playerSlice.actions;
 
 export default playerSlice.reducer;

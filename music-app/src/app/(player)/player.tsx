@@ -19,6 +19,7 @@ import {
   setVolume,
 } from "../../store/playerSlice";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
+import { consumeSkip, FREE_SKIP_LIMIT } from "../../store/skipSlice";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 import { Image } from "expo-image";
 
@@ -164,8 +165,13 @@ export default function PlayerScreen() {
   const likedSongs = useAppSelector((s) => s.library.likedSongs);
   const downloadedSongs = useAppSelector((s) => s.library.downloadedSongs);
   const showLyrics = useAppSelector((s) => s.preferences.showLyrics);
+  const isPremium = useAppSelector((s) => s.auth.user?.isPremium ?? false);
+  const { skipsUsed, resetAt } = useAppSelector((s) => s.skip);
   const isLiked = currentSong ? likedSongs.some((s) => s.id === currentSong?.id) : false;
   const isDownloaded = currentSong ? downloadedSongs.some((s) => s.id === currentSong?.id) : false;
+
+  const skipsLeft = FREE_SKIP_LIMIT - skipsUsed;
+  const canSkip = isPremium || skipsLeft > 0;
 
   useEffect(() => {
     dispatch(loadLibrary());
@@ -175,6 +181,18 @@ export default function PlayerScreen() {
   const [seekValue, setSeekValue] = useState(0);
   const [activeTab, setActiveTab] = useState<"player" | "lyrics">(showLyrics ? "lyrics" : "player");
   const [showPlaylistSheet, setShowPlaylistSheet] = useState(false);
+  const [skipToast, setSkipToast] = useState(false);
+
+  const handleSkip = (direction: "next" | "prev") => {
+    if (!canSkip) {
+      setSkipToast(true);
+      setTimeout(() => setSkipToast(false), 2500);
+      return;
+    }
+    if (!isPremium) dispatch(consumeSkip());
+    if (direction === "next") dispatch(nextSong());
+    else dispatch(prevSong());
+  };
 
   useEffect(() => {
     setActiveTab(showLyrics ? "lyrics" : "player");
@@ -368,7 +386,7 @@ export default function PlayerScreen() {
                 <ShuffleIcon active={isShuffle} />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => dispatch(prevSong())} activeOpacity={0.7}>
+              <TouchableOpacity onPress={() => handleSkip("prev")} activeOpacity={0.7}>
                 <SkipPrevIcon />
               </TouchableOpacity>
 
@@ -387,8 +405,27 @@ export default function PlayerScreen() {
                 {isPlaying ? <PauseIcon /> : <PlayIcon />}
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => dispatch(nextSong())} activeOpacity={0.7}>
-                <SkipNextIcon />
+              <TouchableOpacity onPress={() => handleSkip("next")} activeOpacity={canSkip ? 0.7 : 0.4}>
+                <View>
+                  <SkipNextIcon />
+                  {!isPremium && (
+                    <View style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -6,
+                      backgroundColor: skipsLeft > 0 ? "#444" : "#7c3aed",
+                      borderRadius: 8,
+                      paddingHorizontal: 4,
+                      paddingVertical: 1,
+                      minWidth: 16,
+                      alignItems: "center",
+                    }}>
+                      <Text style={{ color: "#fff", fontSize: 9, fontWeight: "700" }}>
+                        {skipsLeft}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -479,6 +516,33 @@ export default function PlayerScreen() {
                 <Text style={{ color: "#aaa", fontSize: 12, fontWeight: "600" }}>Queue ›</Text>
               </TouchableOpacity>
             </View>
+
+            {/* ── Skip limit toast ── */}
+            {skipToast && (
+              <View style={{
+                position: "absolute",
+                bottom: 100,
+                left: 24,
+                right: 24,
+                backgroundColor: "#1a1a1a",
+                borderRadius: 14,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: "#7c3aed40",
+                gap: 6,
+              }}>
+                <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>
+                  หมดสิทธิ์ข้ามเพลงวันนี้แล้ว
+                </Text>
+                <Text style={{ color: "#888", fontSize: 12 }}>
+                  ผู้ใช้ฟรีข้ามได้ {FREE_SKIP_LIMIT} ครั้ง/วัน จะรีเซ็ตใน 24 ชั่วโมง
+                </Text>
+                <TouchableOpacity onPress={() => router.push("/premium")} activeOpacity={0.8}
+                  style={{ marginTop: 4, alignSelf: "flex-start", backgroundColor: "#7c3aed", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
+                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>✦ สมัคร Premium</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </>
         ) : (
           /* ── Lyrics Tab ── */

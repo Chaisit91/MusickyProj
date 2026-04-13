@@ -5,7 +5,7 @@ import { loginThunk } from "./authSlice";
 interface AdsState {
   currentAd: Ad | null;
   adVisible: boolean;
-  adContext: "SPLASH" | "AFTER_SONG" | "AFTER_MULTIPLE" | null;
+  adContext: "SPLASH" | "AFTER_SONG" | null;
   pendingNextSong: boolean;
   showingPreHomeAd: boolean; // true = block AuthGuard จาก navigate ไป home ก่อนโฆษณาแสดง
 }
@@ -33,27 +33,14 @@ export const showSplashAd = createAsyncThunk(
   }
 );
 
-// ─── AFTER_SONG ad (หลังจบเพลง) ──────────────────────────────────────────────
+// ─── AFTER_SONG ad (หลังจบเพลง — ระบบสุ่ม 1-3 เพลง) ─────────────────────────
 export const showAfterSongAd = createAsyncThunk(
   "ads/showAfterSong",
   async (_, { rejectWithValue }) => {
     try {
-      const ad = await fetchAdByType("AFTER_SONG");
-      return ad;
-    } catch {
-      return rejectWithValue(null);
-    }
-  }
-);
-
-// ─── AFTER_MULTIPLE ad (fallback เมื่อไม่มี AFTER_SONG) ──────────────────────
-export const showAfterMultipleAd = createAsyncThunk(
-  "ads/showAfterMultiple",
-  async (_, { rejectWithValue }) => {
-    try {
       const ad =
-        (await fetchAdByType("AFTER_MULTIPLE")) ??
         (await fetchAdByType("AFTER_SONG")) ??
+        (await fetchAdByType("AFTER_MULTIPLE")) ??
         (await fetchAnyActiveAd());
       return ad;
     } catch {
@@ -105,15 +92,6 @@ const adsSlice = createSlice({
           state.currentAd = action.payload;
           state.adVisible = true;
           state.adContext = "AFTER_SONG";
-          state.pendingNextSong = true;
-        }
-      })
-      .addCase(showAfterMultipleAd.fulfilled, (state, action) => {
-        if (action.payload) {
-          state.currentAd = action.payload;
-          state.adVisible = true;
-          state.adContext = "AFTER_MULTIPLE";
-          state.pendingNextSong = true;
         }
       })
       // ตั้ง showingPreHomeAd=true พร้อมกับ isLoggedIn=true เพื่อกัน race condition กับ AuthGuard

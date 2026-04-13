@@ -8,6 +8,7 @@ import { store } from "../store/store";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { restoreSession, fetchMeThunk } from "../store/authSlice";
 import { loadPreferences } from "../store/preferencesSlice";
+import { restoreSkips } from "../store/skipSlice";
 import AudioController from "../Components/player/AudioController";
 import BetweenSongAd from "../Components/ads/BetweenSongAd";
 import OfflineBanner from "../Components/ui/OfflineBanner";
@@ -53,6 +54,7 @@ function RootLayoutNav() {
   const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
 
   useEffect(() => {
+    dispatch(restoreSkips());
     dispatch(restoreSession()).then((result) => {
       if (restoreSession.fulfilled.match(result) && result.payload) {
         dispatch(loadPreferences());

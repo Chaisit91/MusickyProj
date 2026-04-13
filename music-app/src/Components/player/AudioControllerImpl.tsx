@@ -10,11 +10,11 @@ import {
   clearSeekRequest,
   togglePlay,
 } from "../../store/playerSlice";
-import { showAfterSongAd, showAfterMultipleAd } from "../../store/adsSlice";
+import { showAfterSongAd } from "../../store/adsSlice";
 
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
-  const { currentSong, isPlaying, seekRequest, volume } = useAppSelector((s) => s.player);
+  const { currentSong, isPlaying, seekRequest, volume, reloadCount } = useAppSelector((s) => s.player);
   const autoPlay = useAppSelector((s) => s.preferences.autoPlay);
   const isPremium = useAppSelector((s) => s.auth.user?.isPremium ?? false);
   const isPremiumRef = useRef(isPremium);
@@ -24,6 +24,10 @@ export default function AudioControllerImpl() {
   const isPlayingRef = useRef(isPlaying);
   const volumeRef = useRef(volume);
   const autoPlayRef = useRef(autoPlay);
+
+  // random ad counter: เล่นกี่เพลงแล้วหลัง ad ล่าสุด / ต้องเล่นกี่เพลงถึงจะโชว์ ad
+  const songsPlayedRef = useRef(0);
+  const adTargetRef = useRef(Math.floor(Math.random() * 3) + 1); // สุ่ม 1-3
 
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
@@ -91,15 +95,17 @@ export default function AudioControllerImpl() {
         } else if (isPremiumRef.current) {
           dispatch(nextSong());
         } else {
-          // Free user → แสดงโฆษณาหลังจบทุก 1 เพลง (AFTER_SONG → AFTER_MULTIPLE fallback → any)
-          dispatch(showAfterSongAd()).then((result: any) => {
-            if (!result.payload) {
-              // ไม่มี AFTER_SONG ad → ลอง AFTER_MULTIPLE fallback
-              dispatch(showAfterMultipleAd()).then((r: any) => {
-                if (!r.payload) dispatch(nextSong());
-              });
-            }
-          });
+          // Free user → สุ่มแสดงโฆษณาหลัง 1, 2 หรือ 3 เพลง
+          songsPlayedRef.current += 1;
+          if (songsPlayedRef.current >= adTargetRef.current) {
+            songsPlayedRef.current = 0;
+            adTargetRef.current = Math.floor(Math.random() * 3) + 1; // สุ่มใหม่ 1-3
+            dispatch(showAfterSongAd()).then((result: any) => {
+              if (!result.payload) dispatch(nextSong());
+            });
+          } else {
+            dispatch(nextSong());
+          }
         }
       }
     });
@@ -113,7 +119,7 @@ export default function AudioControllerImpl() {
       player.remove();
       playerRef.current = null;
     };
-  }, [currentSong?.id]);
+  }, [currentSong?.id, reloadCount]);
 
   // ── Play / Pause ──────────────────────────────────────────────────────────────
   useEffect(() => {

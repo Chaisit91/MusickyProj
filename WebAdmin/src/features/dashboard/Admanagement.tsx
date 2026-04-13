@@ -27,8 +27,7 @@ interface Ad {
 
 const AD_TYPE_LABEL: Record<string, string> = {
   SPLASH: "หลังจาก Login",
-  AFTER_SONG: "หลังจบ 1 เพลง",
-  AFTER_MULTIPLE: "หลังจบหลายเพลง",
+  AFTER_SONG: "ระหว่างเพลง (random 1-3 เพลง)",
 };
 
 type MediaType = "image" | "video" | null;
@@ -292,7 +291,7 @@ const AdModal: React.FC<{
             )}
 
             <input ref={fileInputRef} type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4"
+              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/*"
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
           </div>
@@ -328,26 +327,32 @@ const AdModal: React.FC<{
             <p className="text-xs text-gray-400 mt-1">ผู้ใช้สามารถกดที่โฆษณาเพื่อเปิด URL นี้ได้</p>
           </div>
 
-          {/* ประเภทโฆษณา + ความยาว */}
-          <div className={`grid gap-3 ${durationDetected ? "grid-cols-2" : "grid-cols-1"}`}>
+          {/* ประเภทโฆษณา + วินาทีก่อนข้าม */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>ประเภทโฆษณา</label>
               <select value={form.adType} onChange={(e) => setForm({ ...form, adType: e.target.value })} className={inputCls()}>
                 <option value="SPLASH">หลังจาก Login</option>
-                <option value="AFTER_SONG">หลังจบ 1 เพลง</option>
-                <option value="AFTER_MULTIPLE">หลังจบหลายเพลง</option>
+                <option value="AFTER_SONG">ระหว่างเพลง (random 1-3 เพลง)</option>
               </select>
             </div>
-            {durationDetected && (
-              <div>
-                <label className={labelCls}>ความยาววิดีโอ</label>
-                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
-                  <Video size={14} className="text-green-500 flex-shrink-0" />
-                  <span className="text-sm font-semibold text-green-700">{form.adDuration} วินาที</span>
-                  <span className="text-xs text-green-500 ml-auto">คำนวณอัตโนมัติ</span>
-                </div>
+            <div>
+              <label className={labelCls}>
+                วินาทีก่อนข้ามได้{" "}
+                {durationDetected && <span className="text-green-500 font-normal">(คำนวณจากวิดีโอ)</span>}
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={1}
+                  max={300}
+                  value={form.adDuration}
+                  onChange={(e) => setForm({ ...form, adDuration: Number(e.target.value) })}
+                  className={inputCls()}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">วิ</span>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Priority slider */}
