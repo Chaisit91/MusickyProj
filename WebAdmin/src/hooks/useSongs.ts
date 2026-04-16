@@ -15,7 +15,7 @@ interface SongStats {
   avgPlays: number;
 }
 
-export const useSongs = (search?: string, genreId?: string) => {
+export const useSongs = (search?: string, genreId?: string, artistId?: string) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [stats, setStats] = useState<SongStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export const useSongs = (search?: string, genreId?: string) => {
     setError(null);
     try {
       const [songsRes, statsRes] = await Promise.all([
-        getAllSongsApi(search, genreId),
+        getAllSongsApi(search, genreId, artistId),
         getSongStatsApi(),
       ]);
       setSongs(songsRes.data.data);
@@ -36,7 +36,7 @@ export const useSongs = (search?: string, genreId?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [search, genreId]);
+  }, [search, genreId, artistId]);
 
   useEffect(() => {
     fetchSongs();

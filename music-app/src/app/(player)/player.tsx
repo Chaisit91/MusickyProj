@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {View,
+import {
+  View,
   Text,
   TouchableOpacity,
   Dimensions,
   StatusBar,
-  ScrollView} from "react-native";
+} from "react-native";
 import Slider from "@react-native-community/slider";
 import Svg, { Path, Circle } from "react-native-svg";
 import { router } from "expo-router";
@@ -21,6 +22,7 @@ import {
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
 import { consumeSkip, FREE_SKIP_LIMIT } from "../../store/skipSlice";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
+import SyncedLyrics from "../../Components/player/SyncedLyrics";
 import { Image } from "expo-image";
 
 const { width } = Dimensions.get("window");
@@ -546,44 +548,20 @@ export default function PlayerScreen() {
           </>
         ) : (
           /* ── Lyrics Tab ── */
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingHorizontal: 32, paddingBottom: 40 }}
-            showsVerticalScrollIndicator={false}
-            scrollEventThrottle={16}
-          >
-            {/* Mini song info */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 28 }}>
-              <View style={{ width: 48, height: 48, borderRadius: 8, overflow: "hidden", backgroundColor: "#1a1a3e" }}>
-                {currentSong.coverUrl ? (
-                  <Image source={{ uri: currentSong.coverUrl }} style={{ width: 48, height: 48 }} contentFit="cover" />
-                ) : (
-                  <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                    <Text style={{ color: "#ffffff40" }}>♪</Text>
-                  </View>
-                )}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }} numberOfLines={1}>
-                  {currentSong.title}
-                </Text>
-                <Text style={{ color: "#888", fontSize: 13 }} numberOfLines={1}>
-                  {currentSong.artist.name}
-                </Text>
-              </View>
-            </View>
-
+          <View style={{ flex: 1 }}>
             {currentSong.lyrics ? (
-              <Text style={{ color: "#ddd", fontSize: 16, lineHeight: 30, letterSpacing: 0.3 }}>
-                {currentSong.lyrics}
-              </Text>
+              <SyncedLyrics
+                lyrics={currentSong.lyrics}
+                progressSeconds={progressSeconds}
+                onSeek={(t) => dispatch(seekTo(Math.floor(t)))}
+              />
             ) : (
-              <View style={{ alignItems: "center", marginTop: 60 }}>
-                <Text style={{ color: "#333", fontSize: 40, marginBottom: 16 }}>♪</Text>
-                <Text style={{ color: "#555", fontSize: 14 }}>ยังไม่มีเนื้อเพลง</Text>
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#333", fontSize: 48, marginBottom: 16 }}>♪</Text>
+                <Text style={{ color: "#555", fontSize: 15 }}>ยังไม่มีเนื้อเพลง</Text>
               </View>
             )}
-          </ScrollView>
+          </View>
         )}
 
         <AddToPlaylistSheet

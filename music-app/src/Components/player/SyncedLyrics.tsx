@@ -1,17 +1,26 @@
-import React, { useEffect, useRef, useMemo } from "react";
-import { View, Text, FlatList, Dimensions } from "react-native";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 
 const { height: SCREEN_H } = Dimensions.get("window");
-const ITEM_HEIGHT = 56;
-const PADDING_TOP = SCREEN_H * 0.3; // ให้บรรทัดปัจจุบันอยู่กลางๆ จอ
 
 interface LyricLine {
-  time: number; // วินาที
+  time: number;
   text: string;
 }
 
-// ── parse LRC format ──────────────────────────────────────────────────────────
-// รองรับ [mm:ss.xx] และ [mm:ss.xxx]
+// ── Parse LRC format ──────────────────────────────────────────────────────────
 function parseLRC(lrc: string): LyricLine[] | null {
   const timeRegex = /\[(\d{1,2}):(\d{2})\.(\d{2,3})\]/g;
   const lines = lrc.split("\n");
@@ -37,7 +46,6 @@ function parseLRC(lrc: string): LyricLine[] | null {
   return result.sort((a, b) => a.time - b.time);
 }
 
-// ── หา index บรรทัดปัจจุบัน ───────────────────────────────────────────────────
 function getCurrentIndex(lines: LyricLine[], progress: number): number {
   let idx = 0;
   for (let i = 0; i < lines.length; i++) {
@@ -47,13 +55,70 @@ function getCurrentIndex(lines: LyricLine[], progress: number): number {
   return idx;
 }
 
-// ── Synced Lyrics Component ───────────────────────────────────────────────────
+// ── Animated lyric line ───────────────────────────────────────────────────────
+type LineStatus = "current" | "past" | "future";
+
+const TIMING = { duration: 350, easing: Easing.out(Easing.cubic) };
+
+function LyricItem({
+  text,
+  status,
+  onPress,
+}: {
+  text: string;
+  status: LineStatus;
+  onPress: () => void;
+}) {
+  const opacity = useSharedValue(
+    status === "current" ? 1 : status === "past" ? 0.28 : 0.48
+  );
+  const scale = useSharedValue(status === "current" ? 1 : 0.96);
+
+  useEffect(() => {
+    opacity.value = withTiming(
+      status === "current" ? 1 : status === "past" ? 0.28 : 0.48,
+      TIMING
+    );
+    scale.value = withTiming(status === "current" ? 1 : 0.96, TIMING);
+  }, [status]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.65}
+      style={{ paddingHorizontal: 28, paddingVertical: 10 }}
+    >
+      <Animated.Text
+        style={[
+          animStyle,
+          {
+            color: "#ffffff",
+            fontSize: status === "current" ? 30 : 24,
+            fontWeight: status === "current" ? "800" : "600",
+            lineHeight: status === "current" ? 42 : 34,
+            letterSpacing: 0.2,
+          },
+        ]}
+      >
+        {text}
+      </Animated.Text>
+    </TouchableOpacity>
+  );
+}
+
+// ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
   lyrics: string;
   progressSeconds: number;
+  onSeek?: (time: number) => void;
 }
 
-export default function SyncedLyrics({ lyrics, progressSeconds }: Props) {
+export default function SyncedLyrics({ lyrics, progressSeconds, onSeek }: Props) {
   const listRef = useRef<FlatList<LyricLine>>(null);
 
   const lines = useMemo(() => parseLRC(lyrics), [lyrics]);
@@ -63,47 +128,62 @@ export default function SyncedLyrics({ lyrics, progressSeconds }: Props) {
     return getCurrentIndex(lines, progressSeconds);
   }, [lines, progressSeconds]);
 
-  // auto-scroll ไปบรรทัดปัจจุบัน
   useEffect(() => {
     if (!lines || lines.length === 0) return;
     listRef.current?.scrollToIndex({
       index: currentIndex,
       animated: true,
-      viewPosition: 0.35, // วางไว้ประมาณ 1/3 จากบน
+      viewPosition: 0.38,
     });
   }, [currentIndex]);
 
-  // ── ถ้าไม่ใช่ LRC format → แสดงแบบ plain text ─────────────────────────────
+  const handleSeek = useCallback(
+    (time: number) => {
+      onSeek?.(time);
+    },
+    [onSeek]
+  );
+
+  // ── Plain text fallback ───────────────────────────────────────────────────
   if (!lines) {
     return (
-      <View style={{ paddingHorizontal: 32, paddingBottom: 40 }}>
-        <Text style={{ color: "#ddd", fontSize: 16, lineHeight: 30, letterSpacing: 0.3 }}>
+      <View style={{ paddingHorizontal: 28, paddingBottom: 40 }}>
+        <Text
+          style={{
+            color: "#ffffff",
+            fontSize: 22,
+            fontWeight: "600",
+            lineHeight: 36,
+            letterSpacing: 0.2,
+            opacity: 0.85,
+          }}
+        >
           {lyrics}
         </Text>
       </View>
     );
   }
 
-  const renderItem = ({ item, index }: { item: LyricLine; index: number }) => {
-    const isCurrent = index === currentIndex;
-    const isPast = index < currentIndex;
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: LyricLine;
+    index: number;
+  }) => {
+    const status: LineStatus =
+      index === currentIndex
+        ? "current"
+        : index < currentIndex
+        ? "past"
+        : "future";
 
     return (
-      <View style={{ minHeight: ITEM_HEIGHT, justifyContent: "center", paddingHorizontal: 32, paddingVertical: 8 }}>
-        <Text
-          style={{
-            color: isCurrent ? "#ffffff" : isPast ? "#444" : "#555",
-            fontSize: isCurrent ? 24 : 18,
-            fontWeight: isCurrent ? "800" : "500",
-            lineHeight: isCurrent ? 34 : 26,
-            letterSpacing: isCurrent ? 0.2 : 0,
-            // transition effect ผ่าน opacity
-            opacity: isCurrent ? 1 : isPast ? 0.4 : 0.55,
-          }}
-        >
-          {item.text}
-        </Text>
-      </View>
+      <LyricItem
+        text={item.text}
+        status={status}
+        onPress={() => handleSeek(item.time)}
+      />
     );
   };
 
@@ -116,16 +196,15 @@ export default function SyncedLyrics({ lyrics, progressSeconds }: Props) {
       showsVerticalScrollIndicator={false}
       scrollEnabled={true}
       contentContainerStyle={{
-        paddingTop: PADDING_TOP,
-        paddingBottom: SCREEN_H * 0.5,
+        paddingTop: SCREEN_H * 0.32,
+        paddingBottom: SCREEN_H * 0.52,
       }}
       onScrollToIndexFailed={(info) => {
-        // fallback ถ้า scroll ไม่ได้
         setTimeout(() => {
           listRef.current?.scrollToIndex({
             index: info.index,
             animated: true,
-            viewPosition: 0.35,
+            viewPosition: 0.38,
           });
         }, 300);
       }}

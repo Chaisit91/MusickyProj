@@ -13,11 +13,12 @@ export const getSongStats = async () => {
   };
 };
 
-export const findAllSongs = async (search?: string, genreId?: string) => {
+export const findAllSongs = async (search?: string, genreId?: string, artistId?: string) => {
   return prisma.song.findMany({
     where: {
       ...(search && { title: { contains: search, mode: "insensitive" } }),
       ...(genreId && { genreId }),
+      ...(artistId && { artistId }),
     },
     include: { artist: true, album: true, genre: true },
     orderBy: { playCount: "desc" },

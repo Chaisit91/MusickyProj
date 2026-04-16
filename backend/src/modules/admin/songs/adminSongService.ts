@@ -13,10 +13,11 @@ export const getSongStats = async (req: Request, res: Response) => {
 };
 
 export const getAllSongs = async (req: Request, res: Response) => {
-  const { search, genreId } = req.query;
+  const { search, genreId, artistId } = req.query;
   const songs = await AdminSongRepository.findAllSongs(
     search as string,
-    genreId as string
+    genreId as string,
+    artistId as string
   );
   res.json({ success: true, data: songs });
 };

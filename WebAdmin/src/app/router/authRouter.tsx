@@ -6,6 +6,7 @@ import ForbiddenPage from "../../pages/ForbiddenPage";
 import NotFoundPage from "../../pages/NotFoundPage";
 import UserManagementPage from "../../features/dashboard/Usermanagement";
 import SongManagementPage from "../../features/dashboard/Songmanagement";
+import ArtistSongsPage from "../../features/dashboard/ArtistSongs";
 import GenreManagementPage from "../../features/dashboard/GenreManagement";
 import AdManagementPage from "../../features/dashboard/Admanagement";
 import ArtistManagementPage from "../../features/dashboard/ArtistManagement";
@@ -23,6 +24,7 @@ const AuthRouter = () => {
       <Route path="/artists" element={<AdminRoute><ArtistManagementPage /></AdminRoute>} />
       <Route path="/albums" element={<AdminRoute><AlbumManagementPage /></AdminRoute>} />
       <Route path="/songs" element={<AdminRoute><SongManagementPage /></AdminRoute>} />
+      <Route path="/songs/:artistId" element={<AdminRoute><ArtistSongsPage /></AdminRoute>} />
       <Route path="/Genres" element={<AdminRoute><GenreManagementPage /></AdminRoute>} />
       <Route path="/ads" element={<AdminRoute><AdManagementPage /></AdminRoute>} />
       <Route path="/payments" element={<AdminRoute><PaymentManagementPage /></AdminRoute>} />

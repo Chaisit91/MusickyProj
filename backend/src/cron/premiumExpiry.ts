@@ -23,13 +23,13 @@ cron.schedule("0 0 * * *", async () => {
 
     // อัปเดตเป็น free
     await prisma.user.updateMany({
-      where: { id: { in: expired.map((u) => u.id) } },
+      where: { id: { in: expired.map((u: (typeof expired)[number]) => u.id) } },
       data: { isPremium: false, premiumExpiresAt: null },
     });
 
     // สร้าง notification สำหรับแต่ละ user
     await prisma.notification.createMany({
-      data: expired.map((u) => ({
+      data: expired.map((u: (typeof expired)[number]) => ({
         userId: u.id,
         type: "PREMIUM_EXPIRING" as const,
         title: "สมาชิก Premium หมดอายุแล้ว",

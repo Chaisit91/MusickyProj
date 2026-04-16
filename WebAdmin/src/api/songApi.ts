@@ -4,10 +4,11 @@ export const getSongStatsApi = async () => {
   return api.get("/admin/songs/stats");
 };
 
-export const getAllSongsApi = async (search?: string, genreId?: string) => {
+export const getAllSongsApi = async (search?: string, genreId?: string, artistId?: string) => {
   const params = new URLSearchParams();
   if (search) params.append("search", search);
   if (genreId) params.append("genreId", genreId);
+  if (artistId) params.append("artistId", artistId);
   return api.get(`/admin/songs?${params.toString()}`);
 };
 
