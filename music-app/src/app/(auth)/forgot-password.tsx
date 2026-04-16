@@ -11,50 +11,76 @@ import {
   StatusBar,
 } from "react-native";
 import { router } from "expo-router";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  forgotEmailSchema,
+  resetPasswordSchema,
+  type ForgotEmailForm,
+  type ResetPasswordForm,
+} from "../../schema/authSchema";
 import { forgotPasswordApi, resetPasswordApi } from "../../api/authApi";
 
 type Step = "email" | "otp" | "success";
 
+const inputStyle = (hasError: boolean) => ({
+  backgroundColor: "#1e1e1e",
+  borderRadius: 12,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
+  color: "#fff",
+  fontSize: 15,
+  borderWidth: 1,
+  borderColor: hasError ? "#ff4444" : "#2a2a2a",
+});
+
 export default function ForgotPasswordScreen() {
   const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [devOtp, setDevOtp] = useState(""); // OTP จาก backend (dev mode)
-  const [error, setError] = useState("");
+  const [submittedEmail, setSubmittedEmail] = useState("");
+  const [devOtp, setDevOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
-  const handleRequestOtp = async () => {
-    setError("");
-    if (!email.trim()) { setError("กรุณากรอกอีเมล"); return; }
+  const emailForm = useForm<ForgotEmailForm>({
+    resolver: zodResolver(forgotEmailSchema),
+    defaultValues: { email: "" },
+  });
+
+  const resetForm = useForm<ResetPasswordForm>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { otp: "", newPassword: "", confirmPassword: "" },
+  });
+
+  const handleRequestOtp = emailForm.handleSubmit(async (data) => {
+    setApiError("");
     setLoading(true);
     try {
-      const res = await forgotPasswordApi(email.trim().toLowerCase());
-      if (res.data?.otp) setDevOtp(res.data.otp); // แสดงใน dev mode
+      const res = await forgotPasswordApi(data.email.trim().toLowerCase());
+      if (res.data?.otp) setDevOtp(res.data.otp);
+      setSubmittedEmail(data.email.trim().toLowerCase());
       setStep("otp");
     } catch (err: any) {
-      setError(err.response?.data?.message ?? "เกิดข้อผิดพลาด");
+      setApiError(err.response?.data?.message ?? "เกิดข้อผิดพลาด");
     } finally {
       setLoading(false);
     }
-  };
+  });
 
-  const handleResetPassword = async () => {
-    setError("");
-    if (!otp.trim()) { setError("กรุณากรอกรหัส OTP"); return; }
-    if (newPassword.length < 8) { setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"); return; }
-    if (newPassword !== confirmPassword) { setError("รหัสผ่านไม่ตรงกัน"); return; }
+  const handleResetPassword = resetForm.handleSubmit(async (data) => {
+    setApiError("");
     setLoading(true);
     try {
-      await resetPasswordApi(email.trim().toLowerCase(), otp.trim(), newPassword);
+      await resetPasswordApi(submittedEmail, data.otp.trim(), data.newPassword);
       setStep("success");
     } catch (err: any) {
-      setError(err.response?.data?.message ?? "รหัส OTP ไม่ถูกต้องหรือหมดอายุ");
+      setApiError(err.response?.data?.message ?? "รหัส OTP ไม่ถูกต้องหรือหมดอายุ");
     } finally {
       setLoading(false);
     }
-  };
+  });
+
+  const { errors: eErr } = emailForm.formState;
+  const { errors: rErr } = resetForm.formState;
 
   return (
     <KeyboardAvoidingView
@@ -84,27 +110,28 @@ export default function ForgotPasswordScreen() {
               </Text>
 
               <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>อีเมล</Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="your@gmail.com"
-                placeholderTextColor="#555"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={{
-                  backgroundColor: "#1e1e1e",
-                  borderRadius: 12,
-                  paddingHorizontal: 16,
-                  paddingVertical: 14,
-                  color: "#fff",
-                  fontSize: 15,
-                  marginBottom: 24,
-                  borderWidth: 1,
-                  borderColor: "#2a2a2a",
-                }}
+              <Controller
+                control={emailForm.control}
+                name="email"
+                render={({ field: { value, onChange, onBlur } }) => (
+                  <TextInput
+                    value={value}
+                    onChangeText={(v) => { onChange(v); setApiError(""); }}
+                    onBlur={onBlur}
+                    placeholder="your@gmail.com"
+                    placeholderTextColor="#555"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    style={{ ...inputStyle(!!eErr.email), marginBottom: 4 }}
+                  />
+                )}
               />
-
-              {error ? <Text style={{ color: "#ff4444", fontSize: 13, marginBottom: 16 }}>{error}</Text> : null}
+              {eErr.email && (
+                <Text style={{ color: "#ff4444", fontSize: 12, marginBottom: 8 }}>{eErr.email.message}</Text>
+              )}
+              {apiError ? (
+                <Text style={{ color: "#ff4444", fontSize: 13, marginBottom: 16 }}>{apiError}</Text>
+              ) : <View style={{ marginBottom: 16 }} />}
 
               <TouchableOpacity
                 onPress={handleRequestOtp}
@@ -134,7 +161,6 @@ export default function ForgotPasswordScreen() {
                 กรอกรหัส OTP และรหัสผ่านใหม่
               </Text>
 
-              {/* Dev mode: แสดง OTP */}
               {devOtp ? (
                 <View style={{
                   backgroundColor: "#1a2a1a",
@@ -150,35 +176,70 @@ export default function ForgotPasswordScreen() {
                 </View>
               ) : null}
 
-              {[
-                { label: "รหัส OTP", value: otp, setter: setOtp, placeholder: "000000", keyboardType: "numeric" as const },
-                { label: "รหัสผ่านใหม่", value: newPassword, setter: setNewPassword, placeholder: "อย่างน้อย 8 ตัวอักษร", secure: true },
-                { label: "ยืนยันรหัสผ่าน", value: confirmPassword, setter: setConfirmPassword, placeholder: "กรอกซ้ำอีกครั้ง", secure: true },
-              ].map((field) => (
-                <View key={field.label} style={{ marginBottom: 16 }}>
-                  <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>{field.label}</Text>
-                  <TextInput
-                    value={field.value}
-                    onChangeText={field.setter}
-                    placeholder={field.placeholder}
-                    placeholderTextColor="#555"
-                    keyboardType={field.keyboardType}
-                    secureTextEntry={field.secure}
-                    style={{
-                      backgroundColor: "#1e1e1e",
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      paddingVertical: 14,
-                      color: "#fff",
-                      fontSize: 15,
-                      borderWidth: 1,
-                      borderColor: "#2a2a2a",
-                    }}
-                  />
-                </View>
-              ))}
+              {/* OTP */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>รหัส OTP</Text>
+                <Controller
+                  control={resetForm.control}
+                  name="otp"
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextInput
+                      value={value}
+                      onChangeText={(v) => { onChange(v); setApiError(""); }}
+                      onBlur={onBlur}
+                      placeholder="000000"
+                      placeholderTextColor="#555"
+                      keyboardType="numeric"
+                      style={inputStyle(!!rErr.otp)}
+                    />
+                  )}
+                />
+                {rErr.otp && <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{rErr.otp.message}</Text>}
+              </View>
 
-              {error ? <Text style={{ color: "#ff4444", fontSize: 13, marginBottom: 12 }}>{error}</Text> : null}
+              {/* New Password */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>รหัสผ่านใหม่</Text>
+                <Controller
+                  control={resetForm.control}
+                  name="newPassword"
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="อย่างน้อย 8 ตัวอักษร"
+                      placeholderTextColor="#555"
+                      secureTextEntry
+                      style={inputStyle(!!rErr.newPassword)}
+                    />
+                  )}
+                />
+                {rErr.newPassword && <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{rErr.newPassword.message}</Text>}
+              </View>
+
+              {/* Confirm Password */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>ยืนยันรหัสผ่าน</Text>
+                <Controller
+                  control={resetForm.control}
+                  name="confirmPassword"
+                  render={({ field: { value, onChange, onBlur } }) => (
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="กรอกซ้ำอีกครั้ง"
+                      placeholderTextColor="#555"
+                      secureTextEntry
+                      style={inputStyle(!!rErr.confirmPassword)}
+                    />
+                  )}
+                />
+                {rErr.confirmPassword && <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{rErr.confirmPassword.message}</Text>}
+              </View>
+
+              {apiError ? <Text style={{ color: "#ff4444", fontSize: 13, marginBottom: 12 }}>{apiError}</Text> : null}
 
               <TouchableOpacity
                 onPress={handleResetPassword}

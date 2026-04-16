@@ -14,7 +14,7 @@ import { showAfterSongAd } from "../../store/adsSlice";
 
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
-  const { currentSong, isPlaying, seekRequest, volume, reloadCount } = useAppSelector((s) => s.player);
+  const { currentSong, isPlaying, seekRequest, volume, reloadCount, repeatMode, queue } = useAppSelector((s) => s.player);
   const autoPlay = useAppSelector((s) => s.preferences.autoPlay);
   const isPremium = useAppSelector((s) => s.auth.user?.isPremium ?? false);
   const isPremiumRef = useRef(isPremium);
@@ -24,6 +24,10 @@ export default function AudioControllerImpl() {
   const isPlayingRef = useRef(isPlaying);
   const volumeRef = useRef(volume);
   const autoPlayRef = useRef(autoPlay);
+  const repeatModeRef = useRef(repeatMode);
+  const queueLengthRef = useRef(queue.length);
+  useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
+  useEffect(() => { queueLengthRef.current = queue.length; }, [queue.length]);
 
   // random ad counter: เล่นกี่เพลงแล้วหลัง ad ล่าสุด / ต้องเล่นกี่เพลงถึงจะโชว์ ad
   const songsPlayedRef = useRef(0);
@@ -90,6 +94,16 @@ export default function AudioControllerImpl() {
         dispatch(setDuration(Math.floor(status.duration)));
       }
       if (status.didJustFinish) {
+        const rm = repeatModeRef.current;
+        // repeat:one หรือ repeat:all แต่มีเพลงเดียวใน queue → restart เพลงเดิมโดยตรง
+        // ไม่ผ่าน nextSong() เพราะ currentSong.id ไม่เปลี่ยน → useEffect ไม่รัน
+        if (rm === "one" || (rm === "all" && queueLengthRef.current <= 1)) {
+          playerRef.current?.seekTo(0).catch(() => {});
+          playerRef.current?.play();
+          dispatch(setProgress(0));
+          return;
+        }
+
         if (!autoPlayRef.current) {
           dispatch(togglePlay());
         } else if (isPremiumRef.current) {

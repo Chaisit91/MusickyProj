@@ -12,6 +12,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { helpSupportSchema, type HelpSupportForm } from "../../schema/authSchema";
 
 const BackIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -37,23 +40,21 @@ const ISSUE_TYPES = [
 
 export default function HelpSupportScreen() {
   const [selectedType, setSelectedType] = useState(ISSUE_TYPES[0].label);
-  const [description, setDescription] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSend = async () => {
-    if (!description.trim()) {
-      Alert.alert("กรุณากรอกข้อมูล", "โปรดอธิบายปัญหาของคุณ");
-      return;
-    }
-    if (!contactEmail.trim()) {
-      Alert.alert("กรุณากรอกข้อมูล", "โปรดกรอกอีเมลสำหรับติดต่อกลับ");
-      return;
-    }
+  const { control, handleSubmit, formState: { errors } } = useForm<HelpSupportForm>({
+    resolver: zodResolver(helpSupportSchema),
+    defaultValues: { description: "", contactEmail: "" },
+  });
+
+  const description = useWatch({ control, name: "description" });
+  const descLen = description?.length ?? 0;
+
+  const handleSend = handleSubmit(async (data) => {
     setLoading(true);
     const subject = encodeURIComponent(`[Musicky] ${selectedType}`);
     const body = encodeURIComponent(
-      `ประเภทปัญหา: ${selectedType}\n\nรายละเอียด:\n${description}\n\nอีเมลติดต่อกลับ: ${contactEmail}`
+      `ประเภทปัญหา: ${selectedType}\n\nรายละเอียด:\n${data.description}\n\nอีเมลติดต่อกลับ: ${data.contactEmail}`
     );
     const mailUrl = `mailto:support@musicky.com?subject=${subject}&body=${body}`;
     const canOpen = await Linking.canOpenURL(mailUrl);
@@ -63,7 +64,7 @@ export default function HelpSupportScreen() {
     } else {
       Alert.alert("ไม่พบแอปอีเมล", "กรุณาติดต่อเราที่ support@musicky.com โดยตรง");
     }
-  };
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
@@ -143,29 +144,42 @@ export default function HelpSupportScreen() {
 
         {/* Description */}
         <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600", marginBottom: 10 }}>
-            รายละเอียดปัญหา <Text style={{ color: "#ff4444" }}>*</Text>
-          </Text>
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            multiline
-            numberOfLines={5}
-            textAlignVertical="top"
-            placeholder="กรุณาอธิบายปัญหาที่พบ วันเวลา อุปกรณ์ที่ใช้ และขั้นตอนที่เกิดปัญหา..."
-            placeholderTextColor="#444"
-            style={{
-              backgroundColor: "#1e1e1e",
-              borderRadius: 12,
-              padding: 14,
-              color: "#fff",
-              fontSize: 14,
-              minHeight: 120,
-              borderWidth: 1,
-              borderColor: "#2a2a2a",
-              lineHeight: 22,
-            }}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
+              รายละเอียดปัญหา <Text style={{ color: "#ff4444" }}>*</Text>
+            </Text>
+            <Text style={{ color: descLen > 900 ? "#ff4444" : "#555", fontSize: 12 }}>{descLen}/1000</Text>
+          </View>
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { value, onChange, onBlur } }) => (
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                multiline
+                numberOfLines={5}
+                textAlignVertical="top"
+                placeholder="กรุณาอธิบายปัญหาที่พบ วันเวลา อุปกรณ์ที่ใช้ และขั้นตอนที่เกิดปัญหา..."
+                placeholderTextColor="#444"
+                style={{
+                  backgroundColor: "#1e1e1e",
+                  borderRadius: 12,
+                  padding: 14,
+                  color: "#fff",
+                  fontSize: 14,
+                  minHeight: 120,
+                  borderWidth: 1,
+                  borderColor: errors.description ? "#ff4444" : "#2a2a2a",
+                  lineHeight: 22,
+                }}
+              />
+            )}
           />
+          {errors.description && (
+            <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{errors.description.message}</Text>
+          )}
         </View>
 
         {/* Contact email */}
@@ -173,23 +187,33 @@ export default function HelpSupportScreen() {
           <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600", marginBottom: 10 }}>
             อีเมลสำหรับติดต่อกลับ <Text style={{ color: "#ff4444" }}>*</Text>
           </Text>
-          <TextInput
-            value={contactEmail}
-            onChangeText={setContactEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholder="your.email@example.com"
-            placeholderTextColor="#444"
-            style={{
-              backgroundColor: "#1e1e1e",
-              borderRadius: 12,
-              padding: 14,
-              color: "#fff",
-              fontSize: 14,
-              borderWidth: 1,
-              borderColor: "#2a2a2a",
-            }}
+          <Controller
+            control={control}
+            name="contactEmail"
+            render={({ field: { value, onChange, onBlur } }) => (
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholder="your.email@example.com"
+                placeholderTextColor="#444"
+                style={{
+                  backgroundColor: "#1e1e1e",
+                  borderRadius: 12,
+                  padding: 14,
+                  color: "#fff",
+                  fontSize: 14,
+                  borderWidth: 1,
+                  borderColor: errors.contactEmail ? "#ff4444" : "#2a2a2a",
+                }}
+              />
+            )}
           />
+          {errors.contactEmail && (
+            <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{errors.contactEmail.message}</Text>
+          )}
         </View>
 
         {/* Send Button */}

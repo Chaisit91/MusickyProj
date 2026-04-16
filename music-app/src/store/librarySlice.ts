@@ -49,7 +49,6 @@ const toPlaylist = (p: ApiPlaylist): Playlist => {
 };
 
 interface LibraryState {
-  userId: string | null;
   likedSongs: Song[];
   followedArtists: Artist[];
   downloadedSongs: Song[];
@@ -57,7 +56,6 @@ interface LibraryState {
 }
 
 const initialState: LibraryState = {
-  userId: null,
   likedSongs: [],
   followedArtists: [],
   downloadedSongs: [],
@@ -91,7 +89,7 @@ export const loadLibrary = createAsyncThunk(
       if (followedResult.status === "fulfilled") followedArtists = followedResult.value;
     }
 
-    return { userId, likedSongs, followedArtists, downloadedSongs, playlists };
+    return { likedSongs, followedArtists, downloadedSongs, playlists };
   }
 );
 
@@ -200,7 +198,6 @@ const librarySlice = createSlice({
   extraReducers: (builder) => {
     // loadLibrary
     builder.addCase(loadLibrary.fulfilled, (state, action) => {
-      state.userId = action.payload.userId;
       state.likedSongs = action.payload.likedSongs;
       state.followedArtists = action.payload.followedArtists;
       state.downloadedSongs = action.payload.downloadedSongs;

@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle, XCircle, Eye, RefreshCw, Send, Filter } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import * as PaymentApi from "../../api/paymentApi";
 import type { PaymentTransaction } from "../../api/paymentApi";
+import { rejectSchema, broadcastSchema, type RejectFormValues, type BroadcastFormValues } from "../../schema/adminSchema";
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   PENDING: { label: "รอยืนยัน", className: "bg-yellow-500/20 text-yellow-400" },
@@ -24,12 +27,21 @@ export default function PaymentManagementPage() {
   const [loading, setLoading] = useState(false);
   const [slipModal, setSlipModal] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<{ id: string } | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
   const [broadcastModal, setBroadcastModal] = useState(false);
-  const [bTitle, setBTitle] = useState("");
-  const [bBody, setBBody] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const rejectForm = useForm<RejectFormValues>({
+    resolver: zodResolver(rejectSchema),
+    defaultValues: { reason: "" },
+  });
+  const broadcastForm = useForm<BroadcastFormValues>({
+    resolver: zodResolver(broadcastSchema),
+    defaultValues: { title: "", body: "" },
+  });
+
+  const bTitle = useWatch({ control: broadcastForm.control, name: "title" });
+  const bBody = useWatch({ control: broadcastForm.control, name: "body" });
 
   const limit = 20;
 
@@ -70,14 +82,14 @@ export default function PaymentManagementPage() {
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (data: RejectFormValues) => {
     if (!rejectModal) return;
     setActionLoading(true);
     try {
-      await PaymentApi.rejectTransaction(rejectModal.id, rejectReason);
+      await PaymentApi.rejectTransaction(rejectModal.id, data.reason || "");
       showToast("ปฏิเสธสำเร็จ");
       setRejectModal(null);
-      setRejectReason("");
+      rejectForm.reset();
       loadData();
     } catch {
       showToast("ปฏิเสธไม่สำเร็จ", "error");
@@ -86,18 +98,13 @@ export default function PaymentManagementPage() {
     }
   };
 
-  const handleBroadcast = async () => {
-    if (!bTitle.trim() || !bBody.trim()) {
-      showToast("กรุณากรอกหัวข้อและเนื้อหา", "error");
-      return;
-    }
+  const handleBroadcast = async (data: BroadcastFormValues) => {
     setActionLoading(true);
     try {
-      const res = await PaymentApi.broadcastNotification(bTitle, bBody);
+      const res = await PaymentApi.broadcastNotification(data.title, data.body);
       showToast(res.message || "ส่งแจ้งเตือนสำเร็จ");
       setBroadcastModal(false);
-      setBTitle("");
-      setBBody("");
+      broadcastForm.reset();
     } catch {
       showToast("ส่งแจ้งเตือนไม่สำเร็จ", "error");
     } finally {
@@ -271,28 +278,27 @@ export default function PaymentManagementPage() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-base font-semibold text-white mb-4">ยืนยันการปฏิเสธ</h3>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="เหตุผล (ไม่บังคับ)"
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm resize-none outline-none border border-gray-600 focus:border-red-500"
-              rows={3}
-            />
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={() => { setRejectModal(null); setRejectReason(""); }}
-                className="flex-1 py-2 bg-gray-700 rounded-lg text-sm text-gray-300 hover:text-white"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm text-white font-medium disabled:opacity-60"
-              >
-                ยืนยันปฏิเสธ
-              </button>
-            </div>
+            <form onSubmit={rejectForm.handleSubmit(handleReject)}>
+              <textarea
+                {...rejectForm.register("reason")}
+                placeholder="เหตุผล (ไม่บังคับ)"
+                className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm resize-none outline-none border border-gray-600 focus:border-red-500"
+                rows={3}
+              />
+              <div className="flex gap-3 mt-4">
+                <button type="button"
+                  onClick={() => { setRejectModal(null); rejectForm.reset(); }}
+                  className="flex-1 py-2 bg-gray-700 rounded-lg text-sm text-gray-300 hover:text-white"
+                >
+                  ยกเลิก
+                </button>
+                <button type="submit" disabled={actionLoading}
+                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm text-white font-medium disabled:opacity-60"
+                >
+                  ยืนยันปฏิเสธ
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -302,34 +308,34 @@ export default function PaymentManagementPage() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-base font-semibold text-white mb-4">ส่งแจ้งเตือนให้ผู้ใช้ทุกคน</h3>
-            <input
-              value={bTitle}
-              onChange={(e) => setBTitle(e.target.value)}
-              placeholder="หัวข้อ"
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm outline-none border border-gray-600 focus:border-purple-500 mb-3"
-            />
-            <textarea
-              value={bBody}
-              onChange={(e) => setBBody(e.target.value)}
-              placeholder="เนื้อหาแจ้งเตือน"
-              className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm resize-none outline-none border border-gray-600 focus:border-purple-500"
-              rows={4}
-            />
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={() => { setBroadcastModal(false); setBTitle(""); setBBody(""); }}
-                className="flex-1 py-2 bg-gray-700 rounded-lg text-sm text-gray-300 hover:text-white"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleBroadcast}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm text-white font-medium disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                <Send size={13} /> ส่งเลย
-              </button>
-            </div>
+            <form onSubmit={broadcastForm.handleSubmit(handleBroadcast)}>
+              <input
+                {...broadcastForm.register("title")}
+                placeholder="หัวข้อ"
+                className={`w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm outline-none border mb-1 ${broadcastForm.formState.errors.title ? "border-red-500" : "border-gray-600 focus:border-purple-500"}`}
+              />
+              {broadcastForm.formState.errors.title && <p className="text-red-400 text-xs mb-2">⚠ {broadcastForm.formState.errors.title.message}</p>}
+              <textarea
+                {...broadcastForm.register("body")}
+                placeholder="เนื้อหาแจ้งเตือน"
+                className={`w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm resize-none outline-none border mt-2 ${broadcastForm.formState.errors.body ? "border-red-500" : "border-gray-600 focus:border-purple-500"}`}
+                rows={4}
+              />
+              {broadcastForm.formState.errors.body && <p className="text-red-400 text-xs mt-1">⚠ {broadcastForm.formState.errors.body.message}</p>}
+              <div className="flex gap-3 mt-4">
+                <button type="button"
+                  onClick={() => { setBroadcastModal(false); broadcastForm.reset(); }}
+                  className="flex-1 py-2 bg-gray-700 rounded-lg text-sm text-gray-300 hover:text-white"
+                >
+                  ยกเลิก
+                </button>
+                <button type="submit" disabled={actionLoading || !bTitle?.trim() || !bBody?.trim()}
+                  className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm text-white font-medium disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  <Send size={13} /> ส่งเลย
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

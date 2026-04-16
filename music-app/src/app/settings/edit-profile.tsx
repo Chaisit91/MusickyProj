@@ -12,6 +12,9 @@ import {View,
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { editProfileSchema, type EditProfileForm } from "../../schema/authSchema";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { updateProfileThunk } from "../../store/authSlice";
 import { Image } from "expo-image";
@@ -52,13 +55,21 @@ const EmailIcon = () => (
 export default function EditProfileScreen() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
-  const [name, setName] = useState(user?.name ?? "");
-  const [email] = useState(user?.email ?? "");
+  const email = user?.email ?? "";
+
   const [pickedUri, setPickedUri] = useState<string | null>(null);
   const [pickedMimeType, setPickedMimeType] = useState<string>("image/jpeg");
   const [loading, setLoading] = useState(false);
 
-  // ── ขอ permission และเปิด gallery ──────────────────────────────
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<EditProfileForm>({
+    resolver: zodResolver(editProfileSchema),
+    defaultValues: { name: user?.name ?? "" },
+  });
+
+  const nameValue = watch("name");
+  const initial = (nameValue?.charAt(0) ?? "?").toUpperCase();
+  const avatarSource = pickedUri ?? user?.avatarUrl;
+
   const pickFromGallery = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -78,7 +89,6 @@ export default function EditProfileScreen() {
     }
   };
 
-  // ── ถ่ายรูปด้วยกล้อง ───────────────────────────────────────────
   const pickFromCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
@@ -97,7 +107,6 @@ export default function EditProfileScreen() {
     }
   };
 
-  // ── แสดง action sheet เลือก gallery หรือ camera ───────────────
   const handlePickImage = () => {
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -119,13 +128,8 @@ export default function EditProfileScreen() {
     }
   };
 
-  // ── บันทึก ─────────────────────────────────────────────────────
-  const handleSave = async () => {
-    if (!name.trim()) {
-      Alert.alert("ข้อผิดพลาด", "กรุณากรอกชื่อผู้ใช้");
-      return;
-    }
-    const nameChanged = name.trim() !== user?.name;
+  const handleSave = handleSubmit(async (data) => {
+    const nameChanged = data.name.trim() !== user?.name;
     const avatarChanged = !!pickedUri;
     if (!nameChanged && !avatarChanged) {
       router.back();
@@ -134,7 +138,7 @@ export default function EditProfileScreen() {
     setLoading(true);
     const result = await dispatch(
       updateProfileThunk({
-        name: nameChanged ? name.trim() : undefined,
+        name: nameChanged ? data.name.trim() : undefined,
         avatarUri: pickedUri ?? undefined,
         avatarMimeType: pickedMimeType,
       })
@@ -147,10 +151,7 @@ export default function EditProfileScreen() {
     } else {
       Alert.alert("เกิดข้อผิดพลาด", String(result.payload ?? "บันทึกไม่สำเร็จ"));
     }
-  };
-
-  const initial = name.charAt(0)?.toUpperCase() ?? "?";
-  const avatarSource = pickedUri ?? user?.avatarUrl;
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
@@ -252,22 +253,32 @@ export default function EditProfileScreen() {
               <UserIcon />
               <Text style={{ color: "#888", fontSize: 13 }}>ชื่อผู้ใช้</Text>
             </View>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              style={{
-                backgroundColor: "#1e1e1e",
-                borderRadius: 10,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                color: "#fff",
-                fontSize: 15,
-                borderWidth: 1,
-                borderColor: "#2a2a2a",
-              }}
-              placeholderTextColor="#555"
-              placeholder="ชื่อของคุณ"
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  style={{
+                    backgroundColor: "#1e1e1e",
+                    borderRadius: 10,
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    color: "#fff",
+                    fontSize: 15,
+                    borderWidth: 1,
+                    borderColor: errors.name ? "#ff4444" : "#2a2a2a",
+                  }}
+                  placeholderTextColor="#555"
+                  placeholder="ชื่อของคุณ"
+                />
+              )}
             />
+            {errors.name && (
+              <Text style={{ color: "#ff4444", fontSize: 12, marginTop: 4 }}>{errors.name.message}</Text>
+            )}
           </View>
 
           {/* Email (read-only) */}

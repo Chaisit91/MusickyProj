@@ -1,8 +1,11 @@
 import React, { useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Search, Plus, Pencil, Trash2, Music, X, Upload, ImageIcon } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import { useGenres } from "../../hooks/useGenres";
+import { genreSchema, type GenreFormValues } from "../../schema/adminSchema";
 
 interface Genre {
   id: string;
@@ -38,18 +41,27 @@ const GenreModal: React.FC<{
     removeImage?: boolean;
   }) => Promise<void>;
 }> = ({ mode, genre, onClose, onSave }) => {
-  const [form, setForm] = useState({ ...genre });
   const [imagePreview, setImagePreview] = useState(genre.imageUrl || "");
   const [imageFile, setImageFile] = useState<File | undefined>(undefined);
-  const [removeImage, setRemoveImage] = useState(false); // ✅ track ว่าลบรูปไหม
+  const [removeImage, setRemoveImage] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(genre.color || "#3b82f6");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<GenreFormValues>({
+    resolver: zodResolver(genreSchema),
+    defaultValues: { name: genre.name || "", description: genre.description || "", color: genre.color || "#3b82f6", imageUrl: "" },
+  });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
-    setRemoveImage(false); // ถ้าอัปโหลดใหม่ ไม่ต้องลบ
+    setRemoveImage(false);
     const reader = new FileReader();
     reader.onload = (ev) => setImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
@@ -58,20 +70,19 @@ const GenreModal: React.FC<{
   const handleRemoveImage = () => {
     setImagePreview("");
     setImageFile(undefined);
-    setRemoveImage(true); // ✅ บอกว่าต้องการลบรูป
+    setRemoveImage(true);
   };
 
-  const handleSave = async () => {
-    if (!form.name) return;
+  const onSubmit = async (data: GenreFormValues) => {
     setSaving(true);
     try {
       await onSave({
-        name: form.name,
-        description: form.description,
-        color: form.color,
+        name: data.name,
+        description: data.description,
+        color: selectedColor,
         imageUrl: imageFile || removeImage ? undefined : (imagePreview || undefined),
         imageFile,
-        removeImage, // ✅ ส่ง flag ลบรูปไปด้วย
+        removeImage,
       });
       onClose();
     } catch (err) {
@@ -86,76 +97,79 @@ const GenreModal: React.FC<{
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <p className="font-semibold text-gray-900 text-sm">{mode === "add" ? "เพิ่มหมวดหมู่ใหม่" : "แก้ไขหมวดหมู่"}</p>
-          <button onClick={onClose} disabled={saving} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"><X size={16} /></button>
+          <button type="button" onClick={onClose} disabled={saving} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"><X size={16} /></button>
         </div>
-        <div className="px-6 py-5 space-y-4">
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">รูปภาพ</label>
-            {imagePreview && (
-              <div className="relative w-full h-28 rounded-lg overflow-hidden mb-2 bg-gray-100">
-                <img src={imagePreview} alt="preview" className="w-full h-full object-cover"
-                  onError={handleRemoveImage} />
-                {/* ✅ กด X → handleRemoveImage แทน */}
-                <button onClick={handleRemoveImage}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors">
-                  <X size={10} />
-                </button>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="px-6 py-5 space-y-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">รูปภาพ</label>
+              {imagePreview && (
+                <div className="relative w-full h-28 rounded-lg overflow-hidden mb-2 bg-gray-100">
+                  <img src={imagePreview} alt="preview" className="w-full h-full object-cover" onError={handleRemoveImage} />
+                  <button type="button" onClick={handleRemoveImage}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors">
+                    <X size={10} />
+                  </button>
+                </div>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={saving}
+                className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-xs hover:border-gray-400 hover:text-gray-700 transition-colors mb-2 disabled:opacity-50">
+                <Upload size={13} />อัปโหลดรูปภาพ
+              </button>
+              {!imageFile && !removeImage && (
+                <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg">
+                  <ImageIcon size={13} className="text-gray-400 flex-shrink-0" />
+                  <input type="text" placeholder="หรือวาง URL รูปภาพ" value={imagePreview}
+                    onChange={(e) => { setImagePreview(e.target.value); setRemoveImage(false); }}
+                    className="flex-1 text-sm text-gray-900 placeholder-gray-300 focus:outline-none bg-transparent" />
+                </div>
+              )}
+              {imageFile && <p className="text-xs text-blue-500 mt-1">✓ เลือกไฟล์: {imageFile.name}</p>}
+              {removeImage && !imageFile && <p className="text-xs text-red-400 mt-1">✕ จะลบรูปภาพออก</p>}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">ชื่อหมวดหมู่ *</label>
+              <input type="text" placeholder="เช่น Pop, Rock"
+                {...register("name")}
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 transition-all ${errors.name ? "border-red-400 focus:ring-red-500/20" : "border-gray-200 focus:ring-blue-500/20 focus:border-blue-400"}`} />
+              {errors.name && <p className="text-red-500 text-xs mt-1">⚠ {errors.name.message}</p>}
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">คำอธิบาย</label>
+              <input type="text" placeholder="คำอธิบายสั้นๆ"
+                {...register("description")}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-2 block">สีประจำหมวดหมู่</label>
+              <div className="flex flex-wrap gap-2">
+                {COLOR_PALETTE.map((c) => (
+                  <button type="button" key={c} onClick={() => setSelectedColor(c)}
+                    className="w-8 h-8 rounded-full transition-all flex items-center justify-center"
+                    style={{ backgroundColor: c, outline: selectedColor === c ? `3px solid ${c}` : "none", outlineOffset: "2px" }}>
+                    {selectedColor === c && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                  </button>
+                ))}
               </div>
-            )}
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <button onClick={() => fileInputRef.current?.click()} disabled={saving}
-              className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-xs hover:border-gray-400 hover:text-gray-700 transition-colors mb-2 disabled:opacity-50">
-              <Upload size={13} />อัปโหลดรูปภาพ
-            </button>
-            {!imageFile && !removeImage && (
-              <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg">
-                <ImageIcon size={13} className="text-gray-400 flex-shrink-0" />
-                <input type="text" placeholder="หรือวาง URL รูปภาพ" value={imagePreview}
-                  onChange={(e) => { setImagePreview(e.target.value); setRemoveImage(false); }}
-                  className="flex-1 text-sm text-gray-900 placeholder-gray-300 focus:outline-none bg-transparent" />
-              </div>
-            )}
-            {imageFile && <p className="text-xs text-blue-500 mt-1">✓ เลือกไฟล์: {imageFile.name}</p>}
-            {removeImage && !imageFile && <p className="text-xs text-red-400 mt-1">✕ จะลบรูปภาพออก</p>}
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">ชื่อหมวดหมู่ *</label>
-            <input type="text" placeholder="เช่น Pop, Rock" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">คำอธิบาย</label>
-            <input type="text" placeholder="คำอธิบายสั้นๆ" value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-2 block">สีประจำหมวดหมู่</label>
-            <div className="flex flex-wrap gap-2">
-              {COLOR_PALETTE.map((c) => (
-                <button key={c} onClick={() => setForm({ ...form, color: c })}
-                  className="w-8 h-8 rounded-full transition-all flex items-center justify-center"
-                  style={{ backgroundColor: c, outline: form.color === c ? `3px solid ${c}` : "none", outlineOffset: "2px" }}>
-                  {form.color === c && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                </button>
-              ))}
             </div>
           </div>
-        </div>
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
-          <button onClick={onClose} disabled={saving} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">ยกเลิก</button>
-          <button onClick={handleSave} disabled={saving || !form.name}
-            className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 min-w-[100px]">
-            {saving ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                กำลังบันทึก...
-              </span>
-            ) : "บันทึกหมวดหมู่"}
-          </button>
-        </div>
+          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+            <button type="button" onClick={onClose} disabled={saving} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">ยกเลิก</button>
+            <button type="submit" disabled={saving}
+              className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 min-w-[100px]">
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  กำลังบันทึก...
+                </span>
+              ) : "บันทึกหมวดหมู่"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

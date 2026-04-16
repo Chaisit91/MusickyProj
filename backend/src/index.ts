@@ -51,13 +51,6 @@ const globalLimiter = rateLimit({
   message: { success: false, message: "Too many requests, please try again later." },
 });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: "Too many login attempts, please try again in 15 minutes." },
-});
 
 // ── Global Middleware ──────────────────────────────────────────
 app.use(cors({
@@ -70,7 +63,7 @@ app.use(thaiTimeMiddleware);
 app.use(globalLimiter);
 
 // ── Routes ────────────────────────────────────────────────────
-app.use("/api/auth", authLimiter, authRouter);
+app.use("/api/auth", authRouter);
 app.use("/api/artists", artistRouter);
 app.use("/api/genres", genreRouter);
 app.use("/api/albums", albumRouter);

@@ -10,6 +10,9 @@ import {View,
   Dimensions} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { playlistSchema } from "../../schema/authSchema";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { createPlaylistThunk, deletePlaylistThunk, loadLibrary, Playlist } from "../../store/librarySlice";
 import MiniPlayer from "../../Components/player/MiniPlayer";
@@ -118,9 +121,15 @@ export default function PlaylistsScreen() {
   const playlists = useAppSelector((s) => s.library.playlists);
   const [query, setQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>("Your Library");
+
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<{ title: string }>({
+    resolver: zodResolver(playlistSchema),
+    defaultValues: { title: "" },
+  });
+
+  const titleValue = useWatch({ control, name: "title" });
 
   useEffect(() => {
     dispatch(loadLibrary());
@@ -130,13 +139,11 @@ export default function PlaylistsScreen() {
     ? playlists.filter((p) => p.title.toLowerCase().includes(query.toLowerCase()))
     : playlists;
 
-  const handleCreate = () => {
-    const title = newTitle.trim();
-    if (!title) return;
-    dispatch(createPlaylistThunk(title));
-    setNewTitle("");
+  const handleCreate = handleSubmit((data) => {
+    dispatch(createPlaylistThunk(data.title.trim()));
+    reset();
     setShowCreate(false);
-  };
+  });
 
   const handleDelete = (id: string) => {
     dispatch(deletePlaylistThunk(id));
@@ -255,34 +262,51 @@ export default function PlaylistsScreen() {
       )}
 
       {/* ── Create Modal ── */}
-      <Modal transparent visible={showCreate} animationType="fade" onRequestClose={() => setShowCreate(false)}>
+      <Modal
+        transparent
+        visible={showCreate}
+        animationType="fade"
+        onRequestClose={() => { setShowCreate(false); reset(); }}
+      >
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", paddingHorizontal: 32 }}
-          onPress={() => setShowCreate(false)}
+          onPress={() => { setShowCreate(false); reset(); }}
         >
           <Pressable onPress={() => {}} style={{ backgroundColor: "#1e1e1e", borderRadius: 16, padding: 24 }}>
             <Text style={{ color: "#fff", fontSize: 18, fontWeight: "800", marginBottom: 16 }}>
               New Playlist
             </Text>
-            <TextInput
-              value={newTitle}
-              onChangeText={setNewTitle}
-              placeholder="Playlist name"
-              placeholderTextColor="#555"
-              autoFocus
-              style={{
-                backgroundColor: "#2a2a2a",
-                borderRadius: 8,
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                color: "#fff",
-                fontSize: 15,
-                marginBottom: 20,
-              }}
+            <Controller
+              control={control}
+              name="title"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="Playlist name"
+                  placeholderTextColor="#555"
+                  autoFocus
+                  style={{
+                    backgroundColor: "#2a2a2a",
+                    borderRadius: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    color: "#fff",
+                    fontSize: 15,
+                    marginBottom: errors.title ? 4 : 20,
+                    borderWidth: 1,
+                    borderColor: errors.title ? "#ff4444" : "transparent",
+                  }}
+                />
+              )}
             />
+            {errors.title && (
+              <Text style={{ color: "#ff4444", fontSize: 12, marginBottom: 16 }}>{errors.title.message}</Text>
+            )}
             <View style={{ flexDirection: "row", gap: 10 }}>
               <TouchableOpacity
-                onPress={() => { setShowCreate(false); setNewTitle(""); }}
+                onPress={() => { setShowCreate(false); reset(); }}
                 activeOpacity={0.8}
                 style={{ flex: 1, paddingVertical: 12, borderRadius: 8, backgroundColor: "#2a2a2a", alignItems: "center" }}
               >
@@ -293,11 +317,11 @@ export default function PlaylistsScreen() {
                 activeOpacity={0.8}
                 style={{
                   flex: 1, paddingVertical: 12, borderRadius: 8,
-                  backgroundColor: newTitle.trim() ? "#fff" : "#333",
+                  backgroundColor: titleValue?.trim() ? "#fff" : "#333",
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: newTitle.trim() ? "#000" : "#666", fontWeight: "700" }}>Create</Text>
+                <Text style={{ color: titleValue?.trim() ? "#000" : "#666", fontWeight: "700" }}>Create</Text>
               </TouchableOpacity>
             </View>
           </Pressable>

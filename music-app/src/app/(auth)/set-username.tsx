@@ -10,6 +10,9 @@ import {View,
   ScrollView} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Path } from "react-native-svg";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { setUsernameSchema, type SetUsernameForm } from "../../schema/authSchema";
 import { useAppDispatch } from "../../store/hooks";
 import { googleLoginThunk } from "../../store/authSlice";
 import { Image } from "expo-image";
@@ -29,33 +32,30 @@ export default function SetUsernameScreen() {
     avatarUrl: string;
   }>();
 
-  const [name, setName] = useState(params.suggestedName ?? "");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
-  const handleConfirm = async () => {
-    if (!name.trim()) {
-      setError("กรุณากรอกชื่อผู้ใช้");
-      return;
-    }
-    if (name.trim().length < 2) {
-      setError("ชื่อต้องมีอย่างน้อย 2 ตัวอักษร");
-      return;
-    }
-    setError("");
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<SetUsernameForm>({
+    resolver: zodResolver(setUsernameSchema),
+    defaultValues: { name: params.suggestedName ?? "" },
+  });
+
+  const nameValue = watch("name");
+  const initial = (nameValue?.charAt(0) ?? "?").toUpperCase();
+  const avatarUri = params.avatarUrl || null;
+
+  const handleConfirm = handleSubmit(async (data) => {
+    setApiError("");
     setLoading(true);
     const result = await dispatch(
-      googleLoginThunk({ accessToken: params.accessToken, name: name.trim() })
+      googleLoginThunk({ accessToken: params.accessToken, name: data.name.trim() })
     );
     setLoading(false);
     if (googleLoginThunk.rejected.match(result)) {
-      setError((result.payload as string) ?? "เกิดข้อผิดพลาด กรุณาลองใหม่");
+      setApiError((result.payload as string) ?? "เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
     // fulfilled + requiresName=false → AuthGuard redirect ไป /home เอง
-  };
-
-  const avatarUri = params.avatarUrl || null;
-  const initial = name.charAt(0).toUpperCase() || "?";
+  });
 
   return (
     <KeyboardAvoidingView
@@ -120,28 +120,37 @@ export default function SetUsernameScreen() {
 
         {/* Input */}
         <Text style={{ color: "#aaa", fontSize: 13, marginBottom: 8 }}>ชื่อผู้ใช้</Text>
-        <TextInput
-          value={name}
-          onChangeText={(v) => { setName(v); setError(""); }}
-          placeholder="ชื่อของคุณ"
-          placeholderTextColor="#555"
-          autoCapitalize="words"
-          autoCorrect={false}
-          autoFocus
-          style={{
-            backgroundColor: "#1e1e1e",
-            borderRadius: 12,
-            paddingHorizontal: 16,
-            paddingVertical: 15,
-            color: "#fff",
-            fontSize: 16,
-            borderWidth: 1,
-            borderColor: error ? "#ff4444" : "#2a2a2a",
-            marginBottom: 4,
-          }}
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { value, onChange, onBlur } }) => (
+            <TextInput
+              value={value}
+              onChangeText={(v) => { onChange(v); setApiError(""); }}
+              onBlur={onBlur}
+              placeholder="ชื่อของคุณ"
+              placeholderTextColor="#555"
+              autoCapitalize="words"
+              autoCorrect={false}
+              autoFocus
+              style={{
+                backgroundColor: "#1e1e1e",
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                paddingVertical: 15,
+                color: "#fff",
+                fontSize: 16,
+                borderWidth: 1,
+                borderColor: errors.name ? "#ff4444" : "#2a2a2a",
+                marginBottom: 4,
+              }}
+            />
+          )}
         />
-        {error ? (
-          <Text style={{ color: "#ff4444", fontSize: 12, marginBottom: 16 }}>{error}</Text>
+        {errors.name ? (
+          <Text style={{ color: "#ff4444", fontSize: 12, marginBottom: 16 }}>{errors.name.message}</Text>
+        ) : apiError ? (
+          <Text style={{ color: "#ff4444", fontSize: 12, marginBottom: 16 }}>{apiError}</Text>
         ) : (
           <View style={{ height: 20 }} />
         )}

@@ -1,9 +1,12 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Search, Pencil, CheckCircle2, Ban, X, Shield, User as UserIcon, Crown, Users } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import { useUsers } from "../../hooks/useUsers";
 import { usePremiumStats } from "../../hooks/usePremiumStats";
+import { userEditSchema, type UserEditFormValues } from "../../schema/adminSchema";
 
 interface User {
   id: string;
@@ -74,17 +77,26 @@ const StatCard: React.FC<{ label: string; count: number; icon: React.ReactNode; 
 );
 
 const EditUserModal: React.FC<{ user: User | null; onClose: () => void; onSave: (id: string, data: any) => void }> = ({ user, onClose, onSave }) => {
-  const [form, setForm] = useState<User | null>(null);
   const [showToast, setShowToast] = useState(false);
 
-  React.useEffect(() => { setForm(user ? { ...user } : null); }, [user]);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<UserEditFormValues>({
+    resolver: zodResolver(userEditSchema),
+    values: user ? { role: user.role as "USER" | "ADMIN", isActive: user.isActive ? "active" : "banned" } : undefined,
+  });
 
-  if (!user || !form) return null;
+  const watchedRole = watch("role");
 
-  const initials = form.name.split(" ").map((w: string) => w.charAt(0)).slice(0, 2).join("");
+  if (!user) return null;
 
-  const handleSave = () => {
-    onSave(form.id, { name: form.name, email: form.email, isActive: form.isActive, role: form.role });
+  const initials = user.name.split(" ").map((w: string) => w.charAt(0)).slice(0, 2).join("");
+
+  const onSubmit = (data: UserEditFormValues) => {
+    onSave(user.id, { role: data.role, isActive: data.isActive === "active" });
     setShowToast(true);
     setTimeout(() => { setShowToast(false); onClose(); }, 1500);
   };
@@ -94,53 +106,55 @@ const EditUserModal: React.FC<{ user: User | null; onClose: () => void; onSave: 
       <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <p className="font-medium text-gray-900 text-sm">แก้ไขข้อมูลผู้ใช้</p>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={16} /></button>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={16} /></button>
         </div>
 
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50/50">
           <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium text-sm flex-shrink-0">{initials}</div>
           <div>
-            <p className="font-medium text-gray-900 text-sm">{form.name}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{form.email}</p>
+            <p className="font-medium text-gray-900 text-sm">{user.name}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{user.email}</p>
           </div>
         </div>
 
-        <div className="px-5 py-4 space-y-4">
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">บทบาท (Role)</label>
-            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 transition-all bg-white">
-              <option value="USER">User — ผู้ใช้งานทั่วไป</option>
-              <option value="ADMIN">Admin — ผู้ดูแลระบบ</option>
-            </select>
-            {form.role === "ADMIN" && (
-              <p className="text-xs text-orange-500 mt-1.5">⚠️ Admin สามารถเข้าถึงและจัดการข้อมูลทั้งหมดในระบบได้</p>
-            )}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="px-5 py-4 space-y-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">บทบาท (Role)</label>
+              <select {...register("role")}
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 transition-all bg-white ${errors.role ? "border-red-400 focus:ring-red-500/20" : "border-gray-200 focus:ring-purple-500/20 focus:border-purple-400"}`}>
+                <option value="USER">User — ผู้ใช้งานทั่วไป</option>
+                <option value="ADMIN">Admin — ผู้ดูแลระบบ</option>
+              </select>
+              {watchedRole === "ADMIN" && (
+                <p className="text-xs text-orange-500 mt-1.5">⚠️ Admin สามารถเข้าถึงและจัดการข้อมูลทั้งหมดในระบบได้</p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">สถานะบัญชี</label>
+              <select {...register("isActive")}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white">
+                <option value="active">ใช้งาน</option>
+                <option value="banned">ถูกระงับ</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400">Playlists</p><p className="font-bold text-gray-900">{user._count?.playlists ?? 0}</p></div>
+              <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400">Liked Songs</p><p className="font-bold text-gray-900">{user._count?.likedSongs ?? 0}</p></div>
+              <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400">Downloads</p><p className="font-bold text-gray-900">{user._count?.downloads ?? 0}</p></div>
+            </div>
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1.5 block">สถานะบัญชี</label>
-            <select value={form.isActive ? "active" : "banned"} onChange={(e) => setForm({ ...form, isActive: e.target.value === "active" })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-white">
-              <option value="active">ใช้งาน</option>
-              <option value="banned">ถูกระงับ</option>
-            </select>
+          <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between">
+            {showToast ? <span className="text-xs text-green-600 font-medium">✓ บันทึกเรียบร้อยแล้ว</span> : <span />}
+            <div className="flex gap-2">
+              <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">ยกเลิก</button>
+              <button type="submit" className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium">บันทึกการเปลี่ยนแปลง</button>
+            </div>
           </div>
-
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400">Playlists</p><p className="font-bold text-gray-900">{form._count?.playlists ?? 0}</p></div>
-            <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400">Liked Songs</p><p className="font-bold text-gray-900">{form._count?.likedSongs ?? 0}</p></div>
-            <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400">Downloads</p><p className="font-bold text-gray-900">{form._count?.downloads ?? 0}</p></div>
-          </div>
-        </div>
-
-        <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between">
-          {showToast ? <span className="text-xs text-green-600 font-medium">✓ บันทึกเรียบร้อยแล้ว</span> : <span />}
-          <div className="flex gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">ยกเลิก</button>
-            <button onClick={handleSave} className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium">บันทึกการเปลี่ยนแปลง</button>
-          </div>
-        </div>
+        </form>
       </div>
     </div>
   );

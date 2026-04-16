@@ -1,15 +1,11 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginThunk, clearError } from "../../store/auth.store";
 import type { AppDispatch, RootState } from "../../store/store";
-
-interface LoginForm {
-  email: string;
-  password: string;
-}
-
+import { adminLoginSchema, type AdminLoginForm } from "../../schema/adminSchema";
 
 const AdminLogin = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -20,21 +16,19 @@ const AdminLogin = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>();
+  } = useForm<AdminLoginForm>({
+    resolver: zodResolver(adminLoginSchema),
+  });
 
-  // ถ้า login อยู่แล้วให้ redirect ไป dashboard เลย
   useEffect(() => {
     if (accessToken) navigate("/dashboard", { replace: true });
   }, [accessToken, navigate]);
 
-  // เคลียร์ error ตอน unmount
   useEffect(() => {
-    return () => {
-      dispatch(clearError());
-    };
+    return () => { dispatch(clearError()); };
   }, [dispatch]);
 
-  const onSubmit = (data: LoginForm) => {
+  const onSubmit = (data: AdminLoginForm) => {
     dispatch(loginThunk({ email: data.email, password: data.password }));
   };
 
@@ -53,16 +47,18 @@ const AdminLogin = () => {
             type="email"
             placeholder="Email (@gmail.com)"
             {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^[^\s@]+@gmail\.com$/i,
-                message: "Only @gmail.com is allowed",
-              },
+              onChange: () => { if (error) dispatch(clearError()); },
             })}
-            className="w-full p-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+            className={`w-full p-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 border-2 transition-colors ${
+              errors.email
+                ? "border-red-500 focus:ring-red-500"
+                : "border-transparent focus:ring-green-500"
+            }`}
           />
           {errors.email && (
-            <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+            <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+              <span>⚠</span> {errors.email.message}
+            </p>
           )}
         </div>
 
@@ -72,25 +68,25 @@ const AdminLogin = () => {
             type="password"
             placeholder="Password"
             {...register("password", {
-              required: "Password is required",
-              minLength: {
-                value: 6,
-                message: "Password must be at least 6 characters",
-              },
+              onChange: () => { if (error) dispatch(clearError()); },
             })}
-            className="w-full p-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+            className={`w-full p-4 rounded-lg bg-gray-800 text-white focus:outline-none focus:ring-2 border-2 transition-colors ${
+              errors.password || error
+                ? "border-red-500 focus:ring-red-500"
+                : "border-transparent focus:ring-green-500"
+            }`}
           />
           {errors.password && (
-            <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+            <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+              <span>⚠</span> {errors.password.message}
+            </p>
+          )}
+          {error && !errors.password && (
+            <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+              <span>⚠</span> {error}
+            </p>
           )}
         </div>
-
-        {/* API Error */}
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-900 text-red-300 text-sm">
-            {error}
-          </div>
-        )}
 
         {/* Submit */}
         <button

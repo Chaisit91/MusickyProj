@@ -1,4 +1,6 @@
 import React, { useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Search, Plus, Pencil, Trash2, X, Users, LayoutList,
   Upload, Video, Image as ImageIcon, Play,
@@ -8,6 +10,7 @@ import Topbar from "../../components/layout/Topbar";
 import { useAds } from "../../hooks/useAds";
 import { StatCard } from "../../components/common";
 import { toDateInputValue, formatDate } from "../../utils/format";
+import { adSchema, type AdFormValues } from "../../schema/adminSchema";
 
 interface Ad {
   id: string;
@@ -98,17 +101,6 @@ const AdModal: React.FC<{
   onClose: () => void;
   onSave: (data: any) => Promise<void>;
 }> = ({ mode, ad, onClose, onSave }) => {
-  const [form, setForm] = useState({
-    title: ad.title || "",
-    advertiser: ad.advertiser || "",
-    adType: ad.adType || "SPLASH",
-    adDuration: ad.adDuration ?? 30,
-    linkUrl: ad.linkUrl || "",
-    isActive: ad.isActive ?? true,
-    priority: ad.priority ?? 1,
-    startDate: toDateInputValue(ad.startDate),
-    endDate: toDateInputValue(ad.endDate),
-  });
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<MediaType>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(ad.imageUrl || "");
@@ -116,8 +108,28 @@ const AdModal: React.FC<{
   const [durationDetected, setDurationDetected] = useState(!!isExistingVideo && (ad.adDuration ?? 0) > 0);
   const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<AdFormValues>({
+    resolver: zodResolver(adSchema),
+    defaultValues: {
+      title: ad.title || "",
+      advertiser: ad.advertiser || "",
+      adType: (ad.adType as "SPLASH" | "AFTER_SONG") || "SPLASH",
+      adDuration: ad.adDuration ?? 30,
+      linkUrl: ad.linkUrl || "",
+      isActive: ad.isActive ?? true,
+      priority: ad.priority ?? 1,
+      startDate: toDateInputValue(ad.startDate),
+      endDate: toDateInputValue(ad.endDate),
+    },
+  });
 
   const handleFile = async (file: File) => {
     const type = getMediaType(file);
@@ -125,10 +137,10 @@ const AdModal: React.FC<{
     setMediaFile(file);
     setMediaType(type);
     setPreviewUrl(URL.createObjectURL(file));
-    setSubmitAttempted(false);
+    setMediaError(false);
     if (type === "video") {
       const dur = await getMediaDuration(file);
-      setForm((prev) => ({ ...prev, adDuration: dur }));
+      setValue("adDuration", dur);
       setDurationDetected(true);
     } else {
       setDurationDetected(false);
@@ -150,19 +162,18 @@ const AdModal: React.FC<{
     setDurationDetected(false);
   };
 
-  const handleSave = async () => {
-    setSubmitAttempted(true);
-    if (!form.title.trim() || !form.advertiser.trim()) return;
-    if (mode === "add" && !mediaFile) return; // ต้องมีไฟล์ตอน add
+  const onSubmit = async (data: AdFormValues) => {
+    if (mode === "add" && !mediaFile && !previewUrl) {
+      setMediaError(true);
+      return;
+    }
     setSaving(true);
     try {
       await onSave({
-        ...form,
-        adDuration: Number(form.adDuration),
-        priority: Number(form.priority),
+        ...data,
         ...(mediaFile && { mediaFile }),
-        startDate: form.startDate || undefined,
-        endDate: form.endDate || undefined,
+        startDate: data.startDate || undefined,
+        endDate: data.endDate || undefined,
       });
       onClose();
     } catch (err) {
@@ -172,12 +183,7 @@ const AdModal: React.FC<{
     }
   };
 
-  // Validation states
-  const missingMedia = mode === "add" && !mediaFile && !previewUrl;
-  const showMediaError = submitAttempted && missingMedia;
-  const isTitleEmpty = submitAttempted && !form.title.trim();
-  const isAdvertiserEmpty = submitAttempted && !form.advertiser.trim();
-  const isFormValid = form.title.trim() && form.advertiser.trim() && (mode === "edit" || !!mediaFile || !!previewUrl);
+  const showMediaError = mediaError && mode === "add" && !mediaFile && !previewUrl;
 
   const inputCls = (hasError?: boolean) =>
     `w-full border rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 transition-all bg-white ${
@@ -197,231 +203,179 @@ const AdModal: React.FC<{
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
           <p className="font-semibold text-gray-900 text-sm">{mode === "add" ? "เพิ่มโฆษณาใหม่" : "แก้ไขโฆษณา"}</p>
-          <button onClick={onClose} disabled={saving} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"><X size={16} /></button>
+          <button type="button" onClick={onClose} disabled={saving} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors disabled:opacity-50"><X size={16} /></button>
         </div>
 
-        <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+          <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
 
-          {/* Media upload zone */}
-          <div>
-            <label className={labelCls}>
-              ไฟล์โฆษณา {mode === "add" && <span className="text-red-400">*</span>}{" "}
-              <span className="text-gray-300 font-normal">(รูปภาพ / MP4)</span>
-            </label>
-
-            {previewUrl ? (
-              <div className={`rounded-xl overflow-hidden mb-2 border-2 transition-all ${showMediaError ? "border-red-400" : "border-transparent"} ${resolvedMediaType === "image" ? "bg-gray-100" : "bg-gray-900"}`}>
-                {resolvedMediaType === "image" ? (
-                  <img src={previewUrl} alt="preview" className="w-full max-h-52 object-contain" />
-                ) : (
-                  <video src={previewUrl} controls className="w-full max-h-52 object-contain" />
-                )}
-                <div className="flex items-center justify-between px-3 py-2 bg-black/40">
-                  <div className="flex items-center gap-2">
-                    {resolvedMediaType === "video" ? (
-                      <Video size={12} className="text-blue-400" />
-                    ) : (
-                      <ImageIcon size={12} className="text-gray-400" />
-                    )}
-                    <span className="text-white text-xs truncate max-w-[200px]">
-                      {mediaFile ? mediaFile.name : (resolvedMediaType === "video" ? "คลิปวิดีโอโฆษณา" : "รูปภาพโฆษณา")}
-                    </span>
-                    {mediaFile && (
-                      <span className="text-green-400 text-xs">✓ เพิ่มแล้ว</span>
-                    )}
-                    {!mediaFile && mode === "edit" && (
-                      <span className="text-gray-400 text-xs">ไฟล์เดิม</span>
-                    )}
-                  </div>
-                  <button onClick={clearMedia}
-                    className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors flex-shrink-0">
-                    <X size={10} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Drop zone */
-              <div
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`flex flex-col items-center justify-center gap-2 py-7 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
-                  showMediaError
-                    ? "border-red-400 bg-red-50"
-                    : dragOver
-                    ? "border-blue-400 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${showMediaError ? "bg-red-100" : "bg-gray-100"}`}>
-                    <ImageIcon size={16} className={showMediaError ? "text-red-400" : "text-gray-400"} />
-                  </div>
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${showMediaError ? "bg-red-100" : "bg-gray-100"}`}>
-                    <Video size={16} className={showMediaError ? "text-red-400" : "text-gray-400"} />
-                  </div>
-                </div>
-                <div className="text-center">
-                  <p className={`text-sm font-medium ${showMediaError ? "text-red-600" : "text-gray-600"}`}>
-                    <span className={showMediaError ? "text-red-500" : "text-blue-500"}>คลิกเพื่อเลือกไฟล์</span>{" "}
-                    หรือลากมาวาง
-                  </p>
-                  <p className={`text-xs mt-0.5 ${showMediaError ? "text-red-400" : "text-gray-400"}`}>
-                    รองรับ JPG, PNG, MP4
-                  </p>
-                </div>
-                <Upload size={12} className={showMediaError ? "text-red-400" : "text-gray-400"} />
-              </div>
-            )}
-
-            {/* Error message */}
-            {showMediaError && (
-              <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                <span>⚠</span> กรุณาเพิ่มไฟล์โฆษณาก่อนบันทึก
-              </p>
-            )}
-
-            {/* ปุ่มเปลี่ยนไฟล์ */}
-            {previewUrl && (
-              <button onClick={() => fileInputRef.current?.click()}
-                className="mt-2 w-full flex items-center justify-center gap-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-xs hover:border-gray-400 hover:text-gray-700 transition-colors">
-                <Upload size={12} />{mode === "edit" ? "เปลี่ยนไฟล์โฆษณา (ถ้าต้องการ)" : "เปลี่ยนไฟล์"}
-              </button>
-            )}
-
-            <input ref={fileInputRef} type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/*"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
-          </div>
-
-          {/* ชื่อโฆษณา + ผู้ลงโฆษณา */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>ชื่อโฆษณา <span className="text-red-400">*</span></label>
-              <input type="text" placeholder="ชื่อโฆษณา" value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className={inputCls(isTitleEmpty)} />
-              {isTitleEmpty && <p className="text-red-500 text-xs mt-1">กรุณากรอกชื่อโฆษณา</p>}
-            </div>
-            <div>
-              <label className={labelCls}>ผู้ลงโฆษณา <span className="text-red-400">*</span></label>
-              <input type="text" placeholder="ชื่อบริษัท" value={form.advertiser}
-                onChange={(e) => setForm({ ...form, advertiser: e.target.value })}
-                className={inputCls(isAdvertiserEmpty)} />
-              {isAdvertiserEmpty && <p className="text-red-500 text-xs mt-1">กรุณากรอกชื่อผู้ลงโฆษณา</p>}
-            </div>
-          </div>
-
-          {/* URL ปลายทาง (ถ้ากดโฆษณา) */}
-          <div>
-            <label className={labelCls}>URL เมื่อกดโฆษณา <span className="text-gray-300 font-normal">(ไม่บังคับ)</span></label>
-            <input
-              type="url"
-              placeholder="https://example.com"
-              value={form.linkUrl}
-              onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
-              className={inputCls()}
-            />
-            <p className="text-xs text-gray-400 mt-1">ผู้ใช้สามารถกดที่โฆษณาเพื่อเปิด URL นี้ได้</p>
-          </div>
-
-          {/* ประเภทโฆษณา + วินาทีก่อนข้าม */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>ประเภทโฆษณา</label>
-              <select value={form.adType} onChange={(e) => setForm({ ...form, adType: e.target.value })} className={inputCls()}>
-                <option value="SPLASH">หลังจาก Login</option>
-                <option value="AFTER_SONG">ระหว่างเพลง (random 1-3 เพลง)</option>
-              </select>
-            </div>
+            {/* Media upload zone */}
             <div>
               <label className={labelCls}>
-                วินาทีก่อนข้ามได้{" "}
-                {durationDetected && <span className="text-green-500 font-normal">(คำนวณจากวิดีโอ)</span>}
+                ไฟล์โฆษณา {mode === "add" && <span className="text-red-400">*</span>}{" "}
+                <span className="text-gray-300 font-normal">(รูปภาพ / MP4)</span>
               </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={1}
-                  max={300}
-                  value={form.adDuration}
-                  onChange={(e) => setForm({ ...form, adDuration: Number(e.target.value) })}
-                  className={inputCls()}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">วิ</span>
+
+              {previewUrl ? (
+                <div className={`rounded-xl overflow-hidden mb-2 border-2 transition-all ${showMediaError ? "border-red-400" : "border-transparent"} ${resolvedMediaType === "image" ? "bg-gray-100" : "bg-gray-900"}`}>
+                  {resolvedMediaType === "image" ? (
+                    <img src={previewUrl} alt="preview" className="w-full max-h-52 object-contain" />
+                  ) : (
+                    <video src={previewUrl} controls className="w-full max-h-52 object-contain" />
+                  )}
+                  <div className="flex items-center justify-between px-3 py-2 bg-black/40">
+                    <div className="flex items-center gap-2">
+                      {resolvedMediaType === "video" ? (
+                        <Video size={12} className="text-blue-400" />
+                      ) : (
+                        <ImageIcon size={12} className="text-gray-400" />
+                      )}
+                      <span className="text-white text-xs truncate max-w-[200px]">
+                        {mediaFile ? mediaFile.name : (resolvedMediaType === "video" ? "คลิปวิดีโอโฆษณา" : "รูปภาพโฆษณา")}
+                      </span>
+                      {mediaFile && <span className="text-green-400 text-xs">✓ เพิ่มแล้ว</span>}
+                      {!mediaFile && mode === "edit" && <span className="text-gray-400 text-xs">ไฟล์เดิม</span>}
+                    </div>
+                    <button type="button" onClick={clearMedia}
+                      className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors flex-shrink-0">
+                      <X size={10} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`flex flex-col items-center justify-center gap-2 py-7 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
+                    showMediaError ? "border-red-400 bg-red-50"
+                    : dragOver ? "border-blue-400 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${showMediaError ? "bg-red-100" : "bg-gray-100"}`}>
+                      <ImageIcon size={16} className={showMediaError ? "text-red-400" : "text-gray-400"} />
+                    </div>
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${showMediaError ? "bg-red-100" : "bg-gray-100"}`}>
+                      <Video size={16} className={showMediaError ? "text-red-400" : "text-gray-400"} />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm font-medium ${showMediaError ? "text-red-600" : "text-gray-600"}`}>
+                      <span className={showMediaError ? "text-red-500" : "text-blue-500"}>คลิกเพื่อเลือกไฟล์</span> หรือลากมาวาง
+                    </p>
+                    <p className={`text-xs mt-0.5 ${showMediaError ? "text-red-400" : "text-gray-400"}`}>รองรับ JPG, PNG, MP4</p>
+                  </div>
+                  <Upload size={12} className={showMediaError ? "text-red-400" : "text-gray-400"} />
+                </div>
+              )}
+
+              {showMediaError && (
+                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                  <span>⚠</span> กรุณาเพิ่มไฟล์โฆษณาก่อนบันทึก
+                </p>
+              )}
+
+              {previewUrl && (
+                <button type="button" onClick={() => fileInputRef.current?.click()}
+                  className="mt-2 w-full flex items-center justify-center gap-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 text-xs hover:border-gray-400 hover:text-gray-700 transition-colors">
+                  <Upload size={12} />{mode === "edit" ? "เปลี่ยนไฟล์โฆษณา (ถ้าต้องการ)" : "เปลี่ยนไฟล์"}
+                </button>
+              )}
+
+              <input ref={fileInputRef} type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
+            </div>
+
+            {/* ชื่อโฆษณา + ผู้ลงโฆษณา */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>ชื่อโฆษณา <span className="text-red-400">*</span></label>
+                <input type="text" placeholder="ชื่อโฆษณา" {...register("title")} className={inputCls(!!errors.title)} />
+                {errors.title && <p className="text-red-500 text-xs mt-1">⚠ {errors.title.message}</p>}
+              </div>
+              <div>
+                <label className={labelCls}>ผู้ลงโฆษณา <span className="text-red-400">*</span></label>
+                <input type="text" placeholder="ชื่อบริษัท" {...register("advertiser")} className={inputCls(!!errors.advertiser)} />
+                {errors.advertiser && <p className="text-red-500 text-xs mt-1">⚠ {errors.advertiser.message}</p>}
               </div>
             </div>
-          </div>
 
-          {/* Priority slider */}
-          <div>
-            <label className={labelCls}>
-              ความสำคัญ (Priority)
-              <span className="text-gray-400 font-normal ml-1">— ยิ่งสูง ยิ่งมีโอกาสถูกเลือกมากกว่า</span>
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={1}
-                max={10}
-                step={1}
-                value={form.priority}
-                onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })}
-                className="flex-1 accent-violet-600"
-              />
-              <div className={`w-10 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                form.priority >= 8 ? "bg-red-100 text-red-600 border border-red-200"
-                : form.priority >= 5 ? "bg-orange-100 text-orange-600 border border-orange-200"
-                : "bg-gray-100 text-gray-600 border border-gray-200"
-              }`}>
-                {form.priority}
+            {/* URL ปลายทาง */}
+            <div>
+              <label className={labelCls}>URL เมื่อกดโฆษณา <span className="text-gray-300 font-normal">(ไม่บังคับ)</span></label>
+              <input type="url" placeholder="https://example.com" {...register("linkUrl")} className={inputCls(!!errors.linkUrl)} />
+              {errors.linkUrl && <p className="text-red-500 text-xs mt-1">⚠ {errors.linkUrl.message}</p>}
+              <p className="text-xs text-gray-400 mt-1">ผู้ใช้สามารถกดที่โฆษณาเพื่อเปิด URL นี้ได้</p>
+            </div>
+
+            {/* ประเภทโฆษณา + วินาทีก่อนข้าม */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>ประเภทโฆษณา</label>
+                <select {...register("adType")} className={inputCls()}>
+                  <option value="SPLASH">หลังจาก Login</option>
+                  <option value="AFTER_SONG">ระหว่างเพลง (random 1-3 เพลง)</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>
+                  วินาทีก่อนข้ามได้{" "}
+                  {durationDetected && <span className="text-green-500 font-normal">(คำนวณจากวิดีโอ)</span>}
+                </label>
+                <div className="relative">
+                  <input type="number" min={1} max={300}
+                    {...register("adDuration", { valueAsNumber: true })} className={inputCls(!!errors.adDuration)} />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">วิ</span>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between text-xs text-gray-400 mt-0.5 px-0.5">
-              <span>ต่ำ (1)</span>
-              <span>ปกติ (5)</span>
-              <span>สูงสุด (10)</span>
-            </div>
-          </div>
 
-          {/* วันเริ่มต้น + วันสิ้นสุด */}
-          <div className="grid grid-cols-2 gap-3">
+            {/* Priority slider */}
             <div>
-              <label className={labelCls}>วันเริ่มต้น</label>
-              <input type="date" value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })} className={inputCls()} />
+              <label className={labelCls}>
+                ความสำคัญ (Priority)
+                <span className="text-gray-400 font-normal ml-1">— ยิ่งสูง ยิ่งมีโอกาสถูกเลือกมากกว่า</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <input type="range" min={1} max={10} step={1}
+                  {...register("priority", { valueAsNumber: true })} className="flex-1 accent-violet-600" />
+              </div>
+              <div className="flex justify-between text-xs text-gray-400 mt-0.5 px-0.5">
+                <span>ต่ำ (1)</span><span>ปกติ (5)</span><span>สูงสุด (10)</span>
+              </div>
             </div>
+
+            {/* วันเริ่มต้น + วันสิ้นสุด */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>วันเริ่มต้น</label>
+                <input type="date" {...register("startDate")} className={inputCls()} />
+              </div>
+              <div>
+                <label className={labelCls}>วันสิ้นสุด</label>
+                <input type="date" {...register("endDate")} className={inputCls()} />
+              </div>
+            </div>
+
+            {/* สถานะ */}
             <div>
-              <label className={labelCls}>วันสิ้นสุด</label>
-              <input type="date" value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })} className={inputCls()} />
+              <label className={labelCls}>สถานะ</label>
+              <select {...register("isActive", { setValueAs: (v) => v === "true" || v === true })} className={inputCls()}>
+                <option value="true">ใช้งาน</option>
+                <option value="false">หยุดชั่วคราว</option>
+              </select>
             </div>
           </div>
 
-          {/* สถานะ */}
-          <div>
-            <label className={labelCls}>สถานะ</label>
-            <select value={form.isActive ? "true" : "false"}
-              onChange={(e) => setForm({ ...form, isActive: e.target.value === "true" })} className={inputCls()}>
-              <option value="true">ใช้งาน</option>
-              <option value="false">หยุดชั่วคราว</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
-          {/* Summary validation */}
-          {submitAttempted && !isFormValid && (
-            <p className="text-red-500 text-xs">กรุณากรอกข้อมูลให้ครบถ้วน</p>
-          )}
-          {!(submitAttempted && !isFormValid) && <div />}
-
-          <div className="flex gap-2">
-            <button onClick={onClose} disabled={saving}
+          <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-2 flex-shrink-0">
+            <button type="button" onClick={onClose} disabled={saving}
               className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50">ยกเลิก</button>
-            <button onClick={handleSave} disabled={saving}
+            <button type="submit" disabled={saving}
               className="px-4 py-2 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 min-w-[100px]">
               {saving ? (
                 <span className="flex items-center justify-center gap-2">
@@ -434,7 +388,7 @@ const AdModal: React.FC<{
               ) : "บันทึก"}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
