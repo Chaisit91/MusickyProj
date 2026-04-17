@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { store } from "../store/store";
+import { useEffect, useState, useCallback } from "react";
+import { getUserStatsApi } from "../api/userApi";
 
 export interface PremiumStats {
   total: number;
@@ -9,32 +9,21 @@ export interface PremiumStats {
   free: number;
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-
 export const usePremiumStats = () => {
   const [stats, setStats] = useState<PremiumStats | null>(null);
 
-  useEffect(() => {
-    const token = store.getState().auth.accessToken;
-    if (!token) return;
-
-    const url = `${BASE_URL}/admin/users/stats/stream?token=${encodeURIComponent(token)}`;
-    const es = new EventSource(url);
-
-    es.onmessage = (e) => {
-      try {
-        setStats(JSON.parse(e.data) as PremiumStats);
-      } catch {
-        // ignore malformed event
-      }
-    };
-
-    es.onerror = () => {
-      es.close();
-    };
-
-    return () => es.close();
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await getUserStatsApi();
+      setStats(res.data.data);
+    } catch {
+      // ignore
+    }
   }, []);
 
-  return stats;
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  return { stats, refetch: fetchStats };
 };

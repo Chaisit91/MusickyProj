@@ -3,7 +3,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Search, Plus, Pencil, Trash2, Music, X,
-  Upload, Link, ImagePlus, Loader2, ChevronLeft,
+  Upload, Link, ImagePlus, Loader2, ChevronLeft, Play, Pause,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar";
@@ -11,8 +11,9 @@ import Topbar from "../../components/layout/Topbar";
 import { useSongs } from "../../hooks/useSongs";
 import type { Song } from "../../types/song";
 import api from "../../api/axios";
-import { StatCard, ConfirmDeleteModal } from "../../components/common";
+import { StatCard, ConfirmDeleteModal, MiniPlayer } from "../../components/common";
 import { formatDuration } from "../../utils/format";
+import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 import { songSchema, type SongFormValues } from "../../schema/adminSchema";
 
 type AudioTab = "upload" | "url";
@@ -319,6 +320,7 @@ const ArtistSongsPage: React.FC = () => {
   const [deleteSong, setDeleteSong] = useState<Song | null>(null);
 
   const { songs, stats, loading, error, createSong, updateSong, deleteSong: deleteSongApi } = useSongs(search, undefined, artistId);
+  const { current, isPlaying, progress, duration, volume, play, stop, seek, setVolume } = useAudioPlayer();
 
   useEffect(() => {
     if (!artistId) return;
@@ -406,16 +408,23 @@ const ArtistSongsPage: React.FC = () => {
                     {loading && (
                       <tr><td colSpan={7} className="text-center py-12 text-gray-500 text-sm">กำลังโหลด...</td></tr>
                     )}
-                    {!loading && songs.map((song: Song) => (
-                      <tr key={song.id} className="hover:bg-gray-700/40 transition-colors">
+                    {!loading && songs.map((song: Song) => {
+                      const isThisPlaying = current?.id === song.id && isPlaying;
+                      return (
+                      <tr key={song.id} className={`hover:bg-gray-700/40 transition-colors ${current?.id === song.id ? "bg-green-900/20" : ""}`}>
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-md bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <div
+                              className="relative w-9 h-9 rounded-md bg-gray-700 flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer group/cover"
+                              onClick={() => play({ id: song.id, title: song.title, coverUrl: song.coverUrl, filePath: song.filePath })}>
                               {song.coverUrl
                                 ? <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
                                 : <Music size={14} className="text-gray-400" />}
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity">
+                                {isThisPlaying ? <Pause size={12} className="text-white" /> : <Play size={12} className="text-white ml-0.5" />}
+                              </div>
                             </div>
-                            <p className="font-medium text-white text-sm">{song.title}</p>
+                            <p className={`font-medium text-sm ${current?.id === song.id ? "text-green-400" : "text-white"}`}>{song.title}</p>
                           </div>
                         </td>
                         <td className="px-4 py-3.5 text-gray-300 text-sm">{song.album?.title}</td>
@@ -430,7 +439,7 @@ const ArtistSongsPage: React.FC = () => {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );})}
                     {!loading && songs.length === 0 && (
                       <tr><td colSpan={7} className="text-center py-12 text-gray-500 text-sm">ยังไม่มีเพลง</td></tr>
                     )}
@@ -441,6 +450,23 @@ const ArtistSongsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Mini Player — fixed bottom */}
+      {current && (
+        <div className="fixed bottom-0 left-0 right-0 z-40">
+          <MiniPlayer
+            current={current}
+            isPlaying={isPlaying}
+            progress={progress}
+            duration={duration}
+            volume={volume}
+            onToggle={() => play(current)}
+            onStop={stop}
+            onSeek={seek}
+            onVolumeChange={setVolume}
+          />
+        </div>
+      )}
 
       {addModal && (
         <SongModal mode="add" song={null} defaultArtistId={artistId!}

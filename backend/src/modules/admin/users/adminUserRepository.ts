@@ -2,16 +2,19 @@ import { prisma } from "../../../lib/prisma";
 import { Role } from "@prisma/client";
 
 export const findAllUsers = async (search?: string, status?: string) => {
+  const now = new Date();
   return prisma.user.findMany({
     where: {
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { email: { contains: search, mode: "insensitive" } },
-        ],
-      }),
-      ...(status === "active" && { isActive: true }),
-      ...(status === "banned" && { isActive: false }),
+      AND: [
+        ...(search ? [{ OR: [
+          { name: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
+        ]}] : []),
+        ...(status === "active"   ? [{ isActive: true }] : []),
+        ...(status === "banned"   ? [{ isActive: false }] : []),
+        ...(status === "premium"  ? [{ isPremium: true, premiumExpiresAt: { gt: now } }] : []),
+        ...(status === "free"     ? [{ OR: [{ isPremium: false }, { premiumExpiresAt: { lte: now } }] }] : []),
+      ],
     },
     select: {
       id: true,

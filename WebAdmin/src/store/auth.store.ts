@@ -101,8 +101,8 @@ const authSlice = createSlice({
 
       // ── Silent Refresh ───────────────────────────────────────
       .addCase(refreshTokenThunk.fulfilled, (state, action: PayloadAction<any>) => {
-        //  ได้ accessToken ใหม่มาเก็บใน memory
         state.accessToken = action.payload.accessToken;
+        if (action.payload.user) state.user = action.payload.user;
       })
       .addCase(refreshTokenThunk.rejected, (state) => {
         // refresh ไม่ได้ (cookie หมดอายุ หรือไม่มี) → clear state

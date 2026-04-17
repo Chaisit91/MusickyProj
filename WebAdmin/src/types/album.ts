@@ -6,6 +6,7 @@ export interface AlbumSong {
   duration?: number;
   playCount: number;
   coverUrl?: string;
+  filePath?: string;
   genre?: { id: string; name: string };
 }
 

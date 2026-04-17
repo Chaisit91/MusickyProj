@@ -1,11 +1,15 @@
 import React, { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Search, Plus, Pencil, Trash2, Music, X, Upload, ImageIcon } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Music, X, Upload, ImageIcon, Play, Pause } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
 import { useGenres } from "../../hooks/useGenres";
 import { genreSchema, type GenreFormValues } from "../../schema/adminSchema";
+import api from "../../api/axios";
+import { MiniPlayer } from "../../components/common";
+import { useAudioPlayer } from "../../hooks/useAudioPlayer";
+import { formatDuration } from "../../utils/format";
 
 interface Genre {
   id: string;
@@ -191,8 +195,135 @@ const DeleteModal: React.FC<{ genre: Genre; onClose: () => void; onConfirm: () =
   </div>
 );
 
-const GenreCard: React.FC<{ genre: Genre; onEdit: (g: Genre) => void; onDelete: (g: Genre) => void }> = ({ genre, onEdit, onDelete }) => (
-  <div className="bg-gray-800 rounded-xl overflow-hidden group relative">
+interface GenreSong {
+  id: string;
+  title: string;
+  filePath: string;
+  coverUrl?: string;
+  duration?: number;
+  playCount: number;
+  artist?: { name: string };
+  album?: { title: string };
+}
+
+const GenreSongsModal: React.FC<{ genre: Genre; onClose: () => void }> = ({ genre, onClose }) => {
+  const [songs, setSongs] = React.useState<GenreSong[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const { current, isPlaying, progress, duration, volume, play, stop, seek, setVolume } = useAudioPlayer();
+
+  React.useEffect(() => {
+    api.get(`/admin/songs?genreId=${genre.id}&limit=200`)
+      .then((res) => setSongs(res.data.data ?? []))
+      .catch(() => setSongs([]))
+      .finally(() => setLoading(false));
+  }, [genre.id]);
+
+  const handleClose = () => { stop(); onClose(); };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+      onClick={(e) => e.target === e.currentTarget && handleClose()}>
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: (genre.color || "#3b82f6") + "33" }}>
+            {genre.imageUrl
+              ? <img src={genre.imageUrl} alt={genre.name} className="w-full h-full object-cover" />
+              : <Music size={20} style={{ color: genre.color || "#3b82f6" }} />
+            }
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-900 text-sm truncate">{genre.name}</p>
+            <p className="text-gray-400 text-xs">{genre._count?.songs ?? 0} เพลง</p>
+          </div>
+          <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={16} /></button>
+        </div>
+
+        {/* Song list */}
+        <div className="overflow-y-auto flex-1">
+          {loading ? (
+            <div className="text-center py-10 text-gray-400 text-sm">กำลังโหลด...</div>
+          ) : songs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+              <Music size={32} className="mb-2 opacity-40" />
+              <p className="text-sm">ยังไม่มีเพลงในหมวดหมู่นี้</p>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-400">#</th>
+                  <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-400">ชื่อเพลง</th>
+                  <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-400">ศิลปิน</th>
+                  <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-400">ความยาว</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-400">ยอดเล่น</th>
+                </tr>
+              </thead>
+              <tbody>
+                {songs.map((song, idx) => {
+                  const isThisPlaying = current?.id === song.id && isPlaying;
+                  const hasAudio = !!song.filePath;
+                  return (
+                    <tr key={song.id}
+                      className={`border-b border-gray-50 transition-colors ${hasAudio ? "cursor-pointer hover:bg-gray-50" : ""} ${current?.id === song.id ? "bg-green-50" : ""}`}
+                      onClick={() => hasAudio && play({ id: song.id, title: song.title, coverUrl: song.coverUrl, filePath: song.filePath })}>
+                      <td className="px-5 py-3 text-gray-400 text-sm w-8">
+                        {current?.id === song.id
+                          ? (isThisPlaying ? <Pause size={13} className="text-green-500" /> : <Play size={13} className="text-green-500" />)
+                          : <span>{idx + 1}</span>}
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative w-8 h-8 rounded overflow-hidden bg-gray-100 flex-shrink-0 group/cover">
+                            {song.coverUrl
+                              ? <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center"><Music size={12} className="text-gray-400" /></div>
+                            }
+                            {hasAudio && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity">
+                                {isThisPlaying ? <Pause size={10} className="text-white" /> : <Play size={10} className="text-white ml-0.5" />}
+                              </div>
+                            )}
+                          </div>
+                          <span className={`text-sm font-medium truncate max-w-[150px] ${current?.id === song.id ? "text-green-600" : "text-gray-900"}`}>{song.title}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-xs text-gray-400 truncate max-w-[100px]">{song.artist?.name || "—"}</td>
+                      <td className="px-5 py-3 text-sm text-gray-500 text-right">{formatDuration(song.duration)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-400 text-right">{song.playCount.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="px-5 py-2.5 border-t border-gray-100 text-xs text-gray-400">
+          {songs.length} เพลง
+        </div>
+
+        {current && (
+          <MiniPlayer
+            current={current}
+            isPlaying={isPlaying}
+            progress={progress}
+            duration={duration}
+            volume={volume}
+            onToggle={() => play(current)}
+            onStop={stop}
+            onSeek={seek}
+            onVolumeChange={setVolume}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const GenreCard: React.FC<{ genre: Genre; onEdit: (g: Genre) => void; onDelete: (g: Genre) => void; onViewSongs: (g: Genre) => void }> = ({ genre, onEdit, onDelete, onViewSongs }) => (
+  <div className="bg-gray-800 rounded-xl overflow-hidden group relative cursor-pointer" onClick={() => onViewSongs(genre)}>
     <div className="relative h-32 overflow-hidden">
       {genre.imageUrl ? (
         <img src={genre.imageUrl} alt={genre.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -202,7 +333,7 @@ const GenreCard: React.FC<{ genre: Genre; onEdit: (g: Genre) => void; onDelete: 
         </div>
       )}
       <div className="absolute inset-0 opacity-20" style={{ background: `linear-gradient(to top, ${genre.color || "#3b82f6"}, transparent)` }} />
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
         <button onClick={() => onEdit(genre)} className="w-7 h-7 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"><Pencil size={13} /></button>
         <button onClick={() => onDelete(genre)} className="w-7 h-7 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-red-400 hover:bg-red-500/30 transition-colors"><Trash2 size={13} /></button>
       </div>
@@ -225,6 +356,7 @@ const GenreManagementPage: React.FC = () => {
   const [addModal, setAddModal] = useState(false);
   const [editGenre, setEditGenre] = useState<Genre | null>(null);
   const [deleteGenre, setDeleteGenre] = useState<Genre | null>(null);
+  const [viewSongsGenre, setViewSongsGenre] = useState<Genre | null>(null);
   const { genres, stats, loading, error, createGenre, updateGenre, deleteGenre: deleteGenreApi } = useGenres();
 
   const filtered = genres.filter((g: Genre) =>
@@ -271,7 +403,7 @@ const GenreManagementPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filtered.map((genre: Genre) => (
-                <GenreCard key={genre.id} genre={genre} onEdit={setEditGenre} onDelete={setDeleteGenre} />
+                <GenreCard key={genre.id} genre={genre} onEdit={setEditGenre} onDelete={setDeleteGenre} onViewSongs={setViewSongsGenre} />
               ))}
               {!loading && filtered.length === 0 && (
                 <div className="col-span-full text-center py-16 text-gray-500 text-sm">ไม่พบหมวดหมู่</div>
@@ -303,6 +435,9 @@ const GenreManagementPage: React.FC = () => {
           onClose={() => setDeleteGenre(null)}
           onConfirm={handleDelete}
         />
+      )}
+      {viewSongsGenre && (
+        <GenreSongsModal genre={viewSongsGenre} onClose={() => setViewSongsGenre(null)} />
       )}
     </div>
   );

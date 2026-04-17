@@ -1,5 +1,7 @@
 import api from "./axios";
 
+export const getUserStatsApi = async () => api.get("/admin/users/stats");
+
 export const getAllUsersApi = async (search?: string, status?: string) => {
   const params = new URLSearchParams();
   if (search) params.append("search", search);

@@ -188,7 +188,7 @@ const Dashboard = () => {
                       <li key={i} className="flex items-start justify-between gap-3 text-xs">
                         <span className="text-gray-300 leading-relaxed">{a.message}</span>
                         <span className="text-gray-500 whitespace-nowrap flex-shrink-0">
-                          {new Date(a.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
+                          {new Date(a.timestamp).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
                         </span>
                       </li>
                     ))}

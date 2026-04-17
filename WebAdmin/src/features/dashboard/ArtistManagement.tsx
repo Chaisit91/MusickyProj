@@ -160,25 +160,42 @@ const DeleteModal: React.FC<{ artist: Artist; onClose: () => void; onConfirm: ()
 );
 
 const ArtistCard: React.FC<{ artist: Artist; onEdit: (a: Artist) => void; onDelete: (a: Artist) => void }> = ({ artist, onEdit, onDelete }) => (
-  <div className="bg-gray-800 rounded-xl overflow-hidden group relative">
-    <div className="relative h-36 overflow-hidden">
+  <div className="bg-gray-800 rounded-xl overflow-hidden group relative isolate">
+    {/* Image — fixed aspect ratio so all cards are uniform */}
+    <div className="relative w-full aspect-square overflow-hidden bg-gray-700">
       {artist.imageUrl ? (
-        <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <img
+          src={artist.imageUrl}
+          alt={artist.name}
+          className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+        />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gray-700">
-          <Mic size={32} className="text-gray-500" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Mic size={36} className="text-gray-500" />
         </div>
       )}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={() => onEdit(artist)} className="w-7 h-7 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"><Pencil size={13} /></button>
-        <button onClick={() => onDelete(artist)} className="w-7 h-7 rounded-lg bg-black/50 backdrop-blur-sm flex items-center justify-center text-red-400 hover:bg-red-500/30 transition-colors"><Trash2 size={13} /></button>
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2">
-        <p className="text-white font-bold text-sm drop-shadow truncate">{artist.name}</p>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+      {/* Action buttons */}
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button
+          onClick={() => onEdit(artist)}
+          className="w-7 h-7 rounded-lg bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors">
+          <Pencil size={12} />
+        </button>
+        <button
+          onClick={() => onDelete(artist)}
+          className="w-7 h-7 rounded-lg bg-black/60 backdrop-blur-sm flex items-center justify-center text-red-400 hover:bg-red-500/40 transition-colors">
+          <Trash2 size={12} />
+        </button>
       </div>
     </div>
+
+    {/* Info */}
     <div className="px-3 py-2.5">
-      <p className="text-gray-400 text-xs truncate">{artist.bio || "—"}</p>
+      <p className="text-white font-semibold text-sm truncate">{artist.name}</p>
+      <p className="text-gray-400 text-xs mt-0.5 truncate">{artist.bio || "—"}</p>
     </div>
   </div>
 );

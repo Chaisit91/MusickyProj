@@ -11,6 +11,7 @@ import {
   togglePlay,
 } from "../../store/playerSlice";
 import { showAfterSongAd } from "../../store/adsSlice";
+import { recordPlay } from "../../api/homeApi";
 
 export default function AudioControllerImpl() {
   const dispatch = useAppDispatch();
@@ -36,6 +37,12 @@ export default function AudioControllerImpl() {
   useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
   useEffect(() => { autoPlayRef.current = autoPlay; }, [autoPlay]);
+
+  // ── บันทึก play history ทุกครั้งที่เพลงเปลี่ยน (ครอบ queue auto-next, shuffle, after-ad, ฯลฯ) ──
+  useEffect(() => {
+    if (!currentSong?.id) return;
+    recordPlay(currentSong.id).catch(() => {});
+  }, [currentSong?.id]);
 
   // ── Set audio mode once ───────────────────────────────────────────────────────
   useEffect(() => {

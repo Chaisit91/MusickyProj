@@ -77,6 +77,11 @@ export const deleteUser = async (req: Request, res: Response) => {
   res.json({ success: true, message: "User deleted" });
 };
 
+export const getUserStats = async (req: Request, res: Response) => {
+  const stats = await AdminUserRepository.getPremiumStats();
+  res.json({ success: true, data: stats });
+};
+
 // ─── SSE: real-time premium stats ─────────────────────────────────────────────
 
 export const premiumStatsStream = async (req: Request, res: Response) => {

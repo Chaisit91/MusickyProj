@@ -28,9 +28,13 @@ export const deleteAllHistory = async (userId: string) => {
 };
 
 export const recordPlay = async (userId: string, songId: string) => {
-  const existing = await prisma.playHistory.findFirst({
-    where: { userId, songId },
-  });
+  const [existing] = await Promise.all([
+    prisma.playHistory.findFirst({ where: { userId, songId } }),
+    prisma.song.update({
+      where: { id: songId },
+      data: { playCount: { increment: 1 } },
+    }),
+  ]);
 
   if (existing) {
     return prisma.playHistory.update({

@@ -49,11 +49,13 @@ const FeaturingBannerCard = ({
   title,
   subtitle,
   songs,
+  imageUrl,
   onPress,
 }: {
   title: string;
   subtitle: string;
   songs: Song[];
+  imageUrl?: string;
   onPress: () => void;
 }) => {
   const covers = songs.slice(0, 6).map((s) => s.coverUrl ?? null);
@@ -71,24 +73,29 @@ const FeaturingBannerCard = ({
         backgroundColor: "#1a1a2e",
       }}
     >
-      {/* Mosaic: 3 columns × 2 rows */}
-      <View style={{ flex: 1, flexDirection: "row" }}>
-        {[0, 1, 2].map((col) => (
-          <View key={col} style={{ flex: 1, flexDirection: "column" }}>
-            {[0, 1].map((row) => {
-              const idx = col * 2 + row;
-              const cover = covers[idx];
-              return (
-                <View key={row} style={{ flex: 1, backgroundColor: colorFor(idx) }}>
-                  {cover ? (
-                    <Image source={{ uri: cover }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </View>
+      {imageUrl ? (
+        /* รูป genre เต็ม */
+        <Image source={{ uri: imageUrl }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" />
+      ) : (
+        /* Mosaic: 3 columns × 2 rows */
+        <View style={{ flex: 1, flexDirection: "row" }}>
+          {[0, 1, 2].map((col) => (
+            <View key={col} style={{ flex: 1, flexDirection: "column" }}>
+              {[0, 1].map((row) => {
+                const idx = col * 2 + row;
+                const cover = covers[idx];
+                return (
+                  <View key={row} style={{ flex: 1, backgroundColor: colorFor(idx) }}>
+                    {cover ? (
+                      <Image source={{ uri: cover }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+                    ) : null}
+                  </View>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Gradient overlay */}
       <View
@@ -754,25 +761,29 @@ export default function HomeScreen() {
                   onPress={() => setShowFeatured(true)}
                 />
                 {/* Extra banners from genres */}
-                {genres.slice(0, 3).map((genre, gi) => (
-                  <FeaturingBannerCard
-                    key={genre.id}
-                    title={genre.name}
-                    subtitle="Trending"
-                    songs={featuringSongs.slice(gi * 2, gi * 2 + 6)}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/genre/[id]",
-                        params: {
-                          id: genre.id,
-                          name: encodeURIComponent(genre.name),
-                          color: encodeURIComponent(genre.color ?? "#1a1a2e"),
-                          imageUrl: encodeURIComponent(genre.imageUrl ?? ""),
-                        },
-                      })
-                    }
-                  />
-                ))}
+                {genres.slice(0, 3).map((genre) => {
+                  const genreSongs = featuringSongs.filter((s) => s.genre?.id === genre.id);
+                  return (
+                    <FeaturingBannerCard
+                      key={genre.id}
+                      title={genre.name}
+                      subtitle="Trending"
+                      imageUrl={genre.imageUrl ?? undefined}
+                      songs={genreSongs}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/genre/[id]",
+                          params: {
+                            id: genre.id,
+                            name: encodeURIComponent(genre.name),
+                            color: encodeURIComponent(genre.color ?? "#1a1a2e"),
+                            imageUrl: encodeURIComponent(genre.imageUrl ?? ""),
+                          },
+                        })
+                      }
+                    />
+                  );
+                })}
               </ScrollView>
             )}
 

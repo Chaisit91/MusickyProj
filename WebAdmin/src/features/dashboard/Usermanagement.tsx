@@ -8,6 +8,8 @@ import { useUsers } from "../../hooks/useUsers";
 import { usePremiumStats } from "../../hooks/usePremiumStats";
 import { userEditSchema, type UserEditFormValues } from "../../schema/adminSchema";
 
+type FilterTab = "all" | "premium" | "free" | "banned";
+
 interface User {
   id: string;
   name: string;
@@ -66,8 +68,9 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => (
   </span>
 );
 
-const StatCard: React.FC<{ label: string; count: number; icon: React.ReactNode; iconBg: string }> = ({ label, count, icon, iconBg }) => (
-  <div className="flex items-center gap-4 bg-gray-800 rounded-xl px-5 py-4 flex-1 min-w-0">
+const StatCard: React.FC<{ label: string; count: number; icon: React.ReactNode; iconBg: string; active?: boolean; onClick?: () => void }> = ({ label, count, icon, iconBg, active, onClick }) => (
+  <div onClick={onClick} className={`flex items-center gap-4 rounded-xl px-5 py-4 flex-1 min-w-0 transition-all cursor-pointer select-none
+    ${active ? "bg-gray-600 ring-2 ring-white/20" : "bg-gray-800 hover:bg-gray-700"}`}>
     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>{icon}</div>
     <div>
       <p className="text-white text-sm">{label}</p>
@@ -160,11 +163,41 @@ const EditUserModal: React.FC<{ user: User | null; onClose: () => void; onSave: 
   );
 };
 
+const TABS: { key: FilterTab; label: string }[] = [
+  { key: "all", label: "ทั้งหมด" },
+  { key: "premium", label: "พรีเมียม" },
+  { key: "free", label: "ผู้ใช้ปกติ" },
+  { key: "banned", label: "ถูกระงับ" },
+];
+
 const UserManagementPage: React.FC = () => {
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const { users, loading, error, updateUser, banUser, unbanUser } = useUsers(search);
-  const stats = usePremiumStats();
+
+  const statusParam = activeTab === "all" ? undefined : activeTab;
+  const { users, loading, error, updateUser, banUser, unbanUser } = useUsers(search, statusParam);
+  const { stats, refetch: refetchStats } = usePremiumStats();
+
+  const handleTabChange = (tab: FilterTab) => {
+    setActiveTab(tab);
+    setSearch("");
+  };
+
+  const handleUpdateUser = async (id: string, data: any) => {
+    await updateUser(id, data);
+    refetchStats();
+  };
+
+  const handleBan = async (id: string) => {
+    await banUser(id);
+    refetchStats();
+  };
+
+  const handleUnban = async (id: string) => {
+    await unbanUser(id);
+    refetchStats();
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -176,19 +209,38 @@ const UserManagementPage: React.FC = () => {
             {error && <div className="bg-red-900 text-red-300 p-3 rounded-lg text-sm">{error}</div>}
             {loading && <div className="text-center py-4 text-gray-300 text-sm">กำลังโหลด...</div>}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard label="ผู้ใช้ทั้งหมด" count={stats?.total ?? users.length} iconBg="bg-blue-50" icon={<CheckCircle2 size={20} className="text-blue-500" />} />
-              <StatCard label="พรีเมียม" count={stats?.premium ?? users.filter((u: User) => u.isPremium && (!u.premiumExpiresAt || new Date(u.premiumExpiresAt) > new Date())).length} iconBg="bg-yellow-100" icon={<Crown size={20} className="text-yellow-500" />} />
-              <StatCard label="ถูกระงับ" count={stats?.banned ?? users.filter((u: User) => !u.isActive).length} iconBg="bg-red-50" icon={<Ban size={20} className="text-red-400" />} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <StatCard label="ผู้ใช้ทั้งหมด" count={stats?.total ?? 0} iconBg="bg-blue-50"
+                icon={<CheckCircle2 size={20} className="text-blue-500" />}
+                active={activeTab === "all"} onClick={() => handleTabChange("all")} />
+              <StatCard label="พรีเมียม" count={stats?.premium ?? 0} iconBg="bg-yellow-100"
+                icon={<Crown size={20} className="text-yellow-500" />}
+                active={activeTab === "premium"} onClick={() => handleTabChange("premium")} />
+              <StatCard label="ผู้ใช้ปกติ" count={stats?.free ?? 0} iconBg="bg-gray-700"
+                icon={<Users size={20} className="text-gray-300" />}
+                active={activeTab === "free"} onClick={() => handleTabChange("free")} />
+              <StatCard label="ถูกระงับ" count={stats?.banned ?? 0} iconBg="bg-red-50"
+                icon={<Ban size={20} className="text-red-400" />}
+                active={activeTab === "banned"} onClick={() => handleTabChange("banned")} />
             </div>
 
             <div className="bg-gray-800 rounded-xl overflow-hidden">
-              <div className="px-5 py-4">
-                <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="text" placeholder="ค้นหาด้วยชื่อหรืออีเมล..." value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" />
+              <div className="px-5 pt-4 pb-0">
+                <div className="flex items-center gap-2 mb-4">
+                  {TABS.map((t) => (
+                    <button key={t.key} onClick={() => handleTabChange(t.key)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors ${activeTab === t.key
+                        ? "bg-white text-gray-900"
+                        : "text-gray-400 hover:text-white hover:bg-gray-700"}`}>
+                      {t.label}
+                    </button>
+                  ))}
+                  <div className="relative ml-auto">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input type="text" placeholder="ค้นหาชื่อ / อีเมล..." value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="pl-9 pr-4 py-1.5 text-sm bg-gray-700 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-56 transition-all" />
+                  </div>
                 </div>
               </div>
               <div className="overflow-x-auto">
@@ -222,8 +274,8 @@ const UserManagementPage: React.FC = () => {
                           <div className="flex items-center justify-center gap-1">
                             <button onClick={() => setEditingUser(user)} className="p-1.5 rounded-lg text-white hover:text-gray-900 hover:bg-gray-100 transition-colors"><Pencil size={15} /></button>
                             {user.isActive
-                              ? <button onClick={() => banUser(user.id)} className="px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition-colors text-xs">Ban</button>
-                              : <button onClick={() => unbanUser(user.id)} className="px-2 py-1 rounded text-green-400 hover:bg-green-500/10 transition-colors text-xs">Unban</button>}
+                              ? <button onClick={() => handleBan(user.id)} className="px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition-colors text-xs">Ban</button>
+                              : <button onClick={() => handleUnban(user.id)} className="px-2 py-1 rounded text-green-400 hover:bg-green-500/10 transition-colors text-xs">Unban</button>}
                           </div>
                         </td>
                       </tr>
@@ -238,7 +290,7 @@ const UserManagementPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} onSave={updateUser} />
+      <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} onSave={handleUpdateUser} />
     </div>
   );
 };

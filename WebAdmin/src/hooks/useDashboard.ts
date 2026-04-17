@@ -14,7 +14,7 @@ interface DashboardStats {
 interface Activity {
   type: string;
   message: string;
-  createdAt: string;
+  timestamp: string;
 }
 
 interface TopSong {

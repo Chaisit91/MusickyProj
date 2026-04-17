@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { albumSchema, type AlbumFormValues } from "../../schema/adminSchema";
 import {
   Search, Plus, Pencil, Trash2, Disc, X, Upload, ImageIcon,
-  ChevronDown, ChevronRight, Music, User, PlayCircle,
+  ChevronDown, ChevronRight, Music, User, Play, Pause,
 } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";
 import Topbar from "../../components/layout/Topbar";
@@ -12,8 +12,9 @@ import { useAlbums } from "../../hooks/useAlbums";
 import { useArtists } from "../../hooks/useArtists";
 import { getAlbumByIdApi } from "../../api/albumApi";
 import type { Album, AlbumSong } from "../../types/album";
-import { StatCard, ConfirmDeleteModal } from "../../components/common";
+import { StatCard, ConfirmDeleteModal, MiniPlayer } from "../../components/common";
 import { toDateInputValue, formatDuration } from "../../utils/format";
+import { useAudioPlayer } from "../../hooks/useAudioPlayer";
 
 interface Artist {
   id: string;
@@ -175,6 +176,7 @@ const AlbumModal: React.FC<{
 const AlbumSongsModal: React.FC<{ album: Album; onClose: () => void }> = ({ album, onClose }) => {
   const [songs, setSongs] = useState<AlbumSong[]>([]);
   const [loading, setLoading] = useState(true);
+  const { current, isPlaying, progress, duration, volume, play, stop, seek, setVolume } = useAudioPlayer();
 
   React.useEffect(() => {
     getAlbumByIdApi(album.id)
@@ -183,9 +185,11 @@ const AlbumSongsModal: React.FC<{ album: Album; onClose: () => void }> = ({ albu
       .finally(() => setLoading(false));
   }, [album.id]);
 
+  const handleClose = () => { stop(); onClose(); };
+
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}>
+      onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
@@ -199,7 +203,7 @@ const AlbumSongsModal: React.FC<{ album: Album; onClose: () => void }> = ({ albu
             <p className="font-semibold text-gray-900 text-sm truncate">{album.title}</p>
             <p className="text-gray-400 text-xs">{album.artist?.name} · {toDateInputValue(album.releaseDate).split("-")[0]}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={16} /></button>
+          <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"><X size={16} /></button>
         </div>
 
         {/* Song list */}
@@ -219,37 +223,67 @@ const AlbumSongsModal: React.FC<{ album: Album; onClose: () => void }> = ({ albu
                   <th className="text-left px-5 py-2.5 text-xs font-medium text-gray-400">ชื่อเพลง</th>
                   <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-400">หมวดหมู่</th>
                   <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-400">ความยาว</th>
-                  <th className="text-right px-5 py-2.5 text-xs font-medium text-gray-400"><PlayCircle size={12} /></th>
+                  <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-400">ยอดเล่น</th>
                 </tr>
               </thead>
               <tbody>
-                {songs.map((song, idx) => (
-                  <tr key={song.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3 text-gray-400 text-sm">{idx + 1}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                          {song.coverUrl
-                            ? <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
-                            : <div className="w-full h-full flex items-center justify-center"><Music size={12} className="text-gray-400" /></div>
-                          }
+                {songs.map((song, idx) => {
+                  const isThisPlaying = current?.id === song.id && isPlaying;
+                  const hasAudio = !!song.filePath;
+                  return (
+                    <tr key={song.id}
+                      className={`border-b border-gray-50 transition-colors ${hasAudio ? "cursor-pointer hover:bg-gray-50" : ""} ${current?.id === song.id ? "bg-green-50" : ""}`}
+                      onClick={() => hasAudio && play({ id: song.id, title: song.title, coverUrl: song.coverUrl, filePath: song.filePath! })}>
+                      <td className="px-5 py-3 text-gray-400 text-sm w-8">
+                        {current?.id === song.id
+                          ? (isThisPlaying ? <Pause size={13} className="text-green-500" /> : <Play size={13} className="text-green-500" />)
+                          : <span>{idx + 1}</span>}
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative w-8 h-8 rounded overflow-hidden bg-gray-100 flex-shrink-0 group/cover">
+                            {song.coverUrl
+                              ? <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center"><Music size={12} className="text-gray-400" /></div>
+                            }
+                            {hasAudio && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity">
+                                {isThisPlaying ? <Pause size={10} className="text-white" /> : <Play size={10} className="text-white ml-0.5" />}
+                              </div>
+                            )}
+                          </div>
+                          <span className={`text-sm font-medium truncate max-w-[160px] ${current?.id === song.id ? "text-green-600" : "text-gray-900"}`}>{song.title}</span>
                         </div>
-                        <span className="text-sm text-gray-900 font-medium truncate max-w-[160px]">{song.title}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 text-xs text-gray-400">{song.genre?.name || "—"}</td>
-                    <td className="px-5 py-3 text-sm text-gray-500 text-right">{formatDuration(song.duration)}</td>
-                    <td className="px-5 py-3 text-sm text-gray-400 text-right">{song.playCount.toLocaleString()}</td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-3 py-3 text-xs text-gray-400">{song.genre?.name || "—"}</td>
+                      <td className="px-5 py-3 text-sm text-gray-500 text-right">{formatDuration(song.duration)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-400 text-right">{song.playCount.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
         </div>
 
-        <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400">
+        <div className="px-5 py-2.5 border-t border-gray-100 text-xs text-gray-400">
           {songs.length} เพลง
         </div>
+
+        {/* Mini Player */}
+        {current && (
+          <MiniPlayer
+            current={current}
+            isPlaying={isPlaying}
+            progress={progress}
+            duration={duration}
+            volume={volume}
+            onToggle={() => play(current)}
+            onStop={stop}
+            onSeek={seek}
+            onVolumeChange={setVolume}
+          />
+        )}
       </div>
     </div>
   );

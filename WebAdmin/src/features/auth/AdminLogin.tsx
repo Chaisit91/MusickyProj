@@ -10,7 +10,7 @@ import { adminLoginSchema, type AdminLoginForm } from "../../schema/adminSchema"
 const AdminLogin = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error, accessToken } = useSelector((state: RootState) => state.auth);
+  const { loading, error, accessToken, user } = useSelector((state: RootState) => state.auth);
 
   const {
     register,
@@ -21,8 +21,8 @@ const AdminLogin = () => {
   });
 
   useEffect(() => {
-    if (accessToken) navigate("/dashboard", { replace: true });
-  }, [accessToken, navigate]);
+    if (accessToken && user) navigate("/dashboard", { replace: true });
+  }, [accessToken, user, navigate]);
 
   useEffect(() => {
     return () => { dispatch(clearError()); };
@@ -81,9 +81,9 @@ const AdminLogin = () => {
               <span>⚠</span> {errors.password.message}
             </p>
           )}
-          {error && !errors.password && (
+          {error && (
             <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
-              <span>⚠</span> {error}
+              <span>⚠</span> Login failed: {error}
             </p>
           )}
         </div>

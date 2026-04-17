@@ -9,6 +9,7 @@ const admin = [authMiddleware, roleMiddleware("ADMIN")];
 const adminSSE = [sseAuthMiddleware, roleMiddleware("ADMIN")];
 
 router.get("/", ...admin, asyncHandler(AdminUserService.getAllUsers));
+router.get("/stats", ...admin, asyncHandler(AdminUserService.getUserStats));
 router.get("/stats/stream", ...adminSSE, AdminUserService.premiumStatsStream);
 router.get("/:id", ...admin, asyncHandler(AdminUserService.getUserById));
 router.put("/:id", ...admin, asyncHandler(AdminUserService.updateUser));
