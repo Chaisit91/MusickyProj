@@ -82,13 +82,8 @@ export const registerThunk = createAsyncThunk(
   "auth/register",
   async (payload: RegisterPayload, { rejectWithValue }) => {
     try {
-      const res = await registerApi(payload);
-      const { accessToken, refreshToken, user } = res.data;
-      await AsyncStorage.setItem("accessToken", accessToken);
-      await AsyncStorage.setItem("refreshToken", refreshToken);
-      await AsyncStorage.setItem("user", JSON.stringify(user));
-      setCachedToken(accessToken);
-      return { accessToken, user };
+      await registerApi(payload);
+      return true;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message ?? "Registration failed");
     }
@@ -172,10 +167,7 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerThunk.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.isLoggedIn = true;
+      .addCase(registerThunk.fulfilled, (state) => {
         state.isLoading = false;
       })
       .addCase(registerThunk.rejected, (state, action) => {

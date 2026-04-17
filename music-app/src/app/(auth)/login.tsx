@@ -73,8 +73,6 @@ export default function LoginScreen() {
         dispatch(loadPreferences());
         const user = (result.payload as any)?.user;
         if (!user?.isPremium) {
-          // showingPreHomeAd=true ถูกตั้งใน adsSlice.extraReducers (loginThunk.fulfilled)
-          // home-ads page จะ fetch และแสดงโฆษณาเอง
           router.replace("/home-ads");
         }
       }
@@ -173,14 +171,6 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          {/* ── Forgot Password ── */}
-          <TouchableOpacity
-            onPress={() => router.push("/forgot-password")}
-            style={{ alignItems: "flex-end", marginBottom: 24, marginTop: -8 }}
-            activeOpacity={0.7}
-          >
-            <Text style={{ color: "#888", fontSize: 13 }}>ลืมรหัสผ่าน?</Text>
-          </TouchableOpacity>
 
           {/* ── Sign Up Link ── */}
           <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 24 }}>

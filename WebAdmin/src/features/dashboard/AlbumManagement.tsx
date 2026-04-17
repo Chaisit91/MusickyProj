@@ -459,10 +459,9 @@ const AlbumManagementPage: React.FC = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <StatCard label="อัลบั้มทั้งหมด" value={albums.length} icon={<Disc size={16} />} />
             <StatCard label="ศิลปิน" value={artistsWithAlbums.length} icon={<User size={16} />} />
-            <StatCard label="ผลการค้นหา" value={filteredAlbums.length} icon={<Search size={16} />} />
           </div>
 
           {/* Search */}

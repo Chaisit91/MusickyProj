@@ -13,7 +13,7 @@ import {
   toggleDownload,
   removeSongFromPlaylistThunk,
 } from "../../store/librarySlice";
-import { recordPlay, Song } from "../../api/homeApi";
+import { Song } from "../../api/homeApi";
 import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
   BackIcon,
@@ -52,10 +52,9 @@ export default function PlaylistDetailScreen() {
 
   const songs = playlist.songs;
 
-  const handlePlay = async (song: Song, queue: Song[]) => {
+  const handlePlay = (song: Song, queue: Song[]) => {
     dispatch(playSong({ song, queue }));
     router.push("/player");
-    try { await recordPlay(song.id); } catch { /* silent */ }
   };
 
   const handlePlayAll = () => {

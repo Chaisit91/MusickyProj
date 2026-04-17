@@ -186,12 +186,12 @@ export default function PlayerScreen() {
   const [skipToast, setSkipToast] = useState(false);
 
   const handleSkip = (direction: "next" | "prev") => {
-    if (!canSkip) {
+    if (direction === "next" && !canSkip) {
       setSkipToast(true);
       setTimeout(() => setSkipToast(false), 2500);
       return;
     }
-    if (!isPremium) dispatch(consumeSkip());
+    if (direction === "next" && !isPremium) dispatch(consumeSkip());
     if (direction === "next") dispatch(nextSong());
     else dispatch(prevSong());
   };
@@ -331,9 +331,21 @@ export default function PlayerScreen() {
                 <Text style={{ color: "#fff", fontSize: 20, fontWeight: "800" }} numberOfLines={1}>
                   {currentSong.title}
                 </Text>
-                <Text style={{ color: "#888", fontSize: 14, marginTop: 4 }} numberOfLines={1}>
-                  {currentSong.artist.name}
-                </Text>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => router.push({
+                    pathname: "/artist/[id]",
+                    params: {
+                      id: currentSong.artist.id,
+                      name: encodeURIComponent(currentSong.artist.name),
+                      imageUrl: encodeURIComponent(currentSong.artist.imageUrl ?? ""),
+                    },
+                  })}
+                >
+                  <Text style={{ color: "#888", fontSize: 14, marginTop: 4 }} numberOfLines={1}>
+                    {currentSong.artist.name}
+                  </Text>
+                </TouchableOpacity>
               </View>
               <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
                 <TouchableOpacity onPress={() => dispatch(toggleLikeSong({ song: currentSong, wasLiked: isLiked }))} activeOpacity={0.7}>
@@ -408,26 +420,7 @@ export default function PlayerScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => handleSkip("next")} activeOpacity={canSkip ? 0.7 : 0.4}>
-                <View>
-                  <SkipNextIcon />
-                  {!isPremium && (
-                    <View style={{
-                      position: "absolute",
-                      top: -6,
-                      right: -6,
-                      backgroundColor: skipsLeft > 0 ? "#444" : "#7c3aed",
-                      borderRadius: 8,
-                      paddingHorizontal: 4,
-                      paddingVertical: 1,
-                      minWidth: 16,
-                      alignItems: "center",
-                    }}>
-                      <Text style={{ color: "#fff", fontSize: 9, fontWeight: "700" }}>
-                        {skipsLeft}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                <SkipNextIcon />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -523,9 +516,10 @@ export default function PlayerScreen() {
             {skipToast && (
               <View style={{
                 position: "absolute",
-                bottom: 100,
+                bottom: 200,
                 left: 24,
                 right: 24,
+                zIndex: 99,
                 backgroundColor: "#1a1a1a",
                 borderRadius: 14,
                 padding: 16,

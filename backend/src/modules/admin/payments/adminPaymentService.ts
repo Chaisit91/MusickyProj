@@ -114,16 +114,20 @@ export const rejectTransaction = async (req: Request, res: Response) => {
   res.json({ success: true, message: "Rejected" });
 };
 
-// POST /api/admin/notifications/broadcast — ส่งแจ้งเตือนให้ user ทุกคน
+// POST /api/admin/notifications/broadcast — ส่งแจ้งเตือน (ทั้งหมด หรือเฉพาะ userIds)
 export const broadcastNotification = async (req: Request, res: Response) => {
-  const { title, body, type = "PAYMENT_PENDING" } = req.body;
+  const { title, body, type = "PAYMENT_PENDING", userIds } = req.body;
 
   if (!title?.trim() || !body?.trim()) {
     res.status(400).json({ success: false, message: "title and body are required" });
     return;
   }
 
-  const users = await prisma.user.findMany({ select: { id: true } });
+  const where = Array.isArray(userIds) && userIds.length > 0
+    ? { id: { in: userIds as string[] } }
+    : {};
+
+  const users = await prisma.user.findMany({ where, select: { id: true } });
 
   await prisma.notification.createMany({
     data: users.map((u) => ({
@@ -135,5 +139,5 @@ export const broadcastNotification = async (req: Request, res: Response) => {
     })),
   });
 
-  res.json({ success: true, message: `Broadcast sent to ${users.length} users.` });
+  res.json({ success: true, message: `ส่งแจ้งเตือนสำเร็จ ${users.length} คน` });
 };

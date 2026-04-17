@@ -7,7 +7,7 @@ import {View,
   ActivityIndicator,
   Dimensions} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../../api/homeApi";
+import { Song } from "../../api/homeApi";
 import { getAlbumSongs } from "../../api/detailApi";
 import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
@@ -140,14 +140,9 @@ export default function AlbumScreen() {
 
   const isAlbumLiked = songs.length > 0 && likedSongs.some((s) => s.id === songs[0].id);
 
-  const handleSongPress = async (song: Song) => {
+  const handleSongPress = (song: Song) => {
     dispatch(playSong({ song, queue: songs.length > 0 ? songs : [song] }));
     router.push("/player");
-    try {
-      await recordPlay(song.id);
-    } catch {
-      // silent
-    }
   };
 
   const typeLabel = type === "playlist" ? "Playlist" : "Album";

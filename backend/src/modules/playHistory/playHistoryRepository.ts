@@ -34,6 +34,10 @@ export const recordPlay = async (userId: string, songId: string) => {
       where: { id: songId },
       data: { playCount: { increment: 1 } },
     }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { lastLogin: new Date() },
+    }),
   ]);
 
   if (existing) {

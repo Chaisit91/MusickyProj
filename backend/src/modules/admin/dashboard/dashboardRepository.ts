@@ -4,10 +4,10 @@ export const getDashboardStats = async () => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [totalUsers, totalSongs, totalPlays, totalArtists, totalPremium, monthlyRevenue] = await Promise.all([
-    prisma.user.count(),
+  const [totalUsers, totalSongs, totalPlaysAgg, totalArtists, totalPremium, monthlyRevenue] = await Promise.all([
+    prisma.user.count({ where: { role: "USER" } }),
     prisma.song.count(),
-    prisma.playHistory.count(),
+    prisma.song.aggregate({ _sum: { playCount: true } }),
     prisma.artist.count(),
     prisma.user.count({ where: { isPremium: true, premiumExpiresAt: { gt: now } } }),
     prisma.paymentTransaction.aggregate({
@@ -16,6 +16,7 @@ export const getDashboardStats = async () => {
     }),
   ]);
 
+  const totalPlays = totalPlaysAgg._sum.playCount ?? 0;
   const revenue = monthlyRevenue._sum.amount ?? 0;
   const conversionRate = totalUsers > 0 ? ((totalPremium / totalUsers) * 100).toFixed(1) : "0.0";
 

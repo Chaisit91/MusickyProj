@@ -16,12 +16,6 @@ export const uploadImageToCloudinary = (
   return new Promise((resolve, reject) => {
     const baseFolder = process.env.CLOUDINARY_FOLDER || "musickyproj";
 
-    console.log("=== uploadImageToCloudinary ===");
-    console.log("CLOUDINARY_FOLDER env:", process.env.CLOUDINARY_FOLDER);
-    console.log("baseFolder:", baseFolder);
-    console.log("folder param:", folder);
-    console.log("full path:", `${baseFolder}/${folder}`);
-
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `${baseFolder}/${folder}`,
@@ -29,11 +23,7 @@ export const uploadImageToCloudinary = (
         transformation: [{ quality: "auto", fetch_format: "auto" }],
       },
       (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
-        if (error || !result) {
-          console.error("Cloudinary upload error:", error);
-          return reject(error);
-        }
-        console.log("Cloudinary upload success:", result.secure_url);
+        if (error || !result) return reject(error);
         resolve(result.secure_url);
       }
     );
@@ -48,21 +38,14 @@ export const uploadAudioToCloudinary = (buffer: Buffer): Promise<string> => {
   return new Promise((resolve, reject) => {
     const baseFolder = process.env.CLOUDINARY_FOLDER || "musickyproj";
 
-    console.log("=== uploadAudioToCloudinary ===");
-    console.log("full path:", `${baseFolder}/songs/audio`);
-
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: `${baseFolder}/songs/audio`,
-        resource_type: "video", // Cloudinary ใช้ "video" สำหรับ audio ด้วย
+        resource_type: "video",
         format: "mp3",
       },
       (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
-        if (error || !result) {
-          console.error("Cloudinary audio upload error:", error);
-          return reject(error);
-        }
-        console.log("Cloudinary audio upload success:", result.secure_url);
+        if (error || !result) return reject(error);
         resolve(result.secure_url);
       }
     );

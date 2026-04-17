@@ -7,7 +7,7 @@ import {View,
   ActivityIndicator} from "react-native";
 import { router } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
-import { getRecentlyPlayed, recordPlay, PlayHistoryItem, Song } from "../../api/homeApi";
+import { getRecentlyPlayed, PlayHistoryItem, Song } from "../../api/homeApi";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { playSong } from "../../store/playerSlice";
 import { loadLibrary } from "../../store/librarySlice";
@@ -183,13 +183,8 @@ export default function YourLibraryScreen() {
     if (tab === "Search") router.replace("/search");
   };
 
-  const handleSongPress = async (song: Song, allSongs: Song[]) => {
+  const handleSongPress = (song: Song, allSongs: Song[]) => {
     dispatch(playSong({ song, queue: allSongs }));
-    try {
-      await recordPlay(song.id);
-    } catch {
-      // silent
-    }
   };
 
   const allSongs = recentItems.map((i) => i.song);

@@ -21,6 +21,10 @@ export default function AudioControllerImpl() {
   const isPremiumRef = useRef(isPremium);
   useEffect(() => { isPremiumRef.current = isPremium; }, [isPremium]);
 
+  const isLoggedIn = useAppSelector((s) => s.auth.isLoggedIn);
+  const isLoggedInRef = useRef(isLoggedIn);
+  useEffect(() => { isLoggedInRef.current = isLoggedIn; }, [isLoggedIn]);
+
   const playerRef = useRef<AudioPlayer | null>(null);
   const isPlayingRef = useRef(isPlaying);
   const volumeRef = useRef(volume);
@@ -40,7 +44,7 @@ export default function AudioControllerImpl() {
 
   // ── บันทึก play history ทุกครั้งที่เพลงเปลี่ยน (ครอบ queue auto-next, shuffle, after-ad, ฯลฯ) ──
   useEffect(() => {
-    if (!currentSong?.id) return;
+    if (!currentSong?.id || !isLoggedInRef.current) return;
     recordPlay(currentSong.id).catch(() => {});
   }, [currentSong?.id]);
 
@@ -120,7 +124,7 @@ export default function AudioControllerImpl() {
           songsPlayedRef.current += 1;
           if (songsPlayedRef.current >= adTargetRef.current) {
             songsPlayedRef.current = 0;
-            adTargetRef.current = Math.floor(Math.random() * 3) + 1; // สุ่มใหม่ 1-3
+            adTargetRef.current = Math.floor(Math.random() * 3) + 1;
             dispatch(showAfterSongAd()).then((result: any) => {
               if (!result.payload) dispatch(nextSong());
             });

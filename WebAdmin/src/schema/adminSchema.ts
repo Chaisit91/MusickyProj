@@ -19,8 +19,7 @@ export type AdminLoginForm = z.infer<typeof adminLoginSchema>;
 // ── Artist ─────────────────────────────────────────────────────
 export const artistSchema = z.object({
   name: nameField,
-  bio: z.string().max(500, "ประวัติยาวเกิน 500 ตัวอักษร").optional(),
-  imageUrl: urlField,
+  bio: z.string().max(1000, "ประวัติยาวเกิน 1000 ตัวอักษร").optional(),
 });
 export type ArtistFormValues = z.infer<typeof artistSchema>;
 

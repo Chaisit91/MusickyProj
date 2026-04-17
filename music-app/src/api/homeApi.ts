@@ -68,6 +68,25 @@ export const getSongsByGenre = async (genreId: string): Promise<Song[]> => {
   return (data.data as Song[]).slice(0, 3);
 };
 
+export const getCategorySongs = async (genreIds: string[], limitPerGenre = 6): Promise<Song[]> => {
+  if (genreIds.length === 0) return [];
+  const results = await Promise.allSettled(
+    genreIds.map((id) =>
+      apiClient.get("/songs", { params: { genreId: id, limit: limitPerGenre } }).then((r) => r.data.data as Song[])
+    )
+  );
+  const seen = new Set<string>();
+  const songs: Song[] = [];
+  for (const r of results) {
+    if (r.status === "fulfilled") {
+      for (const s of r.value) {
+        if (!seen.has(s.id)) { seen.add(s.id); songs.push(s); }
+      }
+    }
+  }
+  return songs;
+};
+
 export const deleteHistoryRecord = async (id: string): Promise<void> => {
   await apiClient.delete(`/play-history/${id}`);
 };

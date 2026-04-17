@@ -14,7 +14,7 @@ import Svg, { Path } from "react-native-svg";
 import { useFocusEffect } from "@react-navigation/native";
 import TopBar from "../../Components/layout/Topbar";
 import BottomNav, { TabName } from "../../Components/layout/Bottomnav";
-import CategoryContent, { CategoryName } from "../../Components/ui/Categorycontent";
+import CategoryContent, { CategoryName, CATEGORY_KEYWORDS } from "../../Components/ui/Categorycontent";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { playSong } from "../../store/playerSlice";
@@ -26,7 +26,7 @@ import {
   getGenres,
   getNewReleases,
   getAllArtists,
-  recordPlay,
+  getCategorySongs,
   Song,
   PlayHistoryItem,
   Genre,
@@ -226,9 +226,9 @@ const MixCard = ({
         />
 
         {/* Mix label */}
-        <View style={{ position: "absolute", bottom: 9, left: 10 }}>
-          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "800" }}>
-            Mix {index + 1}
+        <View style={{ position: "absolute", bottom: 9, left: 10, right: 10 }}>
+          <Text style={{ color: "#fff", fontSize: 13, fontWeight: "800" }} numberOfLines={1}>
+            {genre.name}
           </Text>
         </View>
       </View>
@@ -611,6 +611,9 @@ export default function HomeScreen() {
   const [newReleases, setNewReleases] = useState<Song[]>([]);
   const [allArtists, setAllArtists] = useState<Artist[]>([]);
 
+  const [moodSongs, setMoodSongs] = useState<Song[]>([]);
+  const [loadingMoodSongs, setLoadingMoodSongs] = useState(false);
+
   const [loadingFeaturing, setLoadingFeaturing] = useState(true);
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [loadingGenres, setLoadingGenres] = useState(true);
@@ -651,6 +654,24 @@ export default function HomeScreen() {
     loadStaticData();
   }, [loadStaticData]);
 
+  // Fetch mood-specific songs when category or genre list changes
+  useEffect(() => {
+    if (activeCategory === "For you" || genres.length === 0) {
+      setMoodSongs([]);
+      return;
+    }
+    const keywords = CATEGORY_KEYWORDS[activeCategory];
+    const matching = genres.filter((g) =>
+      keywords.some((kw) => g.name.toLowerCase().includes(kw))
+    );
+    const genreIds = matching.length > 0 ? matching.map((g) => g.id) : genres.map((g) => g.id);
+    setLoadingMoodSongs(true);
+    getCategorySongs(genreIds, 6)
+      .then((songs) => setMoodSongs(songs))
+      .catch(() => setMoodSongs([]))
+      .finally(() => setLoadingMoodSongs(false));
+  }, [activeCategory, genres]);
+
   useFocusEffect(
     useCallback(() => {
       loadRecent();
@@ -665,10 +686,15 @@ export default function HomeScreen() {
   };
 
   const handleSongPress = async (song: Song) => {
-    dispatch(playSong({ song, queue: featuringSongs.length > 0 ? featuringSongs : [song] }));
+    const queue =
+      activeCategory !== "For you" && moodSongs.length > 0
+        ? moodSongs
+        : featuringSongs.length > 0
+        ? featuringSongs
+        : [song];
+    dispatch(playSong({ song, queue }));
     router.push("/player");
     try {
-      await recordPlay(song.id);
       const updated = await getRecentlyPlayed(6);
       setRecentlyPlayed(updated);
     } catch { /* silent */ }
@@ -954,6 +980,8 @@ export default function HomeScreen() {
               followedArtists={followedArtists}
               allArtists={allArtists}
               playlists={playlists}
+              moodSongs={moodSongs}
+              loadingMoodSongs={loadingMoodSongs}
             />
           </View>
         )}

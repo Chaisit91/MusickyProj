@@ -9,7 +9,7 @@ import Svg, { Path, Circle } from "react-native-svg";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
 import { playSong } from "../../store/playerSlice";
-import { recordPlay, Song } from "../../api/homeApi";
+import { Song } from "../../api/homeApi";
 import { colorFor } from "../../constants";
 import MiniPlayer from "../../Components/player/MiniPlayer";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
@@ -68,10 +68,9 @@ export default function LikedSongsScreen() {
 
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
-  const handlePlay = async (song: Song) => {
+  const handlePlay = (song: Song) => {
     dispatch(playSong({ song, queue: likedSongs }));
     router.push("/player");
-    try { await recordPlay(song.id); } catch { /* silent */ }
   };
 
   const handlePlayAll = () => {

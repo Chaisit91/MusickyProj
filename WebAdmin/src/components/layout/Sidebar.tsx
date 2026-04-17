@@ -28,12 +28,12 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 bg-gray-900 flex flex-col border-r border-gray-700 min-h-screen">
-      <div className="px-6 py-6 border-b border-gray-700">
+    <div className="w-64 bg-gray-900 flex flex-col border-r border-gray-700 h-screen sticky top-0">
+      <div className="px-6 py-6 border-b border-gray-700 flex-shrink-0">
         <h2 className="text-lg font-bold text-green-400 tracking-wide">Musicky Admin</h2>
       </div>
 
-      <ul className="flex-1 flex flex-col gap-1 px-3 py-4">
+      <ul className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto">
         {navItems.map(({ path, label, icon: Icon }) => {
           const isActive = location.pathname === path;
           return (
@@ -51,7 +51,7 @@ const Sidebar = () => {
         })}
       </ul>
 
-      <div className="px-4 py-4 border-t border-gray-700">
+      <div className="px-4 py-4 border-t border-gray-700 flex-shrink-0">
         <p className="text-sm text-gray-300 font-medium truncate mb-0.5">{user?.name}</p>
         <p className="text-xs text-gray-500 mb-3 truncate">{user?.email}</p>
         <button onClick={handleLogout}

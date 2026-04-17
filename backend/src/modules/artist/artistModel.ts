@@ -6,6 +6,6 @@ export interface ArtistCreateInput {
 
 export interface ArtistUpdateInput {
   name?: string;
-  bio?: string;
+  bio?: string | null;
   imageUrl?: string;
 }

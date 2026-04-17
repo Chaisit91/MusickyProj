@@ -18,6 +18,21 @@ interface CategoryConfig {
   accentColor: string;
 }
 
+// Keywords used to filter genres/songs per mood category (case-insensitive contains)
+export const CATEGORY_KEYWORDS: Record<CategoryName, string[]> = {
+  "For you": [],
+  "Relax": ["lo-fi", "lofi", "acoustic", "jazz", "classical", "soul", "r&b", "rnb", "chill", "ambient", "indie", "ballad", "slow", "soft"],
+  "Workout": ["hip-hop", "hiphop", "rap", "rock", "electronic", "edm", "metal", "punk", "trap", "hardcore", "bass"],
+  "Travel": ["folk", "indie", "pop", "world", "latin", "reggae", "country", "acoustic", "bossa", "alternative"],
+  "Party": ["electronic", "dance", "pop", "hip-hop", "edm", "disco", "house", "techno", "latin", "funk", "club"],
+};
+
+function matchesCategory(name: string, keywords: string[]): boolean {
+  if (keywords.length === 0) return true;
+  const lower = name.toLowerCase();
+  return keywords.some((kw) => lower.includes(kw));
+}
+
 const CATEGORY_CONFIG: Record<CategoryName, CategoryConfig> = {
   "For you": {
     headline: "Your Daily Mix",
@@ -220,8 +235,8 @@ const MixCard = ({
             backgroundColor: "rgba(0,0,0,0.52)",
           }}
         />
-        <View style={{ position: "absolute", bottom: 9, left: 10 }}>
-          <Text style={{ color: "#fff", fontSize: 15, fontWeight: "800" }}>Mix {index + 1}</Text>
+        <View style={{ position: "absolute", bottom: 9, left: 10, right: 10 }}>
+          <Text style={{ color: "#fff", fontSize: 13, fontWeight: "800" }} numberOfLines={1}>{genre.name}</Text>
         </View>
       </View>
       <Text style={{ color: "#aaa", fontSize: 10, fontWeight: "500" }} numberOfLines={1}>
@@ -325,6 +340,8 @@ interface CategoryContentProps {
   followedArtists: Artist[];
   allArtists: Artist[];
   playlists: Playlist[];
+  moodSongs?: Song[];
+  loadingMoodSongs?: boolean;
 }
 
 export default function CategoryContent({
@@ -337,17 +354,39 @@ export default function CategoryContent({
   followedArtists,
   allArtists,
   playlists,
+  moodSongs,
+  loadingMoodSongs,
 }: CategoryContentProps) {
   const config = CATEGORY_CONFIG[category];
   const accent = config.accentColor;
+  const keywords = CATEGORY_KEYWORDS[category];
 
-  // Shift songs per category so each tab shows slightly different order
-  const offset = config.headline.length % Math.max(featuringSongs.length, 1);
-  const categorySongs = featuringSongs.length > 0
-    ? [...featuringSongs.slice(offset), ...featuringSongs.slice(0, offset)]
-    : [];
+  // For mood categories: use moodSongs (fetched by genre); fallback to filtered featuringSongs
+  const categorySongs =
+    category !== "For you" && moodSongs && moodSongs.length > 0
+      ? moodSongs
+      : category !== "For you"
+      ? featuringSongs.filter((s) => matchesCategory(s.genre.name, keywords)).length > 0
+        ? featuringSongs.filter((s) => matchesCategory(s.genre.name, keywords))
+        : featuringSongs
+      : featuringSongs;
 
-  const displayArtists = followedArtists.length > 0 ? followedArtists : allArtists.slice(0, 6);
+  const filteredGenres = genres.filter((g) => matchesCategory(g.name, keywords));
+  const categoryGenres = filteredGenres.length > 0 ? filteredGenres : genres;
+
+  // For you: show all followed artists (or all artists as fallback)
+  // Mood tabs: show only followed artists whose songs appear in this tab's pool;
+  //            fallback to artists from the song pool if user follows none of them
+  const songArtistIds = new Set(categorySongs.map((s) => s.artist.id));
+  const relevantFollowed = followedArtists.filter((a) => songArtistIds.has(a.id));
+  const songArtists = categorySongs
+    .map((s) => s.artist)
+    .filter((a, i, arr) => arr.findIndex((x) => x.id === a.id) === i);
+
+  const displayArtists =
+    category === "For you"
+      ? followedArtists.length > 0 ? followedArtists : allArtists.slice(0, 6)
+      : relevantFollowed.length > 0 ? relevantFollowed : songArtists.slice(0, 6);
 
   return (
     <View>
@@ -378,7 +417,7 @@ export default function CategoryContent({
               accent={accent}
               onPress={() => onSongPress(categorySongs[0])}
             />
-            {genres.slice(0, 3).map((genre, gi) => (
+            {categoryGenres.slice(0, 3).map((genre, gi) => (
               <BannerCard
                 key={genre.id}
                 title={genre.name}
@@ -429,7 +468,7 @@ export default function CategoryContent({
       )}
 
       {/* ── Mixes for you ── */}
-      {genres.length > 0 && (
+      {categoryGenres.length > 0 && (
         <>
           <SectionHeader title="Mixes for you" accent={accent} />
           <ScrollView
@@ -438,7 +477,7 @@ export default function CategoryContent({
             contentContainerStyle={{ paddingHorizontal: 20 }}
             style={{ marginBottom: 28 }}
           >
-            {genres.map((genre, gi) => (
+            {categoryGenres.map((genre, gi) => (
               <MixCard
                 key={genre.id}
                 genre={genre}
@@ -465,7 +504,13 @@ export default function CategoryContent({
       {displayArtists.length > 0 && (
         <>
           <SectionHeader
-            title="From Artists You Follow"
+            title={
+              category === "Relax" ? "Artists to Unwind With" :
+              category === "Workout" ? "Artists to Power Your Workout" :
+              category === "Travel" ? "Artists for the Road" :
+              category === "Party" ? "Artists to Get the Party Started" :
+              "From Artists You Follow"
+            }
             accent={accent}
             onSeeMore={() => router.push("/search")}
           />

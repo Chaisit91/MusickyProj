@@ -7,7 +7,7 @@ import {View,
   ActivityIndicator,
   Dimensions} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../../api/homeApi";
+import { Song } from "../../api/homeApi";
 import { getArtistSongs } from "../../api/detailApi";
 import { FALLBACK_COLORS, colorFor } from "../../constants";
 import {
@@ -112,8 +112,8 @@ export default function ArtistScreen() {
   }>();
 
   const artistId = params.id;
-  const artistName = decodeURIComponent(params.name ?? "");
-  const artistImageUrl = params.imageUrl ? decodeURIComponent(params.imageUrl) : null;
+  const paramName = params.name ? decodeURIComponent(params.name) : "";
+  const paramImageUrl = params.imageUrl ? decodeURIComponent(params.imageUrl) : "";
 
   const dispatch = useAppDispatch();
   const followedArtists = useAppSelector((s) => s.library.followedArtists);
@@ -125,6 +125,11 @@ export default function ArtistScreen() {
   const [showAll, setShowAll] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>("Search");
+
+  // Derive artist info from loaded songs as source of truth; fall back to params
+  const artistFromSongs = songs[0]?.artist;
+  const artistName = artistFromSongs?.name || paramName;
+  const artistImageUrl = artistFromSongs?.imageUrl || paramImageUrl || null;
 
   const handleTabPress = (tab: TabName) => {
     setActiveTab(tab);
@@ -140,14 +145,9 @@ export default function ArtistScreen() {
       .finally(() => setLoading(false));
   }, [artistId]);
 
-  const handleSongPress = async (song: Song) => {
+  const handleSongPress = (song: Song) => {
     dispatch(playSong({ song, queue: songs.length > 0 ? songs : [song] }));
     router.push("/player");
-    try {
-      await recordPlay(song.id);
-    } catch {
-      // silent
-    }
   };
 
   const displaySongs = showAll ? songs : songs.slice(0, 6);

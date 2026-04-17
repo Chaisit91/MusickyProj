@@ -15,8 +15,6 @@ import Svg, { Path } from "react-native-svg";
 import { router } from "expo-router";
 import { useAppDispatch } from "../../store/hooks";
 import { registerThunk } from "../../store/authSlice";
-import { loadPreferences } from "../../store/preferencesSlice";
-import { showSplashAd } from "../../store/adsSlice";
 
 
 import { useForm, Controller, useWatch } from "react-hook-form";
@@ -138,8 +136,7 @@ export default function RegisterScreen() {
         }
         return;
       }
-      dispatch(loadPreferences());
-      dispatch(showSplashAd()); // ผู้ใช้ใหม่ = free user เสมอ
+      router.replace("/login");
     } catch (err) {
       setServerError("Unable to connect to server");
     } finally {

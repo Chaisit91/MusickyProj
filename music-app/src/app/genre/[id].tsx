@@ -7,7 +7,7 @@ import {View,
   ActivityIndicator,
   Dimensions} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { recordPlay, Song } from "../../api/homeApi";
+import { Song } from "../../api/homeApi";
 import { getGenreSongs } from "../../api/detailApi";
 import { colorFor } from "../../constants";
 import {
@@ -118,21 +118,15 @@ export default function GenreScreen() {
       .finally(() => setLoading(false));
   }, [genreId]);
 
-  const handleSongPress = async (song: Song) => {
+  const handleSongPress = (song: Song) => {
     dispatch(playSong({ song, queue: songs.length > 0 ? songs : [song] }));
     router.push("/player");
-    try {
-      await recordPlay(song.id);
-    } catch {
-      // silent
-    }
   };
 
   const handlePlayAll = () => {
     if (songs.length === 0) return;
     dispatch(playSong({ song: songs[0], queue: songs }));
     router.push("/player");
-    recordPlay(songs[0].id).catch(() => {});
   };
 
   return (

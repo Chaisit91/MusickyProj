@@ -52,8 +52,8 @@ export const updateArtist = async (req: MulterRequest, res: Response) => {
   }
 
   const artist = await ArtistRepository.updateArtist(req.params.id as string, {
-    name,
-    bio,
+    ...(name !== undefined && { name }),
+    ...(bio !== undefined && { bio: bio === "" ? null : bio }),
     ...(imageUrl && { imageUrl }),
   });
   res.json({ success: true, data: artist });

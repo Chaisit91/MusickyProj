@@ -28,5 +28,5 @@ export const approveTransaction = (id: string) =>
 export const rejectTransaction = (id: string, reason?: string) =>
   api.patch(`/admin/payments/${id}/reject`, { reason }).then((r) => r.data);
 
-export const broadcastNotification = (title: string, body: string) =>
-  api.post("/admin/notifications/broadcast", { title, body }).then((r) => r.data);
+export const broadcastNotification = (title: string, body: string, userIds?: string[]) =>
+  api.post("/admin/notifications/broadcast", { title, body, userIds }).then((r) => r.data);

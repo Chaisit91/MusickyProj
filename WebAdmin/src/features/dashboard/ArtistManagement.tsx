@@ -34,7 +34,7 @@ const ArtistModal: React.FC<{
     formState: { errors },
   } = useForm<ArtistFormValues>({
     resolver: zodResolver(artistSchema),
-    defaultValues: { name: artist.name || "", bio: artist.bio || "", imageUrl: "" },
+    defaultValues: { name: artist.name || "", bio: artist.bio || "" },
   });
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +56,7 @@ const ArtistModal: React.FC<{
     try {
       await onSave({
         name: data.name,
-        bio: data.bio || undefined,
+        bio: data.bio ?? undefined,
         imageUrl: imageFile ? undefined : (imagePreview || undefined),
         imageFile,
       });
@@ -118,7 +118,8 @@ const ArtistModal: React.FC<{
               <label className="text-xs font-medium text-gray-500 mb-1.5 block">ประวัติย่อ</label>
               <textarea placeholder="คำอธิบายสั้นๆ เกี่ยวกับศิลปิน"
                 {...register("bio")} rows={3}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none" />
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 transition-all resize-none ${errors.bio ? "border-red-400 focus:ring-red-500/20" : "border-gray-200 focus:ring-blue-500/20 focus:border-blue-400"}`} />
+              {errors.bio && <p className="text-red-500 text-xs mt-1">⚠ {errors.bio.message}</p>}
             </div>
           </div>
 
@@ -162,7 +163,7 @@ const DeleteModal: React.FC<{ artist: Artist; onClose: () => void; onConfirm: ()
 const ArtistCard: React.FC<{ artist: Artist; onEdit: (a: Artist) => void; onDelete: (a: Artist) => void }> = ({ artist, onEdit, onDelete }) => (
   <div className="bg-gray-800 rounded-xl overflow-hidden group relative isolate">
     {/* Image — fixed aspect ratio so all cards are uniform */}
-    <div className="relative w-full aspect-square overflow-hidden bg-gray-700">
+    <div className="relative w-full aspect-[3/2] overflow-hidden bg-gray-700">
       {artist.imageUrl ? (
         <img
           src={artist.imageUrl}
@@ -251,7 +252,7 @@ const ArtistManagementPage: React.FC = () => {
               className="w-full pl-9 pr-4 py-2 text-sm bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-gray-900 placeholder-gray-500" />
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
             {filtered.map((artist: Artist) => (
               <ArtistCard key={artist.id} artist={artist} onEdit={setEditArtist} onDelete={setDeleteArtist} />
             ))}
