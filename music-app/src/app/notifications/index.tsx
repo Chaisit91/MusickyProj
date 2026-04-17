@@ -59,6 +59,12 @@ const PremiumIcon = () => (
   </Svg>
 );
 
+const SupportIcon = () => (
+  <Svg width={22} height={22} viewBox="0 0 24 24">
+    <Path fill="#7c3aed" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+  </Svg>
+);
+
 const BellOffIcon = () => (
   <Svg width={56} height={56} viewBox="0 0 24 24">
     <Path fill="#2a2a2a" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
@@ -68,7 +74,7 @@ const BellOffIcon = () => (
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 type NotifType = AppNotification["type"];
-type FilterTab = "ทั้งหมด" | "การชำระเงิน" | "Premium";
+type FilterTab = "ทั้งหมด" | "การชำระเงิน" | "Premium" | "Support";
 
 const bgColor: Record<NotifType, string> = {
   PAYMENT_SUCCESS: "#052e16",
@@ -76,6 +82,7 @@ const bgColor: Record<NotifType, string> = {
   PAYMENT_FAILED: "#3b0000",
   PREMIUM_ACTIVATED: "#1e1b4b",
   PREMIUM_EXPIRING: "#1a1a00",
+  SUPPORT_REPLY: "#1e1b4b",
 };
 
 const accentColor: Record<NotifType, string> = {
@@ -84,12 +91,14 @@ const accentColor: Record<NotifType, string> = {
   PAYMENT_FAILED: "#dc2626",
   PREMIUM_ACTIVATED: "#7c3aed",
   PREMIUM_EXPIRING: "#ca8a04",
+  SUPPORT_REPLY: "#7c3aed",
 };
 
 const NotifIconComp = ({ type }: { type: NotifType }) => {
   if (type === "PAYMENT_SUCCESS") return <SuccessIcon />;
   if (type === "PAYMENT_PENDING") return <PendingIcon />;
   if (type === "PAYMENT_FAILED") return <FailIcon />;
+  if (type === "SUPPORT_REPLY") return <SupportIcon />;
   return <PremiumIcon />;
 };
 
@@ -189,7 +198,7 @@ const NotificationCard = ({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-const FILTERS: FilterTab[] = ["ทั้งหมด", "การชำระเงิน", "Premium"];
+const FILTERS: FilterTab[] = ["ทั้งหมด", "การชำระเงิน", "Premium", "Support"];
 
 export default function NotificationsScreen() {
   const dispatch = useAppDispatch();
@@ -222,6 +231,8 @@ export default function NotificationsScreen() {
       return n.type === "PAYMENT_SUCCESS" || n.type === "PAYMENT_PENDING" || n.type === "PAYMENT_FAILED";
     if (activeFilter === "Premium")
       return n.type === "PREMIUM_ACTIVATED" || n.type === "PREMIUM_EXPIRING";
+    if (activeFilter === "Support")
+      return n.type === "SUPPORT_REPLY";
     return true;
   });
 

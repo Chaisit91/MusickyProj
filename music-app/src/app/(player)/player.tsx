@@ -543,10 +543,11 @@ export default function PlayerScreen() {
         ) : (
           /* ── Lyrics Tab ── */
           <View style={{ flex: 1 }}>
-            {currentSong.lyrics ? (
+{currentSong.lyrics ? (
               <SyncedLyrics
                 lyrics={currentSong.lyrics}
                 progressSeconds={progressSeconds}
+                durationSeconds={duration}
                 onSeek={(t) => dispatch(seekTo(Math.floor(t)))}
               />
             ) : (

@@ -41,8 +41,15 @@ const authMiddleware_2 = require("../../middleware/authMiddleware");
 const router = (0, express_1.Router)();
 // Search — ทุกคนค้นหาได้ แต่ถ้า login จะบันทึก history ด้วย
 router.get("/", authMiddleware_2.optionalAuthMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.search));
+// AI lyrics search — ค้นหาจากเนื้อเพลงด้วย Claude AI
+router.get("/lyrics", authMiddleware_2.optionalAuthMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.lyricsSearch));
 // Search history — ต้อง login
 router.get("/history", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.getSearchHistory));
 router.delete("/history", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.clearSearchHistory));
+// Search history items (rich) — ต้อง login
+router.get("/history/items", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.getSearchHistoryItems));
+router.post("/history/items", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.addSearchHistoryItem));
+router.delete("/history/items", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.clearSearchHistoryItems));
+router.delete("/history/items/:id", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(SearchService.removeSearchHistoryItem));
 exports.default = router;
 //# sourceMappingURL=searchRouter.js.map

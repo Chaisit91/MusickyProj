@@ -41,10 +41,13 @@ const roleMiddleware_1 = require("../../middleware/roleMiddleware");
 const router = (0, express_1.Router)();
 const admin = [authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN")];
 router.get("/active", (0, asyncHandler_1.asyncHandler)(AdsService.getActiveAds));
+router.post("/:id/impression", (0, asyncHandler_1.asyncHandler)(AdsService.recordImpression));
+router.get("/stats", ...admin, (0, asyncHandler_1.asyncHandler)(AdsService.getAdsStats)); // เพิ่ม
 router.get("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdsService.getAllAds));
 router.get("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdsService.getAdsById));
 router.post("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdsService.createAds));
 router.put("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdsService.updateAds));
+router.patch("/:id/toggle", ...admin, (0, asyncHandler_1.asyncHandler)(AdsService.toggleAds)); // เพิ่ม
 router.delete("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdsService.deleteAds));
 exports.default = router;
 //# sourceMappingURL=adsRouter.js.map

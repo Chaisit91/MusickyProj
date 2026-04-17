@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutThunk } from '../../store/auth.store';
 import type { AppDispatch, RootState } from '../../store/store';
-import { LayoutDashboard, Users, Music, Tag, Megaphone, Mic, Disc, LogOut, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, Music, Tag, Megaphone, Mic, Disc, LogOut, CreditCard, MessageSquare } from 'lucide-react';
 
 const navItems = [
   { path: '/dashboard', label: 'สถิติภาพรวม', icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const navItems = [
   { path: '/Genres', label: 'จัดการหมวดหมู่', icon: Tag },
   { path: '/ads', label: 'จัดการโฆษณา', icon: Megaphone },
   { path: '/payments', label: 'การชำระเงิน', icon: CreditCard },
+  { path: '/support', label: 'Support', icon: MessageSquare },
 ];
 
 const Sidebar = () => {

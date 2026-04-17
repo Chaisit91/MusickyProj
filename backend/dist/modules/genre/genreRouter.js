@@ -38,13 +38,12 @@ const asyncHandler_1 = require("../../utils/asyncHandler");
 const GenreService = __importStar(require("./genreService"));
 const authMiddleware_1 = require("../../middleware/authMiddleware");
 const roleMiddleware_1 = require("../../middleware/roleMiddleware");
+const upload_1 = require("../../middleware/upload");
 const router = (0, express_1.Router)();
-// Public
 router.get("/", (0, asyncHandler_1.asyncHandler)(GenreService.getAllGenres));
 router.get("/:id", (0, asyncHandler_1.asyncHandler)(GenreService.getGenreById));
-// ADMIN only
-router.post("/", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(GenreService.createGenre));
-router.put("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(GenreService.updateGenre));
+router.post("/", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(GenreService.createGenre));
+router.put("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(GenreService.updateGenre));
 router.delete("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(GenreService.deleteGenre));
 exports.default = router;
 //# sourceMappingURL=genreRouter.js.map

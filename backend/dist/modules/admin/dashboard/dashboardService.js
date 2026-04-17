@@ -36,12 +36,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDashboard = void 0;
 const DashboardRepository = __importStar(require("./dashboardRepository"));
 const getDashboard = async (req, res) => {
-    const [stats, activities, topSongs] = await Promise.all([
+    const [stats, activities, topSongs, userGrowth, playGrowth] = await Promise.all([
         DashboardRepository.getDashboardStats(),
         DashboardRepository.getRecentActivities(),
         DashboardRepository.getTopSongs(),
+        DashboardRepository.getUserGrowth(),
+        DashboardRepository.getPlayGrowth(),
     ]);
-    res.json({ success: true, data: { stats, activities, topSongs } });
+    res.json({ success: true, data: { stats, activities, topSongs, userGrowth, playGrowth } });
 };
 exports.getDashboard = getDashboard;
 //# sourceMappingURL=dashboardService.js.map

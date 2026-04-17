@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAllDownloadsByUser = exports.deleteDownload = exports.createDownload = exports.findDownload = exports.findDownloadsByUser = void 0;
+exports.deleteAllDownloadsByUser = exports.deleteDownloadBySongId = exports.deleteDownload = exports.createDownload = exports.findDownload = exports.findDownloadsByUser = void 0;
 const prisma_1 = require("../../lib/prisma");
 const findDownloadsByUser = async (userId) => {
     return prisma_1.prisma.download.findMany({
@@ -35,6 +35,10 @@ const deleteDownload = async (id) => {
     return prisma_1.prisma.download.delete({ where: { id } });
 };
 exports.deleteDownload = deleteDownload;
+const deleteDownloadBySongId = async (userId, songId) => {
+    return prisma_1.prisma.download.deleteMany({ where: { userId, songId } });
+};
+exports.deleteDownloadBySongId = deleteDownloadBySongId;
 const deleteAllDownloadsByUser = async (userId) => {
     return prisma_1.prisma.download.deleteMany({ where: { userId } });
 };

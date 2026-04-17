@@ -33,8 +33,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearSearchHistory = exports.getSearchHistory = exports.search = void 0;
+exports.lyricsSearch = exports.clearSearchHistoryItems = exports.removeSearchHistoryItem = exports.addSearchHistoryItem = exports.getSearchHistoryItems = exports.clearSearchHistory = exports.getSearchHistory = exports.search = void 0;
 const SearchRepository = __importStar(require("./searchRepository"));
+const lyricsSearch_1 = require("../../utils/lyricsSearch");
 const search = async (req, res) => {
     const { q } = req.query;
     if (!q || typeof q !== "string" || q.trim() === "") {
@@ -64,4 +65,68 @@ const clearSearchHistory = async (req, res) => {
     res.json({ success: true, message: "Search history cleared" });
 };
 exports.clearSearchHistory = clearSearchHistory;
+// ─── SearchHistoryItem handlers ───────────────────────────────────────────────
+const getSearchHistoryItems = async (req, res) => {
+    const userId = req.user.id;
+    const items = await SearchRepository.findSearchHistoryItemsByUser(userId);
+    res.json({ success: true, data: items });
+};
+exports.getSearchHistoryItems = getSearchHistoryItems;
+const addSearchHistoryItem = async (req, res) => {
+    const userId = req.user.id;
+    const { itemId, itemType, title, subtitle, coverUrl } = req.body;
+    if (!itemId || !itemType || !title || !subtitle) {
+        res.status(400).json({ success: false, message: "itemId, itemType, title, subtitle are required" });
+        return;
+    }
+    const item = await SearchRepository.upsertSearchHistoryItem({ userId, itemId, itemType, title, subtitle, coverUrl });
+    res.status(201).json({ success: true, data: item });
+};
+exports.addSearchHistoryItem = addSearchHistoryItem;
+const removeSearchHistoryItem = async (req, res) => {
+    const userId = req.user.id;
+    const id = req.params.id;
+    await SearchRepository.deleteSearchHistoryItem(userId, id);
+    res.json({ success: true, message: "Item removed" });
+};
+exports.removeSearchHistoryItem = removeSearchHistoryItem;
+const clearSearchHistoryItems = async (req, res) => {
+    const userId = req.user.id;
+    await SearchRepository.clearSearchHistoryItems(userId);
+    res.json({ success: true, message: "Search history cleared" });
+};
+exports.clearSearchHistoryItems = clearSearchHistoryItems;
+// ─── AI lyrics search ─────────────────────────────────────────────────────────
+const lyricsSearch = async (req, res) => {
+    const { q } = req.query;
+    if (!q || typeof q !== "string" || q.trim() === "") {
+        res.status(400).json({ success: false, message: "Query parameter 'q' is required" });
+        return;
+    }
+    // ดึงเพลงที่มี lyrics จาก DB
+    const songsWithLyrics = await SearchRepository.getSongsWithLyrics();
+    if (songsWithLyrics.length === 0) {
+        res.json({ success: true, data: { songs: [], artists: [], albums: [] }, aiUsed: true });
+        return;
+    }
+    // ให้ Claude เปรียบเทียบ query กับเนื้อเพลงใน DB
+    const mapped = songsWithLyrics.map((s) => ({
+        id: s.id,
+        title: s.title,
+        artistName: s.artist.name,
+        lyrics: s.lyrics,
+    }));
+    const matchedIds = await (0, lyricsSearch_1.findSongIdsByLyrics)(mapped, q.trim());
+    if (matchedIds.length === 0) {
+        res.json({ success: true, data: { songs: [], artists: [], albums: [] }, aiUsed: true });
+        return;
+    }
+    const songs = await SearchRepository.getSongsByIds(matchedIds);
+    res.json({
+        success: true,
+        data: { songs, artists: [], albums: [] },
+        aiUsed: true,
+    });
+};
+exports.lyricsSearch = lyricsSearch;
 //# sourceMappingURL=searchService.js.map

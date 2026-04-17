@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAds = exports.updateAds = exports.createAds = exports.getAdsById = exports.getActiveAds = exports.getAllAds = void 0;
+exports.toggleAds = exports.getAdsStats = exports.deleteAds = exports.updateAds = exports.createAds = exports.getAdsById = exports.recordImpression = exports.getActiveAds = exports.getAllAds = void 0;
 const AdsRepository = __importStar(require("./adsRepository"));
 const getAllAds = async (req, res) => {
     const ads = await AdsRepository.findAllAds();
@@ -41,10 +41,30 @@ const getAllAds = async (req, res) => {
 };
 exports.getAllAds = getAllAds;
 const getActiveAds = async (req, res) => {
-    const ads = await AdsRepository.findActiveAds();
-    res.json({ success: true, data: ads });
+    var _a;
+    const adType = req.query.type;
+    const ads = await AdsRepository.findActiveAds(adType);
+    // Weighted random ตาม priority: ad ที่ priority สูงกว่ามีโอกาสถูกเลือกมากกว่า
+    // สร้าง pool โดยใส่แต่ละ ad ซ้ำตาม priority value
+    let picked = null;
+    if (ads.length > 0) {
+        const pool = [];
+        for (const ad of ads) {
+            const weight = Math.max(1, (_a = ad.priority) !== null && _a !== void 0 ? _a : 1);
+            for (let i = 0; i < weight; i++)
+                pool.push(ad);
+        }
+        picked = pool[Math.floor(Math.random() * pool.length)];
+    }
+    res.json({ success: true, data: picked });
 };
 exports.getActiveAds = getActiveAds;
+const recordImpression = async (req, res) => {
+    const id = req.params.id;
+    await AdsRepository.recordImpression(id);
+    res.json({ success: true });
+};
+exports.recordImpression = recordImpression;
 const getAdsById = async (req, res) => {
     const id = req.params.id;
     const ads = await AdsRepository.findAdsById(id);
@@ -88,4 +108,20 @@ const deleteAds = async (req, res) => {
     res.json({ success: true, message: "Ad deleted" });
 };
 exports.deleteAds = deleteAds;
+const getAdsStats = async (req, res) => {
+    const stats = await AdsRepository.getAdsStats();
+    res.json({ success: true, data: stats });
+};
+exports.getAdsStats = getAdsStats;
+const toggleAds = async (req, res) => {
+    const id = req.params.id;
+    const existing = await AdsRepository.findAdsById(id);
+    if (!existing) {
+        res.status(404).json({ success: false, message: "Ad not found" });
+        return;
+    }
+    const ads = await AdsRepository.toggleAds(id);
+    res.json({ success: true, data: ads });
+};
+exports.toggleAds = toggleAds;
 //# sourceMappingURL=adsService.js.map

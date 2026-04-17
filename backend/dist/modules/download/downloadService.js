@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearAllDownloads = exports.removeDownload = exports.addDownload = exports.getDownloads = void 0;
+exports.clearAllDownloads = exports.removeDownloadBySong = exports.removeDownload = exports.addDownload = exports.getDownloads = void 0;
 const DownloadRepository = __importStar(require("./downloadRepository"));
 const getDownloads = async (req, res) => {
     const userId = req.user.id;
@@ -67,6 +67,13 @@ const removeDownload = async (req, res) => {
     res.json({ success: true, message: "Download removed" });
 };
 exports.removeDownload = removeDownload;
+const removeDownloadBySong = async (req, res) => {
+    const userId = req.user.id;
+    const songId = req.params.songId;
+    await DownloadRepository.deleteDownloadBySongId(userId, songId);
+    res.json({ success: true, message: "Download removed" });
+};
+exports.removeDownloadBySong = removeDownloadBySong;
 const clearAllDownloads = async (req, res) => {
     const userId = req.user.id;
     await DownloadRepository.deleteAllDownloadsByUser(userId);

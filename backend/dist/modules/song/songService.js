@@ -33,15 +33,25 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSong = exports.updateSong = exports.createSong = exports.getSongById = exports.getAllSongs = void 0;
+exports.deleteSong = exports.updateSong = exports.createSong = exports.getSongById = exports.getAllSongs = exports.getTrendingSongs = void 0;
 const SongRepository = __importStar(require("./songRepository"));
+const getTrendingSongs = async (req, res) => {
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+    const songs = await SongRepository.findTrendingSongs(limit);
+    res.json({ success: true, data: songs });
+};
+exports.getTrendingSongs = getTrendingSongs;
 const getAllSongs = async (req, res) => {
-    const { artistId, albumId, genreId, search } = req.query;
+    const { artistId, albumId, genreId, search, languages } = req.query;
+    const languagesArr = languages
+        ? languages.split(",").map((l) => l.trim()).filter(Boolean)
+        : undefined;
     const songs = await SongRepository.findAllSongs({
         artistId: artistId,
         albumId: albumId,
         genreId: genreId,
         search: search,
+        languages: languagesArr,
     });
     res.json({ success: true, data: songs });
 };

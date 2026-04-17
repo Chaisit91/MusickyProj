@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAds = exports.incrementImpressions = exports.toggleAds = exports.updateAds = exports.createAds = exports.findAdsById = exports.findActiveAds = exports.findAllAds = exports.getAdsStats = void 0;
+exports.sumImpressions = exports.countActiveAds = exports.countAds = exports.deleteAds = exports.incrementImpressions = exports.toggleAds = exports.updateAds = exports.createAds = exports.findAdsById = exports.findActiveAds = exports.findAllAds = exports.getAdsStats = void 0;
 const prisma_1 = require("../../../lib/prisma");
 const getAdsStats = async () => {
     var _a;
@@ -32,11 +32,24 @@ const findAdsById = async (id) => {
 };
 exports.findAdsById = findAdsById;
 const createAds = async (data) => {
-    return prisma_1.prisma.ads.create({ data });
+    return prisma_1.prisma.ads.create({
+        data: {
+            ...data,
+            startDate: data.startDate ? new Date(data.startDate) : null,
+            endDate: data.endDate ? new Date(data.endDate) : null,
+        },
+    });
 };
 exports.createAds = createAds;
 const updateAds = async (id, data) => {
-    return prisma_1.prisma.ads.update({ where: { id }, data });
+    return prisma_1.prisma.ads.update({
+        where: { id },
+        data: {
+            ...data,
+            startDate: data.startDate ? new Date(data.startDate) : undefined,
+            endDate: data.endDate ? new Date(data.endDate) : undefined,
+        },
+    });
 };
 exports.updateAds = updateAds;
 const toggleAds = async (id, isActive) => {
@@ -54,4 +67,18 @@ const deleteAds = async (id) => {
     return prisma_1.prisma.ads.delete({ where: { id } });
 };
 exports.deleteAds = deleteAds;
+const countAds = async () => {
+    return prisma_1.prisma.ads.count();
+};
+exports.countAds = countAds;
+const countActiveAds = async () => {
+    return prisma_1.prisma.ads.count({ where: { isActive: true } });
+};
+exports.countActiveAds = countActiveAds;
+const sumImpressions = async () => {
+    var _a;
+    const result = await prisma_1.prisma.ads.aggregate({ _sum: { impressions: true } });
+    return (_a = result._sum.impressions) !== null && _a !== void 0 ? _a : 0;
+};
+exports.sumImpressions = sumImpressions;
 //# sourceMappingURL=adminAdsRepository.js.map

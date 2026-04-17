@@ -38,18 +38,15 @@ const asyncHandler_1 = require("../../../utils/asyncHandler");
 const AdminAdsService = __importStar(require("./adminAdsService"));
 const authMiddleware_1 = require("../../../middleware/authMiddleware");
 const roleMiddleware_1 = require("../../../middleware/roleMiddleware");
+const upload_1 = require("../../../middleware/upload");
 const router = (0, express_1.Router)();
-const admin = [authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN")];
-// Public — mobile app ดึง active ads และ track impression
-router.get("/active", (0, asyncHandler_1.asyncHandler)(AdminAdsService.getActiveAds));
-router.post("/:id/impression", (0, asyncHandler_1.asyncHandler)(AdminAdsService.trackImpression));
-// ADMIN
-router.get("/stats", ...admin, (0, asyncHandler_1.asyncHandler)(AdminAdsService.getAdsStats));
-router.get("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdminAdsService.getAllAds));
-router.get("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminAdsService.getAdsById));
-router.post("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdminAdsService.createAds));
-router.put("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminAdsService.updateAds));
-router.patch("/:id/toggle", ...admin, (0, asyncHandler_1.asyncHandler)(AdminAdsService.toggleAds));
-router.delete("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminAdsService.deleteAds));
+router.use(authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"));
+router.get("/stats", (0, asyncHandler_1.asyncHandler)(AdminAdsService.getAdsStats));
+router.get("/", (0, asyncHandler_1.asyncHandler)(AdminAdsService.getAllAds));
+router.get("/:id", (0, asyncHandler_1.asyncHandler)(AdminAdsService.getAdById));
+router.post("/", upload_1.uploadAd.single("media"), (0, asyncHandler_1.asyncHandler)(AdminAdsService.createAd));
+router.put("/:id", upload_1.uploadAd.single("media"), (0, asyncHandler_1.asyncHandler)(AdminAdsService.updateAd));
+router.delete("/:id", (0, asyncHandler_1.asyncHandler)(AdminAdsService.deleteAd));
+router.patch("/:id/toggle", (0, asyncHandler_1.asyncHandler)(AdminAdsService.toggleAdStatus));
 exports.default = router;
 //# sourceMappingURL=adminAdsRouter.js.map

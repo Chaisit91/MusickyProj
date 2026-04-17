@@ -33,8 +33,9 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.unbanUser = exports.banUser = exports.getUserById = exports.getAllUsers = void 0;
+exports.updateMyPreferences = exports.getMyPreferences = exports.deleteUser = exports.unbanUser = exports.banUser = exports.getUserById = exports.getAllUsers = void 0;
 const UserRepository = __importStar(require("./userRepository"));
+const prisma_1 = require("../../lib/prisma");
 const getAllUsers = async (req, res) => {
     const users = await UserRepository.findAllUsers();
     res.json({ success: true, data: users });
@@ -68,4 +69,41 @@ const deleteUser = async (req, res) => {
     res.json({ success: true, message: "User deleted" });
 };
 exports.deleteUser = deleteUser;
+const getMyPreferences = async (req, res) => {
+    var _a;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+    let pref = await prisma_1.prisma.userPreference.findUnique({ where: { userId } });
+    if (!pref) {
+        pref = await prisma_1.prisma.userPreference.create({
+            data: { userId },
+        });
+    }
+    res.json({ success: true, data: pref });
+};
+exports.getMyPreferences = getMyPreferences;
+const updateMyPreferences = async (req, res) => {
+    var _a;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+    const { streamingQuality, downloadQuality, musicLanguages, autoPlay, showLyrics } = req.body;
+    const pref = await prisma_1.prisma.userPreference.upsert({
+        where: { userId },
+        create: {
+            userId,
+            ...(streamingQuality !== undefined && { streamingQuality }),
+            ...(downloadQuality !== undefined && { downloadQuality }),
+            ...(musicLanguages !== undefined && { musicLanguages }),
+            ...(autoPlay !== undefined && { autoPlay }),
+            ...(showLyrics !== undefined && { showLyrics }),
+        },
+        update: {
+            ...(streamingQuality !== undefined && { streamingQuality }),
+            ...(downloadQuality !== undefined && { downloadQuality }),
+            ...(musicLanguages !== undefined && { musicLanguages }),
+            ...(autoPlay !== undefined && { autoPlay }),
+            ...(showLyrics !== undefined && { showLyrics }),
+        },
+    });
+    res.json({ success: true, data: pref });
+};
+exports.updateMyPreferences = updateMyPreferences;
 //# sourceMappingURL=userService.js.map

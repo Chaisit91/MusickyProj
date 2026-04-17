@@ -3,7 +3,7 @@ import apiClient from "./apiClient";
 export interface AppNotification {
   id: string;
   userId: string;
-  type: "PAYMENT_SUCCESS" | "PAYMENT_PENDING" | "PAYMENT_FAILED" | "PREMIUM_ACTIVATED" | "PREMIUM_EXPIRING";
+  type: "PAYMENT_SUCCESS" | "PAYMENT_PENDING" | "PAYMENT_FAILED" | "PREMIUM_ACTIVATED" | "PREMIUM_EXPIRING" | "SUPPORT_REPLY";
   title: string;
   body: string;
   amount?: string | null;

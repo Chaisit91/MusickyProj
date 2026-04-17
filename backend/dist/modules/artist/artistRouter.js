@@ -38,13 +38,13 @@ const asyncHandler_1 = require("../../utils/asyncHandler");
 const ArtistService = __importStar(require("./artistService"));
 const authMiddleware_1 = require("../../middleware/authMiddleware");
 const roleMiddleware_1 = require("../../middleware/roleMiddleware");
+const upload_1 = require("../../middleware/upload");
 const router = (0, express_1.Router)();
-// Public
 router.get("/", (0, asyncHandler_1.asyncHandler)(ArtistService.getAllArtists));
 router.get("/:id", (0, asyncHandler_1.asyncHandler)(ArtistService.getArtistById));
-// ADMIN only
-router.post("/", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(ArtistService.createArtist));
-router.put("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(ArtistService.updateArtist));
+// ✅ upload.single("image") — รองรับทั้งส่งไฟล์โดยตรง หรือส่ง imageUrl ใน body
+router.post("/", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(ArtistService.createArtist));
+router.put("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(ArtistService.updateArtist));
 router.delete("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(ArtistService.deleteArtist));
 exports.default = router;
 //# sourceMappingURL=artistRouter.js.map

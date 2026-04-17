@@ -33,7 +33,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.unbanUser = exports.banUser = exports.updateUser = exports.getUserById = exports.getAllUsers = void 0;
+exports.premiumStatsStream = exports.getUserStats = exports.deleteUser = exports.unbanUser = exports.banUser = exports.updateUser = exports.getUserById = exports.getAllUsers = void 0;
+const client_1 = require("@prisma/client");
 const AdminUserRepository = __importStar(require("./adminUserRepository"));
 const getAllUsers = async (req, res) => {
     const { search, status } = req.query;
@@ -58,8 +59,17 @@ const updateUser = async (req, res) => {
         res.status(404).json({ success: false, message: "User not found" });
         return;
     }
-    const { name, email, isActive } = req.body;
-    const user = await AdminUserRepository.updateUser(id, { name, email, isActive });
+    const { name, email, isActive, role } = req.body;
+    if (role && !Object.values(client_1.Role).includes(role)) {
+        res.status(400).json({ success: false, message: "Invalid role. Must be USER or ADMIN" });
+        return;
+    }
+    const user = await AdminUserRepository.updateUser(id, {
+        name,
+        email,
+        isActive,
+        role: role,
+    });
     res.json({ success: true, data: user });
 };
 exports.updateUser = updateUser;
@@ -96,4 +106,33 @@ const deleteUser = async (req, res) => {
     res.json({ success: true, message: "User deleted" });
 };
 exports.deleteUser = deleteUser;
+const getUserStats = async (req, res) => {
+    const stats = await AdminUserRepository.getPremiumStats();
+    res.json({ success: true, data: stats });
+};
+exports.getUserStats = getUserStats;
+// ─── SSE: real-time premium stats ─────────────────────────────────────────────
+const premiumStatsStream = async (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.flushHeaders();
+    const sendStats = async () => {
+        try {
+            const stats = await AdminUserRepository.getPremiumStats();
+            res.write(`data: ${JSON.stringify(stats)}\n\n`);
+        }
+        catch (_a) {
+            // ignore DB error — keep connection alive
+        }
+    };
+    // ส่งทันทีเมื่อ connect
+    await sendStats();
+    // ส่งทุก 5 วินาที
+    const interval = setInterval(sendStats, 5000);
+    // cleanup เมื่อ client ตัด connection
+    req.on("close", () => clearInterval(interval));
+};
+exports.premiumStatsStream = premiumStatsStream;
 //# sourceMappingURL=adminUserService.js.map

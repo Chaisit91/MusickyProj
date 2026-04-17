@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteGenre = exports.updateGenre = exports.createGenre = exports.getGenreById = exports.getAllGenres = exports.getGenreStats = void 0;
 const AdminGenreRepository = __importStar(require("./adminGenreRepository"));
+const uploadImage_1 = require("../../../utils/uploadImage");
 const getGenreStats = async (req, res) => {
     const stats = await AdminGenreRepository.getGenreStats();
     res.json({ success: true, data: stats });
@@ -56,12 +57,16 @@ const getGenreById = async (req, res) => {
 };
 exports.getGenreById = getGenreById;
 const createGenre = async (req, res) => {
-    const { name, description, imageUrl, color } = req.body;
+    const { name, description, color, imageUrl: imageUrlFromBody } = req.body;
     if (!name) {
         res.status(400).json({ success: false, message: "Name is required" });
         return;
     }
-    const genre = await AdminGenreRepository.createGenre({ name, description, imageUrl, color });
+    let imageUrl = imageUrlFromBody;
+    if (req.file) {
+        imageUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "genres");
+    }
+    const genre = await AdminGenreRepository.createGenre({ name, description, color, imageUrl });
     res.status(201).json({ success: true, data: genre });
 };
 exports.createGenre = createGenre;
@@ -72,8 +77,31 @@ const updateGenre = async (req, res) => {
         res.status(404).json({ success: false, message: "Genre not found" });
         return;
     }
-    const { name, description, imageUrl, color } = req.body;
-    const genre = await AdminGenreRepository.updateGenre(id, { name, description, imageUrl, color });
+    const { name, description, color, imageUrl: imageUrlFromBody, removeImage } = req.body;
+    let imageUrl = undefined;
+    if (req.file) {
+        // ✅ มีไฟล์ใหม่ → ลบเก่า + upload ใหม่
+        if (existing.imageUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
+        imageUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "genres");
+    }
+    else if (removeImage === "true" || removeImage === true) {
+        // ✅ กดลบรูป → ลบออกจาก Cloudinary + set null ใน DB
+        if (existing.imageUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
+        imageUrl = null;
+    }
+    else if (imageUrlFromBody && imageUrlFromBody !== existing.imageUrl) {
+        imageUrl = imageUrlFromBody;
+    }
+    const genre = await AdminGenreRepository.updateGenre(id, {
+        name,
+        description,
+        color,
+        // ✅ ถ้า imageUrl เป็น null → set null ใน DB (ลบรูป)
+        // ถ้าเป็น undefined → ไม่เปลี่ยนแปลง
+        ...(imageUrl !== undefined && { imageUrl }),
+    });
     res.json({ success: true, data: genre });
 };
 exports.updateGenre = updateGenre;
@@ -84,8 +112,10 @@ const deleteGenre = async (req, res) => {
         res.status(404).json({ success: false, message: "Genre not found" });
         return;
     }
+    if (existing.imageUrl)
+        await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
     await AdminGenreRepository.deleteGenre(id);
-    res.json({ success: true, message: "Genre and related songs deleted" });
+    res.json({ success: true, message: "Genre deleted" });
 };
 exports.deleteGenre = deleteGenre;
 //# sourceMappingURL=adminGenreService.js.map

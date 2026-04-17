@@ -38,14 +38,13 @@ const asyncHandler_1 = require("../../utils/asyncHandler");
 const AlbumService = __importStar(require("./albumService"));
 const authMiddleware_1 = require("../../middleware/authMiddleware");
 const roleMiddleware_1 = require("../../middleware/roleMiddleware");
+const upload_1 = require("../../middleware/upload");
 const router = (0, express_1.Router)();
-// Public
 router.get("/", (0, asyncHandler_1.asyncHandler)(AlbumService.getAllAlbums));
-router.get("/:id", (0, asyncHandler_1.asyncHandler)(AlbumService.getAlbumById));
 router.get("/artist/:artistId", (0, asyncHandler_1.asyncHandler)(AlbumService.getAlbumsByArtist));
-// ADMIN only
-router.post("/", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(AlbumService.createAlbum));
-router.put("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(AlbumService.updateAlbum));
+router.get("/:id", (0, asyncHandler_1.asyncHandler)(AlbumService.getAlbumById));
+router.post("/", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(AlbumService.createAlbum));
+router.put("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(AlbumService.updateAlbum));
 router.delete("/:id", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(AlbumService.deleteAlbum));
 exports.default = router;
 //# sourceMappingURL=albumRouter.js.map
