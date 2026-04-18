@@ -9,16 +9,12 @@ export const getTrendingSongs = async (req: Request, res: Response) => {
 };
 
 export const getAllSongs = async (req: Request, res: Response) => {
-  const { artistId, albumId, genreId, search, languages } = req.query;
-  const languagesArr = languages
-    ? (languages as string).split(",").map((l) => l.trim()).filter(Boolean)
-    : undefined;
+  const { artistId, albumId, genreId, search } = req.query;
   const songs = await SongRepository.findAllSongs({
     artistId: artistId as string,
     albumId: albumId as string,
     genreId: genreId as string,
     search: search as string,
-    languages: languagesArr,
   });
   res.json({ success: true, data: songs });
 };

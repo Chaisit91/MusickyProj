@@ -98,7 +98,7 @@ export const findRefreshToken = async (token: string) => {
 };
 
 export const deleteRefreshToken = async (token: string) => {
-  return prisma.refreshToken.delete({ where: { token } });
+  return prisma.refreshToken.deleteMany({ where: { token } });
 };
 
 export const deleteAllRefreshTokensByUser = async (userId: string) => {

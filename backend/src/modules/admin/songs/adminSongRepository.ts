@@ -72,7 +72,6 @@ export const deleteSong = async (id: string) => {
     prisma.likedSong.deleteMany({ where: { songId: id } }),
     prisma.playlistSong.deleteMany({ where: { songId: id } }),
     prisma.download.deleteMany({ where: { songId: id } }),
-    prisma.queue.deleteMany({ where: { songId: id } }),
     prisma.song.delete({ where: { id } }),
   ]);
 };

@@ -25,7 +25,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(403).json({ success: false, message: "No token provided" });
+    res.status(401).json({ success: false, message: "No token provided" });
     return;
   }
 
@@ -63,7 +63,7 @@ export const sseAuthMiddleware = (req: Request, res: Response, next: NextFunctio
   const raw = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : queryToken;
 
   if (!raw) {
-    res.status(403).json({ success: false, message: "No token provided" });
+    res.status(401).json({ success: false, message: "No token provided" });
     return;
   }
 

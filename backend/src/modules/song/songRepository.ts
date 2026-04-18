@@ -38,7 +38,7 @@ export const findTrendingSongs = async (limit = 10) => {
 };
 
 export const findAllSongs = async (filter: SongFilterInput = {}) => {
-  const { artistId, albumId, genreId, search, languages } = filter;
+  const { artistId, albumId, genreId, search } = filter;
   return prisma.song.findMany({
     where: {
       ...(artistId && { artistId }),
@@ -46,9 +46,6 @@ export const findAllSongs = async (filter: SongFilterInput = {}) => {
       ...(genreId && { genreId }),
       ...(search && {
         title: { contains: search, mode: "insensitive" },
-      }),
-      ...(languages && languages.length > 0 && {
-        language: { in: languages },
       }),
     },
     include: songInclude,

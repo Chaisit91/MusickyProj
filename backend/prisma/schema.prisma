@@ -22,7 +22,6 @@ model User {
   premiumExpiresAt   DateTime?
   playlists          Playlist[]
   downloads          Download[]
-  queues             Queue[]
   searchHistory      SearchHistory[]
   searchHistoryItems SearchHistoryItem[]
   likedSongs         LikedSong[]
@@ -72,7 +71,6 @@ model Song {
   playCount     Int            @default(0)  // เพิ่ม — จำนวนครั้งที่เปิด
   year          Int?           // เพิ่ม — ปีที่ลงเพลง
   lyrics        String?
-  language      String         @default("English") // ภาษาของเพลง
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   artist        Artist         @relation(fields: [artistId], references: [id])
@@ -81,7 +79,6 @@ model Song {
   likedSongs    LikedSong[]
   playlistSongs PlaylistSong[]
   downloads     Download[]
-  queues        Queue[]
   playHistory   PlayHistory[]
 }
 
@@ -167,19 +164,6 @@ model Download {
 
   @@index([userId])
   @@index([songId])
-}
-
-model Queue {
-  id       String   @id @default(uuid())
-  userId   String
-  songId   String
-  position Int
-  queuedAt DateTime @default(now())
-  user     User     @relation(fields: [userId], references: [id])
-  song     Song     @relation(fields: [songId], references: [id])
-
-  @@unique([userId, position])
-  @@index([userId])
 }
 
 model SearchHistory {

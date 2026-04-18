@@ -8,7 +8,6 @@ export interface SongCreateInput {
   duration?: number;
   year?: number;
   lyrics?: string;
-  language?: string;
 }
 
 export interface SongUpdateInput {
@@ -21,7 +20,6 @@ export interface SongUpdateInput {
   duration?: number;
   year?: number;
   lyrics?: string;
-  language?: string;
 }
 
 export interface SongFilterInput {
@@ -29,5 +27,4 @@ export interface SongFilterInput {
   albumId?: string;
   genreId?: string;
   search?: string;
-  languages?: string[];
 }
