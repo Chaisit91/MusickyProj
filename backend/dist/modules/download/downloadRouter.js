@@ -42,6 +42,7 @@ const router = (0, express_1.Router)();
 router.get("/", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(DownloadService.getDownloads));
 router.post("/", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(DownloadService.addDownload));
 router.delete("/clear", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(DownloadService.clearAllDownloads));
+router.delete("/song/:songId", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(DownloadService.removeDownloadBySong));
 router.delete("/:id", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(DownloadService.removeDownload));
 exports.default = router;
 //# sourceMappingURL=downloadRouter.js.map

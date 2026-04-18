@@ -16,11 +16,12 @@ const getSongStats = async () => {
     };
 };
 exports.getSongStats = getSongStats;
-const findAllSongs = async (search, genreId) => {
+const findAllSongs = async (search, genreId, artistId) => {
     return prisma_1.prisma.song.findMany({
         where: {
             ...(search && { title: { contains: search, mode: "insensitive" } }),
             ...(genreId && { genreId }),
+            ...(artistId && { artistId }),
         },
         include: { artist: true, album: true, genre: true },
         orderBy: { playCount: "desc" },
@@ -50,7 +51,13 @@ const updateSong = async (id, data) => {
 };
 exports.updateSong = updateSong;
 const deleteSong = async (id) => {
-    return prisma_1.prisma.song.delete({ where: { id } });
+    return prisma_1.prisma.$transaction([
+        prisma_1.prisma.likedSong.deleteMany({ where: { songId: id } }),
+        prisma_1.prisma.playlistSong.deleteMany({ where: { songId: id } }),
+        prisma_1.prisma.download.deleteMany({ where: { songId: id } }),
+        prisma_1.prisma.queue.deleteMany({ where: { songId: id } }),
+        prisma_1.prisma.song.delete({ where: { id } }),
+    ]);
 };
 exports.deleteSong = deleteSong;
 const incrementPlayCount = async (id) => {

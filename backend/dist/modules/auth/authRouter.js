@@ -37,16 +37,22 @@ const express_1 = require("express");
 const asyncHandler_1 = require("../../utils/asyncHandler");
 const AuthService = __importStar(require("./authService"));
 const authMiddleware_1 = require("../../middleware/authMiddleware");
+const upload_1 = require("../../middleware/upload");
 const router = (0, express_1.Router)();
 // ── Mobile App ─────────────────────────────────────────────────
 router.post("/register", (0, asyncHandler_1.asyncHandler)(AuthService.register));
 router.post("/login", (0, asyncHandler_1.asyncHandler)(AuthService.login));
+router.post("/forgot-password", (0, asyncHandler_1.asyncHandler)(AuthService.forgotPassword));
+router.post("/reset-password", (0, asyncHandler_1.asyncHandler)(AuthService.resetPassword));
 // ── Admin Web ──────────────────────────────────────────────────
 router.post("/admin/login", (0, asyncHandler_1.asyncHandler)(AuthService.adminLogin));
 // ── Token ──────────────────────────────────────────────────────
 router.post("/refresh", (0, asyncHandler_1.asyncHandler)(AuthService.refresh));
+// ── Google OAuth ───────────────────────────────────────────────
+router.post("/google", (0, asyncHandler_1.asyncHandler)(AuthService.googleLogin));
 // ── Protected ─────────────────────────────────────────────────
 router.get("/me", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(AuthService.getMe));
+router.patch("/profile", authMiddleware_1.authMiddleware, upload_1.upload.single("avatar"), (0, asyncHandler_1.asyncHandler)(AuthService.updateProfile));
 router.post("/logout", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(AuthService.logout));
 router.post("/logout-all", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(AuthService.logoutAll));
 exports.default = router;

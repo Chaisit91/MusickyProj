@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAlbum = exports.updateAlbum = exports.createAlbum = exports.getAlbumsByArtist = exports.getAlbumById = exports.getAllAlbums = void 0;
 const AlbumRepository = __importStar(require("./albumRepository"));
+const uploadImage_1 = require("../../utils/uploadImage");
 const getAllAlbums = async (req, res) => {
     const albums = await AlbumRepository.findAllAlbums();
     res.json({ success: true, data: albums });
@@ -57,16 +58,23 @@ const getAlbumsByArtist = async (req, res) => {
 };
 exports.getAlbumsByArtist = getAlbumsByArtist;
 const createAlbum = async (req, res) => {
-    const { title, artistId, releaseDate, coverUrl } = req.body;
+    const { title, artistId, releaseDate, coverUrl: coverUrlFromBody } = req.body;
     if (!title || !artistId || !releaseDate) {
-        res.status(400).json({ success: false, message: "title, artistId and releaseDate are required" });
+        res.status(400).json({
+            success: false,
+            message: "title, artistId and releaseDate are required",
+        });
         return;
+    }
+    let coverUrl = coverUrlFromBody;
+    if (req.file) {
+        coverUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "albums");
     }
     const album = await AlbumRepository.createAlbum({
         title: title,
         artistId: artistId,
         releaseDate: releaseDate,
-        coverUrl: coverUrl,
+        coverUrl,
     });
     res.status(201).json({ success: true, data: album });
 };
@@ -78,12 +86,23 @@ const updateAlbum = async (req, res) => {
         res.status(404).json({ success: false, message: "Album not found" });
         return;
     }
-    const { title, artistId, releaseDate, coverUrl } = req.body;
+    const { title, artistId, releaseDate, coverUrl: coverUrlFromBody } = req.body;
+    let coverUrl = undefined;
+    if (req.file) {
+        if (existing.coverUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.coverUrl);
+        coverUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "albums");
+    }
+    else if (coverUrlFromBody && coverUrlFromBody !== existing.coverUrl) {
+        if (existing.coverUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.coverUrl);
+        coverUrl = coverUrlFromBody;
+    }
     const album = await AlbumRepository.updateAlbum(id, {
         title: title,
         artistId: artistId,
         releaseDate: releaseDate,
-        coverUrl: coverUrl,
+        ...(coverUrl && { coverUrl }),
     });
     res.json({ success: true, data: album });
 };
@@ -95,6 +114,8 @@ const deleteAlbum = async (req, res) => {
         res.status(404).json({ success: false, message: "Album not found" });
         return;
     }
+    if (existing.coverUrl)
+        await (0, uploadImage_1.deleteImageFromCloudinary)(existing.coverUrl);
     await AlbumRepository.deleteAlbum(id);
     res.json({ success: true, message: "Album deleted" });
 };

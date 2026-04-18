@@ -40,6 +40,10 @@ const authMiddleware_1 = require("../../middleware/authMiddleware");
 const roleMiddleware_1 = require("../../middleware/roleMiddleware");
 const router = (0, express_1.Router)();
 const admin = [authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN")];
+// User preference routes (authenticated)
+router.get("/me/preferences", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(UserService.getMyPreferences));
+router.put("/me/preferences", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asyncHandler)(UserService.updateMyPreferences));
+// Admin routes
 router.get("/", ...admin, (0, asyncHandler_1.asyncHandler)(UserService.getAllUsers));
 router.get("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(UserService.getUserById));
 router.put("/:id/ban", ...admin, (0, asyncHandler_1.asyncHandler)(UserService.banUser));

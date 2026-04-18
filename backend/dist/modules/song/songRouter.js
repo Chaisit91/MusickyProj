@@ -41,6 +41,7 @@ const roleMiddleware_1 = require("../../middleware/roleMiddleware");
 const router = (0, express_1.Router)();
 // Public — ?artistId=&albumId=&genreId=&search=
 router.get("/", (0, asyncHandler_1.asyncHandler)(SongService.getAllSongs));
+router.get("/trending", (0, asyncHandler_1.asyncHandler)(SongService.getTrendingSongs));
 router.get("/:id", (0, asyncHandler_1.asyncHandler)(SongService.getSongById));
 // ADMIN only
 router.post("/", authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN"), (0, asyncHandler_1.asyncHandler)(SongService.createSong));

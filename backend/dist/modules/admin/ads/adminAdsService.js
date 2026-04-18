@@ -33,89 +33,126 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAds = exports.trackImpression = exports.toggleAds = exports.updateAds = exports.createAds = exports.getAdsById = exports.getActiveAds = exports.getAllAds = exports.getAdsStats = void 0;
+exports.getAdsStats = exports.toggleAdStatus = exports.deleteAd = exports.updateAd = exports.createAd = exports.getAdById = exports.getAllAds = void 0;
 const AdminAdsRepository = __importStar(require("./adminAdsRepository"));
-const getAdsStats = async (req, res) => {
-    const stats = await AdminAdsRepository.getAdsStats();
-    res.json({ success: true, data: stats });
+const uploadImage_1 = require("../../../utils/uploadImage");
+// ลบ media เดิม (image หรือ video/audio) ออกจาก Cloudinary
+const deleteExistingMedia = async (url, mimetype) => {
+    if (!url)
+        return;
+    const isVideo = url.includes("/video/upload/") || url.includes("resource_type=video");
+    if (isVideo || (mimetype && !mimetype.startsWith("image/"))) {
+        await (0, uploadImage_1.deleteAudioFromCloudinary)(url); // resource_type: video ครอบคลุม mp4 + mp3
+    }
+    else {
+        await (0, uploadImage_1.deleteImageFromCloudinary)(url);
+    }
 };
-exports.getAdsStats = getAdsStats;
 const getAllAds = async (req, res) => {
     const ads = await AdminAdsRepository.findAllAds();
     res.json({ success: true, data: ads });
 };
 exports.getAllAds = getAllAds;
-const getActiveAds = async (req, res) => {
-    const ads = await AdminAdsRepository.findActiveAds();
-    res.json({ success: true, data: ads });
-};
-exports.getActiveAds = getActiveAds;
-const getAdsById = async (req, res) => {
-    const id = req.params.id;
-    const ads = await AdminAdsRepository.findAdsById(id);
-    if (!ads) {
+const getAdById = async (req, res) => {
+    const ad = await AdminAdsRepository.findAdsById(req.params.id);
+    if (!ad) {
         res.status(404).json({ success: false, message: "Ad not found" });
         return;
     }
-    res.json({ success: true, data: ads });
+    res.json({ success: true, data: ad });
 };
-exports.getAdsById = getAdsById;
-const createAds = async (req, res) => {
-    const { title, imageUrl, linkUrl, adType, adDuration, advertiser, isActive } = req.body;
-    if (!title || !imageUrl || !linkUrl || !adType || !adDuration || !advertiser) {
-        res.status(400).json({ success: false, message: "title, imageUrl, linkUrl, adType, adDuration and advertiser are required" });
+exports.getAdById = getAdById;
+const createAd = async (req, res) => {
+    const { title, adType, adDuration, advertiser, linkUrl, isActive, priority, startDate, endDate } = req.body;
+    if (!title || !adType) {
+        res.status(400).json({ success: false, message: "title and adType are required" });
         return;
     }
-    const ads = await AdminAdsRepository.createAds({
-        title, imageUrl, linkUrl, adType,
-        adDuration: Number(adDuration),
-        advertiser, isActive,
+    let mediaUrl;
+    if (req.file) {
+        mediaUrl = await (0, uploadImage_1.uploadAdMediaToCloudinary)(req.file.buffer, req.file.mimetype);
+    }
+    if (!mediaUrl) {
+        res.status(400).json({ success: false, message: "Media file is required for ads" });
+        return;
+    }
+    const ad = await AdminAdsRepository.createAds({
+        title,
+        imageUrl: mediaUrl,
+        linkUrl: linkUrl || "",
+        adType,
+        adDuration: adDuration ? Number(adDuration) : 30,
+        advertiser: advertiser || "",
+        isActive: isActive !== undefined ? isActive === "true" || isActive === true : true,
+        priority: priority ? Math.min(10, Math.max(1, Number(priority))) : 1,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
     });
-    res.status(201).json({ success: true, data: ads });
+    res.status(201).json({ success: true, data: ad });
 };
-exports.createAds = createAds;
-const updateAds = async (req, res) => {
-    const id = req.params.id;
-    const existing = await AdminAdsRepository.findAdsById(id);
+exports.createAd = createAd;
+const updateAd = async (req, res) => {
+    const existing = await AdminAdsRepository.findAdsById(req.params.id);
     if (!existing) {
         res.status(404).json({ success: false, message: "Ad not found" });
         return;
     }
-    const { title, imageUrl, linkUrl, adType, adDuration, advertiser, isActive } = req.body;
-    const ads = await AdminAdsRepository.updateAds(id, {
-        title, imageUrl, linkUrl, adType,
+    const { title, adType, adDuration, isActive, advertiser, linkUrl, priority, startDate, endDate } = req.body;
+    let imageUrl;
+    if (req.file) {
+        await deleteExistingMedia(existing.imageUrl, req.file.mimetype);
+        imageUrl = await (0, uploadImage_1.uploadAdMediaToCloudinary)(req.file.buffer, req.file.mimetype);
+    }
+    const ad = await AdminAdsRepository.updateAds(req.params.id, {
+        title,
+        adType,
         adDuration: adDuration ? Number(adDuration) : undefined,
-        advertiser, isActive,
+        advertiser,
+        linkUrl: linkUrl !== undefined ? linkUrl : undefined,
+        isActive: isActive !== undefined ? isActive === "true" || isActive === true : undefined,
+        priority: priority !== undefined ? Math.min(10, Math.max(1, Number(priority))) : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        ...(imageUrl && { imageUrl }),
     });
-    res.json({ success: true, data: ads });
+    res.json({ success: true, data: ad });
 };
-exports.updateAds = updateAds;
-const toggleAds = async (req, res) => {
-    const id = req.params.id;
-    const existing = await AdminAdsRepository.findAdsById(id);
+exports.updateAd = updateAd;
+const deleteAd = async (req, res) => {
+    const existing = await AdminAdsRepository.findAdsById(req.params.id);
     if (!existing) {
         res.status(404).json({ success: false, message: "Ad not found" });
         return;
     }
-    const ads = await AdminAdsRepository.toggleAds(id, !existing.isActive);
-    res.json({ success: true, data: ads });
-};
-exports.toggleAds = toggleAds;
-const trackImpression = async (req, res) => {
-    const id = req.params.id;
-    await AdminAdsRepository.incrementImpressions(id);
-    res.json({ success: true, message: "Impression tracked" });
-};
-exports.trackImpression = trackImpression;
-const deleteAds = async (req, res) => {
-    const id = req.params.id;
-    const existing = await AdminAdsRepository.findAdsById(id);
-    if (!existing) {
-        res.status(404).json({ success: false, message: "Ad not found" });
-        return;
-    }
-    await AdminAdsRepository.deleteAds(id);
+    await deleteExistingMedia(existing.imageUrl);
+    await AdminAdsRepository.deleteAds(req.params.id);
     res.json({ success: true, message: "Ad deleted" });
 };
-exports.deleteAds = deleteAds;
+exports.deleteAd = deleteAd;
+const toggleAdStatus = async (req, res) => {
+    const existing = await AdminAdsRepository.findAdsById(req.params.id);
+    if (!existing) {
+        res.status(404).json({ success: false, message: "Ad not found" });
+        return;
+    }
+    const ad = await AdminAdsRepository.toggleAds(req.params.id, !existing.isActive);
+    res.json({ success: true, data: ad });
+};
+exports.toggleAdStatus = toggleAdStatus;
+const getAdsStats = async (req, res) => {
+    const [totalAds, activeAds, impressionsAgg] = await Promise.all([
+        AdminAdsRepository.countAds(),
+        AdminAdsRepository.countActiveAds(),
+        AdminAdsRepository.sumImpressions(),
+    ]);
+    res.json({
+        success: true,
+        data: {
+            totalAds,
+            activeAds,
+            totalImpressions: impressionsAgg,
+        },
+    });
+};
+exports.getAdsStats = getAdsStats;
 //# sourceMappingURL=adminAdsService.js.map

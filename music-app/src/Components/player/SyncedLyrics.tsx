@@ -1,17 +1,12 @@
-import React, { useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
+  Animated,
   Dimensions,
 } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 
@@ -20,7 +15,7 @@ interface LyricLine {
   text: string;
 }
 
-// ── Parse LRC format ──────────────────────────────────────────────────────────
+// ── Parse LRC format [mm:ss.xx] ───────────────────────────────────────────────
 function parseLRC(lrc: string): LyricLine[] | null {
   const timeRegex = /\[(\d{1,2}):(\d{2})\.(\d{2,3})\]/g;
   const lines = lrc.split("\n");
@@ -46,6 +41,17 @@ function parseLRC(lrc: string): LyricLine[] | null {
   return result.sort((a, b) => a.time - b.time);
 }
 
+// ── Fallback: split plain text by newlines, estimate timing ──────────────────
+function parsePlainText(lrc: string, duration: number): LyricLine[] {
+  const lines = lrc
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return [];
+  const step = duration > 0 ? duration / lines.length : 3;
+  return lines.map((text, i) => ({ time: i * step, text }));
+}
+
 function getCurrentIndex(lines: LyricLine[], progress: number): number {
   let idx = 0;
   for (let i = 0; i < lines.length; i++) {
@@ -55,55 +61,61 @@ function getCurrentIndex(lines: LyricLine[], progress: number): number {
   return idx;
 }
 
-// ── Animated lyric line ───────────────────────────────────────────────────────
-type LineStatus = "current" | "past" | "future";
+// ── Single animated lyric line ────────────────────────────────────────────────
+type Status = "current" | "past" | "future";
 
-const TIMING = { duration: 350, easing: Easing.out(Easing.cubic) };
-
-function LyricItem({
+function LyricLine({
   text,
   status,
   onPress,
+  onLayout,
 }: {
   text: string;
-  status: LineStatus;
+  status: Status;
   onPress: () => void;
+  onLayout: (y: number) => void;
 }) {
-  const opacity = useSharedValue(
-    status === "current" ? 1 : status === "past" ? 0.28 : 0.48
-  );
-  const scale = useSharedValue(status === "current" ? 1 : 0.96);
+  const opacity = useRef(
+    new Animated.Value(status === "current" ? 1 : status === "past" ? 0.45 : 0.18)
+  ).current;
+  const scale = useRef(new Animated.Value(status === "current" ? 1 : 0.92)).current;
 
   useEffect(() => {
-    opacity.value = withTiming(
-      status === "current" ? 1 : status === "past" ? 0.28 : 0.48,
-      TIMING
-    );
-    scale.value = withTiming(status === "current" ? 1 : 0.96, TIMING);
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: status === "current" ? 1 : status === "past" ? 0.45 : 0.18,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: status === "current" ? 1 : 0.92,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [status]);
 
-  const animStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
+  const color =
+    status === "current" ? "#ffffff" : status === "past" ? "#9ca3af" : "#374151";
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.65}
-      style={{ paddingHorizontal: 28, paddingVertical: 10 }}
+      activeOpacity={0.7}
+      onLayout={(e) => onLayout(e.nativeEvent.layout.y)}
     >
       <Animated.Text
-        style={[
-          animStyle,
-          {
-            color: "#ffffff",
-            fontSize: status === "current" ? 30 : 24,
-            fontWeight: status === "current" ? "800" : "600",
-            lineHeight: status === "current" ? 42 : 34,
-            letterSpacing: 0.2,
-          },
-        ]}
+        style={{
+          opacity,
+          transform: [{ scale }],
+          color,
+          fontSize: status === "current" ? 32 : 22,
+          fontWeight: status === "current" ? "800" : "600",
+          lineHeight: status === "current" ? 44 : 32,
+          letterSpacing: 0.2,
+          paddingHorizontal: 28,
+          paddingVertical: 10,
+        }}
       >
         {text}
       </Animated.Text>
@@ -115,99 +127,74 @@ function LyricItem({
 interface Props {
   lyrics: string;
   progressSeconds: number;
+  durationSeconds: number;
   onSeek?: (time: number) => void;
 }
 
-export default function SyncedLyrics({ lyrics, progressSeconds, onSeek }: Props) {
-  const listRef = useRef<FlatList<LyricLine>>(null);
+export default function SyncedLyrics({ lyrics, progressSeconds, durationSeconds, onSeek }: Props) {
+  const scrollRef = useRef<ScrollView>(null);
+  const itemYs = useRef<Record<number, number>>({});
 
-  const lines = useMemo(() => parseLRC(lyrics), [lyrics]);
+  const lines = useMemo(() => {
+    const lrc = parseLRC(lyrics);
+    if (lrc) return lrc;
+    // plain text fallback — estimate timing from duration
+    return parsePlainText(lyrics, durationSeconds > 0 ? durationSeconds : 180);
+  }, [lyrics, durationSeconds]);
 
-  const currentIndex = useMemo(() => {
-    if (!lines) return 0;
-    return getCurrentIndex(lines, progressSeconds);
-  }, [lines, progressSeconds]);
+  const currentIndex = useMemo(
+    () => getCurrentIndex(lines, progressSeconds),
+    [lines, progressSeconds]
+  );
 
+  // Auto-scroll to current line
   useEffect(() => {
-    if (!lines || lines.length === 0) return;
-    listRef.current?.scrollToIndex({
-      index: currentIndex,
+    const y = itemYs.current[currentIndex];
+    if (y == null) return;
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, y - SCREEN_H * 0.35),
       animated: true,
-      viewPosition: 0.38,
     });
   }, [currentIndex]);
 
-  const handleSeek = useCallback(
-    (time: number) => {
-      onSeek?.(time);
-    },
-    [onSeek]
-  );
-
-  // ── Plain text fallback ───────────────────────────────────────────────────
-  if (!lines) {
+  if (lines.length === 0) {
     return (
-      <View style={{ paddingHorizontal: 28, paddingBottom: 40 }}>
-        <Text
-          style={{
-            color: "#ffffff",
-            fontSize: 22,
-            fontWeight: "600",
-            lineHeight: 36,
-            letterSpacing: 0.2,
-            opacity: 0.85,
-          }}
-        >
-          {lyrics}
-        </Text>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ color: "#555", fontSize: 15 }}>ไม่มีเนื้อเพลง</Text>
       </View>
     );
   }
 
-  const renderItem = ({
-    item,
-    index,
-  }: {
-    item: LyricLine;
-    index: number;
-  }) => {
-    const status: LineStatus =
-      index === currentIndex
-        ? "current"
-        : index < currentIndex
-        ? "past"
-        : "future";
-
-    return (
-      <LyricItem
-        text={item.text}
-        status={status}
-        onPress={() => handleSeek(item.time)}
-      />
-    );
-  };
-
   return (
-    <FlatList
-      ref={listRef}
-      data={lines}
-      keyExtractor={(_, i) => String(i)}
-      renderItem={renderItem}
+    <ScrollView
+      ref={scrollRef}
       showsVerticalScrollIndicator={false}
-      scrollEnabled={true}
+      scrollEnabled
       contentContainerStyle={{
-        paddingTop: SCREEN_H * 0.32,
-        paddingBottom: SCREEN_H * 0.52,
+        paddingTop: SCREEN_H * 0.3,
+        paddingBottom: SCREEN_H * 0.5,
       }}
-      onScrollToIndexFailed={(info) => {
-        setTimeout(() => {
-          listRef.current?.scrollToIndex({
-            index: info.index,
-            animated: true,
-            viewPosition: 0.38,
-          });
-        }, 300);
-      }}
-    />
+    >
+      {lines.map((line, index) => {
+        const status: Status =
+          index === currentIndex
+            ? "current"
+            : index < currentIndex
+            ? "past"
+            : "future";
+
+        return (
+          <LyricLine
+            key={index}
+            text={line.text}
+            status={status}
+            onPress={() => onSeek?.(line.time)}
+            onLayout={(y) => {
+              itemYs.current[index] = y;
+            }}
+          />
+        );
+      })}
+    </ScrollView>
   );
 }

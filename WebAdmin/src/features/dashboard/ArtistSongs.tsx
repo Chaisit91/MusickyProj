@@ -3,7 +3,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Search, Plus, Pencil, Trash2, Music, X,
-  Upload, Link, ImagePlus, Loader2, ChevronLeft, Play, Pause,
+  Upload, Link, ImagePlus, Loader2, ChevronLeft, Play, Pause, Sparkles,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/layout/Sidebar";
@@ -38,6 +38,8 @@ const SongModal: React.FC<{
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fetchingLyrics, setFetchingLyrics] = useState(false);
+  const [lyricsMsg, setLyricsMsg] = useState<string | null>(null);
 
   const audioInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -63,6 +65,7 @@ const SongModal: React.FC<{
   });
 
   const watchedArtistId = useWatch({ control, name: "artistId" });
+  const watchedTitle = useWatch({ control, name: "title" });
 
   // โหลด artists + genres ครั้งเดียว
   useEffect(() => {
@@ -101,6 +104,37 @@ const SongModal: React.FC<{
       setValue("duration", String(Math.round(audio.duration)));
       URL.revokeObjectURL(audio.src);
     };
+  };
+
+  const fetchLyrics = async () => {
+    const artistName = artists.find((a) => a.id === watchedArtistId)?.name ?? "";
+    if (!watchedTitle || !artistName) {
+      setLyricsMsg("กรุณากรอกชื่อเพลงและเลือกศิลปินก่อน");
+      setTimeout(() => setLyricsMsg(null), 3000);
+      return;
+    }
+    setFetchingLyrics(true);
+    setLyricsMsg(null);
+    try {
+      const params = new URLSearchParams({ track_name: watchedTitle, artist_name: artistName });
+      const res = await fetch(`https://lrclib.net/api/search?${params}`);
+      const data = await res.json();
+      const hit = data.find((d: any) => d.syncedLyrics) ?? data[0];
+      if (hit?.syncedLyrics) {
+        setValue("lyrics", hit.syncedLyrics);
+        setLyricsMsg("✓ พบเนื้อเพลง (LRC) เรียบร้อย");
+      } else if (hit?.plainLyrics) {
+        setValue("lyrics", hit.plainLyrics);
+        setLyricsMsg("⚠ พบเนื้อเพลงแบบ plain text (ไม่มี timestamps)");
+      } else {
+        setLyricsMsg("ไม่พบเนื้อเพลงใน lrclib.net");
+      }
+    } catch {
+      setLyricsMsg("เชื่อมต่อ lrclib.net ไม่ได้");
+    } finally {
+      setFetchingLyrics(false);
+      setTimeout(() => setLyricsMsg(null), 4000);
+    }
   };
 
   const onSubmit = async (data: SongFormValues) => {
@@ -234,11 +268,19 @@ const SongModal: React.FC<{
             {/* ศิลปิน */}
             <div>
               <label className={labelCls}>ศิลปิน *</label>
-              <select {...register("artistId", { onChange: () => setValue("albumId", "") })}
-                className={inputCls(!!errors.artistId)}>
-                <option value="">เลือกศิลปิน</option>
-                {artists.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+              {mode === "add" && defaultArtistId ? (
+                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-gray-50 flex items-center gap-2">
+                  <span className="text-gray-400">🎤</span>
+                  <span className="font-medium">{artists.find(a => a.id === defaultArtistId)?.name ?? "กำลังโหลด..."}</span>
+                  <span className="ml-auto text-xs text-gray-400">ศิลปินที่เลือก</span>
+                </div>
+              ) : (
+                <select {...register("artistId", { onChange: () => setValue("albumId", "") })}
+                  className={inputCls(!!errors.artistId)}>
+                  <option value="">เลือกศิลปิน</option>
+                  {artists.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              )}
               {errors.artistId && <p className="text-red-500 text-xs mt-1">⚠ {errors.artistId.message}</p>}
             </div>
 
@@ -280,7 +322,24 @@ const SongModal: React.FC<{
 
             {/* เนื้อเพลง */}
             <div>
-              <label className={labelCls}>เนื้อเพลง</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className={labelCls + " mb-0"}>เนื้อเพลง</label>
+                <button
+                  type="button"
+                  onClick={fetchLyrics}
+                  disabled={fetchingLyrics}
+                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-violet-50 text-violet-600 hover:bg-violet-100 transition-colors disabled:opacity-50"
+                >
+                  {fetchingLyrics
+                    ? <><Loader2 size={11} className="animate-spin" />กำลังดึง...</>
+                    : <><Sparkles size={11} />ดึงเนื้อเพลง</>}
+                </button>
+              </div>
+              {lyricsMsg && (
+                <p className={`text-xs mb-1.5 px-2 py-1 rounded ${lyricsMsg.startsWith("✓") ? "bg-green-50 text-green-600" : lyricsMsg.startsWith("⚠") ? "bg-yellow-50 text-yellow-600" : "bg-red-50 text-red-500"}`}>
+                  {lyricsMsg}
+                </p>
+              )}
               <textarea {...register("lyrics")} rows={3} placeholder="เนื้อเพลง (ถ้ามี)"
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none" />
             </div>

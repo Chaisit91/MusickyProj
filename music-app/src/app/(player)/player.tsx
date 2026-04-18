@@ -24,6 +24,7 @@ import { consumeSkip, FREE_SKIP_LIMIT } from "../../store/skipSlice";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 import SyncedLyrics from "../../Components/player/SyncedLyrics";
 import { Image } from "expo-image";
+import { getSongLyricsApi } from "../../api/homeApi";
 
 const { width } = Dimensions.get("window");
 const ART_SIZE = width - 64;
@@ -184,6 +185,8 @@ export default function PlayerScreen() {
   const [activeTab, setActiveTab] = useState<"player" | "lyrics">(showLyrics ? "lyrics" : "player");
   const [showPlaylistSheet, setShowPlaylistSheet] = useState(false);
   const [skipToast, setSkipToast] = useState(false);
+  const [fetchedLyrics, setFetchedLyrics] = useState<string | null | undefined>(undefined);
+  const [lyricsLoadingId, setLyricsLoadingId] = useState<string | null>(null);
 
   const handleSkip = (direction: "next" | "prev") => {
     if (direction === "next" && !canSkip) {
@@ -199,6 +202,21 @@ export default function PlayerScreen() {
   useEffect(() => {
     setActiveTab(showLyrics ? "lyrics" : "player");
   }, [showLyrics]);
+
+  // Fetch lyrics when song changes or lyrics tab is opened
+  useEffect(() => {
+    if (!currentSong) return;
+    if (lyricsLoadingId === currentSong.id) return;
+    if (currentSong.lyrics) {
+      setFetchedLyrics(currentSong.lyrics);
+      return;
+    }
+    setFetchedLyrics(undefined);
+    setLyricsLoadingId(currentSong.id);
+    getSongLyricsApi(currentSong.id)
+      .then((lrc) => setFetchedLyrics(lrc))
+      .catch(() => setFetchedLyrics(null));
+  }, [currentSong?.id]);
 
   // ── Misc ──────────────────────────────────────────────────────────────────
   const duration = durationSeconds > 0 ? durationSeconds : (currentSong?.duration ?? 0);
@@ -543,16 +561,21 @@ export default function PlayerScreen() {
         ) : (
           /* ── Lyrics Tab ── */
           <View style={{ flex: 1 }}>
-            {currentSong.lyrics ? (
+            {fetchedLyrics === undefined ? (
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#555", fontSize: 14 }}>กำลังโหลดเนื้อเพลง...</Text>
+              </View>
+            ) : fetchedLyrics ? (
               <SyncedLyrics
-                lyrics={currentSong.lyrics}
+                lyrics={fetchedLyrics}
                 progressSeconds={progressSeconds}
+                durationSeconds={duration}
                 onSeek={(t) => dispatch(seekTo(Math.floor(t)))}
               />
             ) : (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                 <Text style={{ color: "#333", fontSize: 48, marginBottom: 16 }}>♪</Text>
-                <Text style={{ color: "#555", fontSize: 15 }}>ยังไม่มีเนื้อเพลง</Text>
+                <Text style={{ color: "#555", fontSize: 15 }}>ไม่พบเนื้อเพลง</Text>
               </View>
             )}
           </View>

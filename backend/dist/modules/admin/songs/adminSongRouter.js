@@ -38,8 +38,14 @@ const asyncHandler_1 = require("../../../utils/asyncHandler");
 const AdminSongService = __importStar(require("./adminSongService"));
 const authMiddleware_1 = require("../../../middleware/authMiddleware");
 const roleMiddleware_1 = require("../../../middleware/roleMiddleware");
+const upload_1 = require("../../../middleware/upload");
 const router = (0, express_1.Router)();
 const admin = [authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN")];
+// รับไฟล์ได้ 2 field: coverImage (รูปปก) และ audioFile (MP3)
+const songUpload = upload_1.uploadSong.fields([
+    { name: "coverImage", maxCount: 1 },
+    { name: "audioFile", maxCount: 1 },
+]);
 // stats — ADMIN
 router.get("/stats", ...admin, (0, asyncHandler_1.asyncHandler)(AdminSongService.getSongStats));
 // play — ทุกคนที่ login เปิดเพลงได้
@@ -47,8 +53,8 @@ router.post("/:id/play", authMiddleware_1.authMiddleware, (0, asyncHandler_1.asy
 // CRUD — ADMIN
 router.get("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdminSongService.getAllSongs));
 router.get("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminSongService.getSongById));
-router.post("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdminSongService.createSong));
-router.put("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminSongService.updateSong));
+router.post("/", ...admin, songUpload, (0, asyncHandler_1.asyncHandler)(AdminSongService.createSong));
+router.put("/:id", ...admin, songUpload, (0, asyncHandler_1.asyncHandler)(AdminSongService.updateSong));
 router.delete("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminSongService.deleteSong));
 exports.default = router;
 //# sourceMappingURL=adminSongRouter.js.map

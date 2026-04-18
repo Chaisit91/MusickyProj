@@ -35,14 +35,15 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.playSong = exports.deleteSong = exports.updateSong = exports.createSong = exports.getSongById = exports.getAllSongs = exports.getSongStats = void 0;
 const AdminSongRepository = __importStar(require("./adminSongRepository"));
+const uploadImage_1 = require("../../../utils/uploadImage");
 const getSongStats = async (req, res) => {
     const stats = await AdminSongRepository.getSongStats();
     res.json({ success: true, data: stats });
 };
 exports.getSongStats = getSongStats;
 const getAllSongs = async (req, res) => {
-    const { search, genreId } = req.query;
-    const songs = await AdminSongRepository.findAllSongs(search, genreId);
+    const { search, genreId, artistId } = req.query;
+    const songs = await AdminSongRepository.findAllSongs(search, genreId, artistId);
     res.json({ success: true, data: songs });
 };
 exports.getAllSongs = getAllSongs;
@@ -57,13 +58,44 @@ const getSongById = async (req, res) => {
 };
 exports.getSongById = getSongById;
 const createSong = async (req, res) => {
-    const { title, artistId, albumId, genreId, filePath, duration, year, lyrics } = req.body;
-    if (!title || !artistId || !albumId || !genreId || !filePath) {
-        res.status(400).json({ success: false, message: "title, artistId, albumId, genreId and filePath are required" });
+    var _a, _b;
+    const files = req.files;
+    const { title, artistId, albumId, genreId, filePath: filePathBody, duration, year, lyrics } = req.body;
+    if (!title || !artistId || !albumId || !genreId) {
+        res.status(400).json({
+            success: false,
+            message: "title, artistId, albumId, genreId are required",
+        });
         return;
     }
+    // --- กำหนด audio source ---
+    let filePath;
+    if ((_a = files === null || files === void 0 ? void 0 : files.audioFile) === null || _a === void 0 ? void 0 : _a[0]) {
+        filePath = await (0, uploadImage_1.uploadAudioToCloudinary)(files.audioFile[0].buffer);
+    }
+    else if (filePathBody) {
+        filePath = filePathBody;
+    }
+    else {
+        res.status(400).json({
+            success: false,
+            message: "audioFile (MP3) or filePath is required",
+        });
+        return;
+    }
+    // --- อัปโหลดรูปปก (ถ้ามี) ---
+    let coverUrl;
+    if ((_b = files === null || files === void 0 ? void 0 : files.coverImage) === null || _b === void 0 ? void 0 : _b[0]) {
+        coverUrl = await (0, uploadImage_1.uploadImageToCloudinary)(files.coverImage[0].buffer, "songs");
+    }
+    // duration ถูก auto-detect จาก WebAdmin (HTML5 Audio API) และส่งมาเป็น field ปกติ
     const song = await AdminSongRepository.createSong({
-        title, artistId, albumId, genreId, filePath,
+        title,
+        artistId,
+        albumId,
+        genreId,
+        filePath,
+        coverUrl,
         duration: duration ? Number(duration) : undefined,
         year: year ? Number(year) : undefined,
         lyrics,
@@ -72,28 +104,68 @@ const createSong = async (req, res) => {
 };
 exports.createSong = createSong;
 const updateSong = async (req, res) => {
+    var _a, _b, _c;
     const id = req.params.id;
     const existing = await AdminSongRepository.findSongById(id);
     if (!existing) {
         res.status(404).json({ success: false, message: "Song not found" });
         return;
     }
-    const { title, artistId, albumId, genreId, filePath, duration, year, lyrics } = req.body;
+    const files = req.files;
+    const { title, artistId, albumId, genreId, filePath: filePathBody, duration, year, lyrics, deleteCover } = req.body;
+    // --- อัปเดต audio source ถ้ามีการส่งมาใหม่ ---
+    let filePath;
+    if ((_a = files === null || files === void 0 ? void 0 : files.audioFile) === null || _a === void 0 ? void 0 : _a[0]) {
+        if ((_b = existing.filePath) === null || _b === void 0 ? void 0 : _b.includes("cloudinary.com")) {
+            await (0, uploadImage_1.deleteAudioFromCloudinary)(existing.filePath);
+        }
+        filePath = await (0, uploadImage_1.uploadAudioToCloudinary)(files.audioFile[0].buffer);
+    }
+    else if (filePathBody) {
+        filePath = filePathBody;
+    }
+    // --- อัปเดตรูปปก / ลบรูปปก ---
+    let coverUrl;
+    if (deleteCover === "true") {
+        if (existing.coverUrl) {
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.coverUrl).catch(() => { });
+        }
+        coverUrl = null; // clear in DB
+    }
+    else if ((_c = files === null || files === void 0 ? void 0 : files.coverImage) === null || _c === void 0 ? void 0 : _c[0]) {
+        if (existing.coverUrl) {
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.coverUrl).catch(() => { });
+        }
+        coverUrl = await (0, uploadImage_1.uploadImageToCloudinary)(files.coverImage[0].buffer, "songs");
+    }
     const song = await AdminSongRepository.updateSong(id, {
-        title, artistId, albumId, genreId, filePath,
-        duration: duration ? Number(duration) : undefined,
-        year: year ? Number(year) : undefined,
-        lyrics,
+        ...(title && { title }),
+        ...(artistId && { artistId }),
+        ...(albumId && { albumId }),
+        ...(genreId && { genreId }),
+        ...(filePath && { filePath }),
+        ...(coverUrl !== undefined && { coverUrl: coverUrl !== null && coverUrl !== void 0 ? coverUrl : undefined }),
+        ...(deleteCover === "true" && { coverUrl: null }),
+        ...(duration !== undefined && { duration: Number(duration) }),
+        ...(year && { year: Number(year) }),
+        ...(lyrics !== undefined && { lyrics }),
     });
     res.json({ success: true, data: song });
 };
 exports.updateSong = updateSong;
 const deleteSong = async (req, res) => {
+    var _a, _b;
     const id = req.params.id;
     const existing = await AdminSongRepository.findSongById(id);
     if (!existing) {
         res.status(404).json({ success: false, message: "Song not found" });
         return;
+    }
+    if ((_a = existing.filePath) === null || _a === void 0 ? void 0 : _a.includes("cloudinary.com")) {
+        await (0, uploadImage_1.deleteAudioFromCloudinary)(existing.filePath);
+    }
+    if ((_b = existing.coverUrl) === null || _b === void 0 ? void 0 : _b.includes("cloudinary.com")) {
+        await (0, uploadImage_1.deleteImageFromCloudinary)(existing.coverUrl);
     }
     await AdminSongRepository.deleteSong(id);
     res.json({ success: true, message: "Song deleted" });

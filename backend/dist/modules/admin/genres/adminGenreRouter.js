@@ -38,13 +38,15 @@ const asyncHandler_1 = require("../../../utils/asyncHandler");
 const AdminGenreService = __importStar(require("./adminGenreService"));
 const authMiddleware_1 = require("../../../middleware/authMiddleware");
 const roleMiddleware_1 = require("../../../middleware/roleMiddleware");
+const upload_1 = require("../../../middleware/upload"); // ✅ เพิ่ม multer
 const router = (0, express_1.Router)();
 const admin = [authMiddleware_1.authMiddleware, (0, roleMiddleware_1.roleMiddleware)("ADMIN")];
 router.get("/stats", ...admin, (0, asyncHandler_1.asyncHandler)(AdminGenreService.getGenreStats));
 router.get("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdminGenreService.getAllGenres));
 router.get("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminGenreService.getGenreById));
-router.post("/", ...admin, (0, asyncHandler_1.asyncHandler)(AdminGenreService.createGenre));
-router.put("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminGenreService.updateGenre));
+// ✅ เพิ่ม upload.single("image") — parse FormData + รับไฟล์รูป
+router.post("/", ...admin, upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(AdminGenreService.createGenre));
+router.put("/:id", ...admin, upload_1.upload.single("image"), (0, asyncHandler_1.asyncHandler)(AdminGenreService.updateGenre));
 router.delete("/:id", ...admin, (0, asyncHandler_1.asyncHandler)(AdminGenreService.deleteGenre));
 exports.default = router;
 //# sourceMappingURL=adminGenreRouter.js.map

@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteArtist = exports.updateArtist = exports.createArtist = exports.getArtistById = exports.getAllArtists = void 0;
 const ArtistRepository = __importStar(require("./artistRepository"));
+const uploadImage_1 = require("../../utils/uploadImage");
 const getAllArtists = async (req, res) => {
     const artists = await ArtistRepository.findAllArtists();
     res.json({ success: true, data: artists });
@@ -50,10 +51,14 @@ const getArtistById = async (req, res) => {
 };
 exports.getArtistById = getArtistById;
 const createArtist = async (req, res) => {
-    const { name, bio, imageUrl } = req.body;
+    const { name, bio, imageUrl: imageUrlFromBody } = req.body;
     if (!name) {
         res.status(400).json({ success: false, message: "Name is required" });
         return;
+    }
+    let imageUrl = imageUrlFromBody;
+    if (req.file) {
+        imageUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "artists");
     }
     const artist = await ArtistRepository.createArtist({ name, bio, imageUrl });
     res.status(201).json({ success: true, data: artist });
@@ -65,8 +70,23 @@ const updateArtist = async (req, res) => {
         res.status(404).json({ success: false, message: "Artist not found" });
         return;
     }
-    const { name, bio, imageUrl } = req.body;
-    const artist = await ArtistRepository.updateArtist(req.params.id, { name, bio, imageUrl });
+    const { name, bio, imageUrl: imageUrlFromBody } = req.body;
+    let imageUrl = undefined;
+    if (req.file) {
+        if (existing.imageUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
+        imageUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "artists");
+    }
+    else if (imageUrlFromBody && imageUrlFromBody !== existing.imageUrl) {
+        if (existing.imageUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
+        imageUrl = imageUrlFromBody;
+    }
+    const artist = await ArtistRepository.updateArtist(req.params.id, {
+        ...(name !== undefined && { name }),
+        ...(bio !== undefined && { bio: bio === "" ? null : bio }),
+        ...(imageUrl && { imageUrl }),
+    });
     res.json({ success: true, data: artist });
 };
 exports.updateArtist = updateArtist;
@@ -76,6 +96,8 @@ const deleteArtist = async (req, res) => {
         res.status(404).json({ success: false, message: "Artist not found" });
         return;
     }
+    if (existing.imageUrl)
+        await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
     await ArtistRepository.deleteArtist(req.params.id);
     res.json({ success: true, message: "Artist deleted" });
 };

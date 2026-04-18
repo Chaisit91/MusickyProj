@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteGenre = exports.updateGenre = exports.createGenre = exports.getGenreById = exports.getAllGenres = void 0;
 const GenreRepository = __importStar(require("./genreRepository"));
+const uploadImage_1 = require("../../utils/uploadImage");
 const getAllGenres = async (req, res) => {
     const genres = await GenreRepository.findAllGenres();
     res.json({ success: true, data: genres });
@@ -50,7 +51,7 @@ const getGenreById = async (req, res) => {
 };
 exports.getGenreById = getGenreById;
 const createGenre = async (req, res) => {
-    const { name } = req.body;
+    const { name, description, color, imageUrl: imageUrlFromBody } = req.body;
     if (!name) {
         res.status(400).json({ success: false, message: "Name is required" });
         return;
@@ -60,7 +61,11 @@ const createGenre = async (req, res) => {
         res.status(409).json({ success: false, message: "Genre already exists" });
         return;
     }
-    const genre = await GenreRepository.createGenre({ name });
+    let imageUrl = imageUrlFromBody;
+    if (req.file) {
+        imageUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "genres");
+    }
+    const genre = await GenreRepository.createGenre({ name, description, color, imageUrl });
     res.status(201).json({ success: true, data: genre });
 };
 exports.createGenre = createGenre;
@@ -70,8 +75,24 @@ const updateGenre = async (req, res) => {
         res.status(404).json({ success: false, message: "Genre not found" });
         return;
     }
-    const { name } = req.body;
-    const genre = await GenreRepository.updateGenre(req.params.id, { name });
+    const { name, description, color, imageUrl: imageUrlFromBody } = req.body;
+    let imageUrl = undefined;
+    if (req.file) {
+        if (existing.imageUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
+        imageUrl = await (0, uploadImage_1.uploadImageToCloudinary)(req.file.buffer, "genres");
+    }
+    else if (imageUrlFromBody && imageUrlFromBody !== existing.imageUrl) {
+        if (existing.imageUrl)
+            await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
+        imageUrl = imageUrlFromBody;
+    }
+    const genre = await GenreRepository.updateGenre(req.params.id, {
+        name,
+        description,
+        color,
+        ...(imageUrl && { imageUrl }),
+    });
     res.json({ success: true, data: genre });
 };
 exports.updateGenre = updateGenre;
@@ -81,6 +102,8 @@ const deleteGenre = async (req, res) => {
         res.status(404).json({ success: false, message: "Genre not found" });
         return;
     }
+    if (existing.imageUrl)
+        await (0, uploadImage_1.deleteImageFromCloudinary)(existing.imageUrl);
     await GenreRepository.deleteGenre(req.params.id);
     res.json({ success: true, message: "Genre deleted" });
 };

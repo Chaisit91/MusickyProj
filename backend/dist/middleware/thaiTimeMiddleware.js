@@ -8,7 +8,11 @@ const convertDates = (obj) => {
         return obj.map(convertDates);
     const result = {};
     for (const key of Object.keys(obj)) {
-        const dateKeys = ["createdAt", "updatedAt", "lastLogin", "downloadedAt", "searchedAt", "queuedAt", "releaseDate", "expiresAt"];
+        const dateKeys = [
+            "createdAt", "updatedAt", "lastLogin", "downloadedAt",
+            "searchedAt", "queuedAt", "releaseDate", "expiresAt",
+            "startDate", "endDate", // เพิ่ม 2 ตัวนี้
+        ];
         if (dateKeys.includes(key) && obj[key]) {
             result[key] = new Intl.DateTimeFormat("th-TH", {
                 timeZone: "Asia/Bangkok",

@@ -25,6 +25,7 @@ import playHistoryRouter from "./modules/playHistory/playHistoryRouter";
 import artistFollowRouter from "./modules/artistFollow/artistFollowRouter";
 import notificationRouter from "./modules/notification/notificationRouter";
 import paymentRouter from "./modules/payment/paymentRouter";
+import supportRouter from "./modules/support/supportRouter";
 
 // Admin Routers
 import dashboardRouter from "./modules/admin/dashboard/dashboardRouter";
@@ -80,6 +81,7 @@ app.use("/api/play-history", playHistoryRouter);
 app.use("/api/artist-follows", artistFollowRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/payments", paymentRouter);
+app.use("/api/support", supportRouter);
 
 // ── Admin Routes ──────────────────────────────────────────────
 app.use("/api/admin/dashboard", dashboardRouter);

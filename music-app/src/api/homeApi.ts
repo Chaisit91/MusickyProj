@@ -135,6 +135,13 @@ export const unlikeSongApi = async (songId: string): Promise<void> => {
   await apiClient.delete(`/liked-songs/${songId}`);
 };
 
+// ─── Lyrics API ───────────────────────────────────────────────────────────────
+
+export const getSongLyricsApi = async (songId: string): Promise<string | null> => {
+  const { data } = await apiClient.get(`/songs/${songId}/lyrics`);
+  return data.data?.lyrics ?? null;
+};
+
 // ─── Downloads API ────────────────────────────────────────────────────────────
 
 export const getDownloadsApi = async (): Promise<Song[]> => {
