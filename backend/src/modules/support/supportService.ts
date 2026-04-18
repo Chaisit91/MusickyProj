@@ -66,10 +66,23 @@ export const adminReplyTicket = async (req: Request, res: Response) => {
   res.status(201).json({ success: true, data: msg });
 };
 
+const STATUS_MESSAGES: Record<TicketStatus, string> = {
+  OPEN:        "ticket ของคุณถูกเปิดใหม่อีกครั้ง",
+  IN_PROGRESS: "ticket ของคุณกำลังได้รับการดำเนินการ",
+  RESOLVED:    "ticket ของคุณได้รับการแก้ไขแล้ว",
+  CLOSED:      "ticket ของคุณถูกปิดแล้ว",
+};
+
 export const adminUpdateStatus = async (req: Request, res: Response) => {
   const { status } = req.body;
   const valid: TicketStatus[] = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
   if (!valid.includes(status)) { res.status(400).json({ success: false, message: "Invalid status" }); return; }
   const ticket = await Repo.updateTicketStatus(req.params.id as string, status);
+  await createNotification({
+    userId: ticket.userId,
+    type: "SUPPORT_REPLY",
+    title: `อัพเดต: ${ticket.subject}`,
+    body: STATUS_MESSAGES[status as TicketStatus],
+  });
   res.json({ success: true, data: ticket });
 };

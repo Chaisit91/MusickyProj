@@ -243,14 +243,13 @@ export const adminLogin = async (req: Request, res: Response) => {
 
   await AuthRepository.saveRefreshToken(user.id, refreshToken);
 
-  //  refreshToken → HttpOnly Cookie (JS อ่านไม่ได้)
   res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
 
-  //  ส่งแค่ accessToken + user ใน body (ไม่ส่ง refreshToken)
   res.json({
     success: true,
     data: {
       accessToken,
+      refreshToken,
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     },
   });
@@ -307,12 +306,6 @@ export const refresh = async (req: Request, res: Response) => {
     data: {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
-      user: {
-        id: tokenRecord.user.id,
-        name: tokenRecord.user.name,
-        email: tokenRecord.user.email,
-        role: tokenRecord.user.role,
-      },
     },
   });
 };
