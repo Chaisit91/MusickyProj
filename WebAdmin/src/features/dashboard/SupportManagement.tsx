@@ -84,8 +84,27 @@ const SupportManagementPage: React.FC = () => {
     return t.user?.name?.toLowerCase().includes(q) || t.user?.email?.toLowerCase().includes(q) || t.subject?.toLowerCase().includes(q);
   });
 
-  const fmtTime = (d: string) => new Date(d).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
-  const fmtDate = (d: string) => new Date(d).toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  const fmtTime = (d: string) => {
+    if (!d) return "";
+    if (d.includes(",")) return d.split(", ")[1]?.substring(0, 5) ?? "";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  };
+  const getDateKey = (d: string) => {
+    if (!d) return "";
+    if (d.includes(",")) return d.split(", ")[0];
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return d;
+    return date.toDateString();
+  };
+  const fmtDate = (d: string) => {
+    if (!d) return "";
+    if (d.includes(",")) return d.split(", ")[0];
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -122,7 +141,6 @@ const SupportManagementPage: React.FC = () => {
                 const isSelected = selected?.id === ticket.id;
                 const lastMsg = ticket.messages?.at(-1);
                 const unread = lastMsg?.sender === "USER";
-                const s = STATUS_CONFIG[ticket.status];
                 return (
                   <button key={ticket.id} onClick={() => selectTicket(ticket)}
                     className={`w-full text-left px-4 py-3.5 border-b border-gray-700/50 hover:bg-gray-700/60 transition-colors ${isSelected ? "bg-gray-700" : ""}`}>
@@ -181,13 +199,13 @@ const SupportManagementPage: React.FC = () => {
                 {selected.messages?.map((msg, i) => {
                   const isAdmin = msg.sender === "ADMIN";
                   const prev = selected.messages?.[i - 1];
-                  const showDate = !prev || new Date(msg.createdAt).toDateString() !== new Date(prev.createdAt).toDateString();
+                  const showDate = !prev || getDateKey(msg.createdAt) !== getDateKey(prev.createdAt);
                   return (
                     <React.Fragment key={msg.id}>
                       {showDate && (
                         <div className="text-center py-3">
                           <span className="text-xs text-gray-500 bg-gray-800 px-3 py-1 rounded-full">
-                            {new Date(msg.createdAt).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })}
+                            {getDateKey(msg.createdAt)}
                           </span>
                         </div>
                       )}

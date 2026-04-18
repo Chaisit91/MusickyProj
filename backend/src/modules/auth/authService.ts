@@ -300,13 +300,20 @@ export const refresh = async (req: Request, res: Response) => {
 
   await AuthRepository.saveRefreshToken(tokenRecord.user.id, newRefreshToken);
 
-  //  set refreshToken ใหม่ใน Cookie (Rotation)
   res.cookie("refreshToken", newRefreshToken, REFRESH_COOKIE_OPTIONS);
 
-  //  ส่งแค่ accessToken กลับ
   res.json({
     success: true,
-    data: { accessToken: newAccessToken },
+    data: {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: tokenRecord.user.id,
+        name: tokenRecord.user.name,
+        email: tokenRecord.user.email,
+        role: tokenRecord.user.role,
+      },
+    },
   });
 };
 

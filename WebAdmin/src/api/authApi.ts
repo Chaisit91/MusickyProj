@@ -11,9 +11,9 @@ export const logoutApi = async () => {
   return res.data;
 };
 
-//  silent refresh — browser ส่ง cookie ไปเอง ไม่ต้องส่ง body อะไร
 export const refreshApi = async () => {
-  const res = await api.post("/auth/refresh");
+  const refreshToken = localStorage.getItem("admin_refresh_token");
+  const res = await api.post("/auth/refresh", refreshToken ? { refreshToken } : {});
   return res.data;
 };
 

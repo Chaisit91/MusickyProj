@@ -16,9 +16,9 @@ interface AuthState {
   error: string | null;
 }
 
-//  ไม่มี initialState จาก localStorage แล้ว — ทุกอย่างเริ่มที่ null
+const savedUser = localStorage.getItem("admin_user");
 const initialState: AuthState = {
-  user: null,
+  user: savedUser ? JSON.parse(savedUser) : null,
   accessToken: null,
   loading: false,
   error: null,
@@ -83,8 +83,10 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
-        //  ไม่มี localStorage.setItem แล้ว
-        // refreshToken ถูก set เป็น HttpOnly Cookie โดย backend อัตโนมัติ
+        localStorage.setItem("admin_user", JSON.stringify(action.payload.user));
+        if (action.payload.refreshToken) {
+          localStorage.setItem("admin_refresh_token", action.payload.refreshToken);
+        }
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -95,19 +97,26 @@ const authSlice = createSlice({
       .addCase(logoutThunk.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
-        //  ไม่ต้อง clear localStorage
-        // refreshToken Cookie ถูก clear โดย backend อัตโนมัติ
+        localStorage.removeItem("admin_user");
+        localStorage.removeItem("admin_refresh_token");
       })
 
       // ── Silent Refresh ───────────────────────────────────────
       .addCase(refreshTokenThunk.fulfilled, (state, action: PayloadAction<any>) => {
         state.accessToken = action.payload.accessToken;
-        if (action.payload.user) state.user = action.payload.user;
+        if (action.payload.user) {
+          state.user = action.payload.user;
+          localStorage.setItem("admin_user", JSON.stringify(action.payload.user));
+        }
+        if (action.payload.refreshToken) {
+          localStorage.setItem("admin_refresh_token", action.payload.refreshToken);
+        }
       })
       .addCase(refreshTokenThunk.rejected, (state) => {
-        // refresh ไม่ได้ (cookie หมดอายุ หรือไม่มี) → clear state
         state.user = null;
         state.accessToken = null;
+        localStorage.removeItem("admin_user");
+        localStorage.removeItem("admin_refresh_token");
       });
   },
 });

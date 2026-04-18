@@ -116,20 +116,31 @@ export default function HelpSupportScreen() {
     }
   };
 
-  const fmtTime = (d: string) =>
-    new Date(d).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  const fmtTime = (d: string) => {
+    if (!d) return "";
+    if (d.includes(",")) return d.split(", ")[1]?.substring(0, 5) ?? "";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const getDateKey = (d: string) => {
+    if (!d) return "";
+    if (d.includes(",")) return d.split(", ")[0];
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return d;
+    return date.toDateString();
+  };
 
   const renderMessage = ({ item, index }: { item: Message; index: number }) => {
     const isUser = item.sender === "USER";
     const prev = messages[index - 1];
-    const showDate =
-      !prev ||
-      new Date(item.createdAt).toDateString() !== new Date(prev.createdAt).toDateString();
+    const showDate = !prev || getDateKey(item.createdAt) !== getDateKey(prev.createdAt);
     return (
       <>
         {showDate && (
           <Text style={{ color: "#555", fontSize: 11, textAlign: "center", marginVertical: 12 }}>
-            {new Date(item.createdAt).toLocaleDateString("th-TH", { day: "numeric", month: "long" })}
+            {getDateKey(item.createdAt)}
           </Text>
         )}
         <View style={{ flexDirection: "row", justifyContent: isUser ? "flex-end" : "flex-start", marginBottom: 6, paddingHorizontal: 12 }}>
