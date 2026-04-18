@@ -50,11 +50,13 @@ export const updateSong = async (req: Request, res: Response) => {
 };
 
 export const getSongLyrics = async (req: Request, res: Response) => {
+  console.log(`[lyrics] GET /songs/${req.params.id}/lyrics`);
   const song = await SongRepository.findSongById(req.params.id as string);
   if (!song) {
     res.status(404).json({ success: false, message: "Song not found" });
     return;
   }
+  console.log(`[lyrics] song="${song.title}" db_lyrics=${song.lyrics ? "HAS_LYRICS" : "NULL"}`);
 
   // Return cached lyrics from DB
   if (song.lyrics) {

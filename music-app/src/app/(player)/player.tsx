@@ -186,7 +186,6 @@ export default function PlayerScreen() {
   const [showPlaylistSheet, setShowPlaylistSheet] = useState(false);
   const [skipToast, setSkipToast] = useState(false);
   const [fetchedLyrics, setFetchedLyrics] = useState<string | null | undefined>(undefined);
-  const [lyricsLoadingId, setLyricsLoadingId] = useState<string | null>(null);
 
   const handleSkip = (direction: "next" | "prev") => {
     if (direction === "next" && !canSkip) {
@@ -203,19 +202,20 @@ export default function PlayerScreen() {
     setActiveTab(showLyrics ? "lyrics" : "player");
   }, [showLyrics]);
 
-  // Fetch lyrics when song changes or lyrics tab is opened
+  // Fetch lyrics when song changes
   useEffect(() => {
+    console.log("[player] lyrics effect, song=", currentSong?.id, currentSong?.title);
     if (!currentSong) return;
-    if (lyricsLoadingId === currentSong.id) return;
-    if (currentSong.lyrics) {
-      setFetchedLyrics(currentSong.lyrics);
-      return;
-    }
     setFetchedLyrics(undefined);
-    setLyricsLoadingId(currentSong.id);
     getSongLyricsApi(currentSong.id)
-      .then((lrc) => setFetchedLyrics(lrc))
-      .catch(() => setFetchedLyrics(null));
+      .then((lrc) => {
+        console.log("[player] lyrics result=", lrc ? "HAS_LYRICS" : "NULL");
+        setFetchedLyrics(lrc);
+      })
+      .catch((err) => {
+        console.log("[player] lyrics error=", err?.message ?? err);
+        setFetchedLyrics(null);
+      });
   }, [currentSong?.id]);
 
   // ── Misc ──────────────────────────────────────────────────────────────────

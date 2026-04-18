@@ -84,9 +84,11 @@ export const updateUserProfile = async (
 
 export const saveRefreshToken = async (userId: string, token: string) => {
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7); // หมดอายุใน 7 วัน
-  return prisma.refreshToken.create({
-    data: { userId, token, expiresAt },
+  expiresAt.setDate(expiresAt.getDate() + 7);
+  return prisma.refreshToken.upsert({
+    where: { token },
+    update: { userId, expiresAt },
+    create: { userId, token, expiresAt },
   });
 };
 
