@@ -9,8 +9,6 @@ const router = Router();
 // ── Mobile App ─────────────────────────────────────────────────
 router.post("/register", asyncHandler(AuthService.register));
 router.post("/login", asyncHandler(AuthService.login));
-router.post("/forgot-password", asyncHandler(AuthService.forgotPassword));
-router.post("/reset-password", asyncHandler(AuthService.resetPassword));
 
 // ── Admin Web ──────────────────────────────────────────────────
 router.post("/admin/login", asyncHandler(AuthService.adminLogin));

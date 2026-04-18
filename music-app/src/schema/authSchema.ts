@@ -29,22 +29,6 @@ export const playlistSchema = z.object({
   title: playlistTitleField,
 });
 
-// ─── Forgot Password ──────────────────────────────────────────────────────────
-export const forgotEmailSchema = z.object({
-  email: emailField,
-});
-export type ForgotEmailForm = z.infer<typeof forgotEmailSchema>;
-
-export const resetPasswordSchema = z.object({
-  otp: z.string().min(6, "OTP ต้องมี 6 หลัก").max(6, "OTP ต้องมี 6 หลัก"),
-  newPassword: z.string().min(8, "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"),
-  confirmPassword: z.string().min(1, "กรุณายืนยันรหัสผ่าน"),
-}).refine((d) => d.newPassword === d.confirmPassword, {
-  message: "รหัสผ่านไม่ตรงกัน",
-  path: ["confirmPassword"],
-});
-export type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
-
 // ─── Set Username ─────────────────────────────────────────────────────────────
 export const setUsernameSchema = z.object({
   name: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร").max(50, "ชื่อยาวเกิน 50 ตัวอักษร"),
