@@ -175,6 +175,11 @@ const NotificationCard = ({
     </View>
 
     <View style={{ flex: 1 }}>
+      {notif.type === "SUPPORT_REPLY" && (
+        <View style={{ alignSelf: "flex-start", backgroundColor: "#7c3aed", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginBottom: 6 }}>
+          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>ตอบกลับจาก ADMIN</Text>
+        </View>
+      )}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
         <Text style={{ color: "#fff", fontSize: 14, fontWeight: notif.isRead ? "500" : "700", flex: 1, marginRight: 8 }}>
           {notif.title}
@@ -321,7 +326,12 @@ export default function NotificationsScreen() {
               <NotificationCard
                 key={notif.id}
                 notif={notif}
-                onPress={() => handleMarkRead(notif.id)}
+                onPress={() => {
+                  handleMarkRead(notif.id);
+                  if (notif.type === "SUPPORT_REPLY") {
+                    router.push("/settings/help-support");
+                  }
+                }}
               />
             ))
           )}

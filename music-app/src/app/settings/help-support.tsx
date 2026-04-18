@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StatusBar,
-  FlatList, ActivityIndicator, KeyboardAvoidingView, Platform,
+  FlatList, ActivityIndicator, KeyboardAvoidingView,
   RefreshControl, Alert, ScrollView,
 } from "react-native";
 import { router } from "expo-router";
@@ -40,7 +40,7 @@ interface Message {
 }
 
 export default function HelpSupportScreen() {
-  const token = useAppSelector((s) => s.auth.token);
+  const token = useAppSelector((s) => s.auth.accessToken);
 
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [ticketSubject, setTicketSubject] = useState("");
@@ -162,7 +162,7 @@ export default function HelpSupportScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "#111" }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior="padding"
     >
       <StatusBar barStyle="light-content" />
 

@@ -268,11 +268,19 @@ const SongModal: React.FC<{
             {/* ศิลปิน */}
             <div>
               <label className={labelCls}>ศิลปิน *</label>
-              <select {...register("artistId", { onChange: () => setValue("albumId", "") })}
-                className={inputCls(!!errors.artistId)}>
-                <option value="">เลือกศิลปิน</option>
-                {artists.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+              {mode === "add" && defaultArtistId ? (
+                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-gray-50 flex items-center gap-2">
+                  <span className="text-gray-400">🎤</span>
+                  <span className="font-medium">{artists.find(a => a.id === defaultArtistId)?.name ?? "กำลังโหลด..."}</span>
+                  <span className="ml-auto text-xs text-gray-400">ศิลปินที่เลือก</span>
+                </div>
+              ) : (
+                <select {...register("artistId", { onChange: () => setValue("albumId", "") })}
+                  className={inputCls(!!errors.artistId)}>
+                  <option value="">เลือกศิลปิน</option>
+                  {artists.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              )}
               {errors.artistId && <p className="text-red-500 text-xs mt-1">⚠ {errors.artistId.message}</p>}
             </div>
 

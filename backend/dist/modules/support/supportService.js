@@ -115,7 +115,7 @@ const adminReplyTicket = async (req, res) => {
     await (0, notificationRepository_1.createNotification)({
         userId: ticket.userId,
         type: "SUPPORT_REPLY",
-        title: `ตอบกลับ: ${ticket.subject}`,
+        title: `ตอบกลับจาก ADMIN: ${ticket.subject}`,
         body: content,
     });
     res.status(201).json({ success: true, data: msg });

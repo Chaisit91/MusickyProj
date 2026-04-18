@@ -291,16 +291,6 @@ export default function SettingsScreen() {
         </Text>
         <View style={{ backgroundColor: "#161616", borderRadius: 14, marginHorizontal: 16, overflow: "hidden" }}>
           <SettingRow
-            label="Streaming Quality"
-            value={prefs.streamingQuality}
-            onPress={() => router.push("/settings/streaming-quality")}
-          />
-          <SettingRow
-            label="Download Quality"
-            value={prefs.downloadQuality}
-            onPress={() => router.push("/settings/download-quality")}
-          />
-          <SettingRow
             label="Auto-Play"
             rightElement={
               <Switch
