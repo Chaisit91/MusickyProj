@@ -38,12 +38,6 @@ export const playlistSchema = z.object({
   title: playlistTitleField,
 });
 
-// ─── Set Username ─────────────────────────────────────────────────────────────
-export const setUsernameSchema = z.object({
-  name: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร").max(50, "ชื่อยาวเกิน 50 ตัวอักษร"),
-});
-export type SetUsernameForm = z.infer<typeof setUsernameSchema>;
-
 // ─── Edit Profile ─────────────────────────────────────────────────────────────
 export const editProfileSchema = z.object({
   name: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร").max(50, "ชื่อยาวเกิน 50 ตัวอักษร"),
