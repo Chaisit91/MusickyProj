@@ -16,9 +16,6 @@ router.post("/admin/login", asyncHandler(AuthService.adminLogin));
 // ── Token ──────────────────────────────────────────────────────
 router.post("/refresh", asyncHandler(AuthService.refresh));
 
-// ── Google OAuth ───────────────────────────────────────────────
-router.post("/google", asyncHandler(AuthService.googleLogin));
-
 // ── Protected ─────────────────────────────────────────────────
 router.get("/me", authMiddleware, asyncHandler(AuthService.getMe));
 router.patch("/profile", authMiddleware, upload.single("avatar"), asyncHandler(AuthService.updateProfile));

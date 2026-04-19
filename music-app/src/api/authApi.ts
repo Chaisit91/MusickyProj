@@ -46,30 +46,6 @@ export const logoutApi = async () => {
   return data;
 };
 
-export interface GoogleLoginResponse {
-  success: boolean;
-  requiresName: boolean;
-  // กรณี requiresName = true
-  googleData?: {
-    googleId: string;
-    email: string;
-    suggestedName: string;
-    avatarUrl: string | null;
-    accessToken: string;
-  };
-  // กรณี requiresName = false
-  data?: {
-    accessToken: string;
-    refreshToken: string;
-    user: AuthUser;
-  };
-}
-
-export const googleLoginApi = async (params: { accessToken: string; name?: string }) => {
-  const { data } = await apiClient.post("/auth/google", params);
-  return data as GoogleLoginResponse;
-};
-
 export const fetchMeApi = async () => {
   const { data } = await apiClient.get("/auth/me");
   return data as { success: boolean; data: AuthUser };
