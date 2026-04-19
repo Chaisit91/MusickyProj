@@ -17,7 +17,6 @@ model User {
   isActive           Boolean              @default(true)
   lastLogin          DateTime?
   avatarUrl          String?
-  googleId           String?              @unique
   isPremium          Boolean              @default(false)
   premiumExpiresAt   DateTime?
   playlists          Playlist[]

@@ -46,6 +46,7 @@ export interface LoginResponse {
   };
 }
 
+<<<<<<< HEAD
 // ─── ขอ OTP สำหรับรีเซ็ตรหัสผ่าน ─────────────────────────────────────────────
 // params: email - อีเมลที่ต้องการรีเซ็ตรหัสผ่าน
 // return: success flag, ข้อความ, และอาจมี OTP (dev mode)
@@ -65,6 +66,8 @@ export const resetPasswordApi = async (email: string, otp: string, newPassword: 
 // ─── สมัครสมาชิกใหม่ ──────────────────────────────────────────────────────────
 // params: payload - ข้อมูลสมาชิกใหม่ (ชื่อ, อีเมล, รหัสผ่าน, วันเกิด)
 // return: LoginResponse (backend คืน token ทันทีหลังสมัคร ไม่ต้อง login ซ้ำ)
+=======
+>>>>>>> d644fe44f32236481b9e824505657910f9ebd318
 export const registerApi = async (payload: RegisterPayload) => {
   const { data } = await apiClient.post("/auth/register", payload);
   return data as LoginResponse; // backend now returns tokens on register
@@ -86,6 +89,7 @@ export const logoutApi = async () => {
   return data;
 };
 
+<<<<<<< HEAD
 // ─── Interface สำหรับ response เมื่อ login ด้วย Google ──────────────────────
 export interface GoogleLoginResponse {
   success: boolean;      // API สำเร็จหรือไม่
@@ -117,6 +121,8 @@ export const googleLoginApi = async (params: { accessToken: string; name?: strin
 // ─── ดึงข้อมูลผู้ใช้ปัจจุบัน (ตาม token ที่แนบ) ─────────────────────────────
 // ใช้ตรวจสอบ session ว่ายังใช้งานได้อยู่หรือไม่ และดึงข้อมูล user ล่าสุด
 // return: ข้อมูล AuthUser ของผู้ใช้ที่ login อยู่
+=======
+>>>>>>> d644fe44f32236481b9e824505657910f9ebd318
 export const fetchMeApi = async () => {
   const { data } = await apiClient.get("/auth/me");
   return data as { success: boolean; data: AuthUser };

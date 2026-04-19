@@ -11,9 +11,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // นำเข้า AsyncStorage สำหรับเก็บ/อ่าน token และข้อมูลผู้ใช้ใน local storage ของอุปกรณ์
 import AsyncStorage from "@react-native-async-storage/async-storage";
+<<<<<<< HEAD
 // นำเข้า API functions และ types สำหรับระบบ authentication
 import { loginApi, registerApi, logoutApi, fetchMeApi, updateProfileApi, googleLoginApi, AuthUser, LoginPayload, RegisterPayload } from "../api/authApi";
 // นำเข้า setCachedToken เพื่ออัปเดต token ที่ใช้กับ axios instance ทันที (ไม่ต้องรอ AsyncStorage)
+=======
+import { loginApi, registerApi, logoutApi, fetchMeApi, updateProfileApi, AuthUser, LoginPayload, RegisterPayload } from "../api/authApi";
+>>>>>>> d644fe44f32236481b9e824505657910f9ebd318
 import { setCachedToken } from "../api/apiClient";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -63,6 +67,7 @@ export const restoreSession = createAsyncThunk("auth/restoreSession", async () =
   }
 });
 
+<<<<<<< HEAD
 // Google Login
 // รับ Google access token แล้วส่งไป backend เพื่อแลก JWT ของแอป
 export const googleLoginThunk = createAsyncThunk(
@@ -88,6 +93,8 @@ export const googleLoginThunk = createAsyncThunk(
   }
 );
 
+=======
+>>>>>>> d644fe44f32236481b9e824505657910f9ebd318
 // Fetch latest user from API (call after focus on profile screens)
 // ใช้รีเฟรช user data หลังผู้ใช้แก้ไข profile เพื่อให้ UI แสดงข้อมูลล่าสุด
 export const fetchMeThunk = createAsyncThunk("auth/fetchMe", async (_, { rejectWithValue }) => {
@@ -231,6 +238,7 @@ const authSlice = createSlice({
         state.isLoading = false;
       });
 
+<<<<<<< HEAD
     // googleLogin: จัดการ Google OAuth login
     builder
       .addCase(googleLoginThunk.fulfilled, (state, action) => {
@@ -247,6 +255,9 @@ const authSlice = createSlice({
       });
 
     // fetchMe: อัปเดต user data ล่าสุดจาก API
+=======
+    // fetchMe
+>>>>>>> d644fe44f32236481b9e824505657910f9ebd318
     builder.addCase(fetchMeThunk.fulfilled, (state, action) => {
       state.user = action.payload; // แทนที่ user เดิมด้วยข้อมูลล่าสุด
     });
