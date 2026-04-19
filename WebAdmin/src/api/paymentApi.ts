@@ -1,3 +1,5 @@
+// API รายการชำระเงิน (Admin) — getPayments, ดูประวัติ subscription ของ users
+
 import api from "./axios";
 
 export interface PaymentTransaction {

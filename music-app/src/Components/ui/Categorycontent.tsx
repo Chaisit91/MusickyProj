@@ -1,3 +1,12 @@
+// แสดงรายการ content แบบ horizontal scroll — รองรับ: เพลง, ศิลปิน, อัลบั้ม, แนวเพลง | กด item เพื่อ navigate หรือเล่นเพลง
+//
+// หลักการทำงาน:
+// 1. รับ category ปัจจุบัน (For you/Relax/Workout/Travel/Party) และข้อมูลต่างๆ จาก home screen
+// 2. กรองเพลงตาม CATEGORY_KEYWORDS โดยจับคู่กับ genre.name (case-insensitive)
+// 3. กรองศิลปินที่ follow และ artist จากเพลงที่กรองแล้ว เพื่อแสดงเฉพาะที่เกี่ยวข้อง
+// 4. render section ต่างๆ: Featuring Today (BannerCard), Recently Played (RecentCard), Mixes (MixCard), Artists, New Releases, Playlists
+// 5. แต่ละ card เป็น horizontal scroll — กด navigate ไปหน้าเพลง/ศิลปิน/แนวเพลง หรือเรียก onSongPress
+
 import React from "react";
 import {View,
   Text,

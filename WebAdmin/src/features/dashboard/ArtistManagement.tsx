@@ -1,3 +1,10 @@
+// หน้าจัดการ Artists — table + modal CRUD: สร้าง/แก้ไข/ลบศิลปิน, upload รูปภาพ, กดดูเพลงของศิลปิน | ใช้ useArtists
+//
+// หลักการทำงาน:
+// 1. useArtists hook: โหลดศิลปิน, CRUD
+// 2. แสดง grid หรือ table ศิลปิน + pagination
+// 3. modal สร้าง/แก้ไข: form มี image upload
+
 import React, { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

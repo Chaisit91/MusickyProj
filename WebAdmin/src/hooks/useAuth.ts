@@ -1,3 +1,11 @@
+// Hook จัดการ auth admin — login, logout, checkAuth, อ่าน user/token จาก Redux | ใช้ใน AdminLogin และ guards
+//
+// หลักการทำงาน:
+// 1. ดึง user, accessToken, loading, error จาก Redux auth state
+// 2. logout function: dispatch logoutThunk → navigate /login
+// 3. คำนวณ isAdmin (role==="ADMIN") และ isAuthenticated (มีทั้ง token + user)
+// 4. ใช้โดย AdminRoute, Sidebar (แสดงชื่อ), AdminLogin
+
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../store/store";
 import { logoutThunk } from "../store/auth.store";

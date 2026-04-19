@@ -1,3 +1,11 @@
+// Redux slice การแจ้งเตือน — state: items[], unreadCount | thunks: fetchNotifications, markAllRead, deleteNotification | ล้าง state เมื่อ logout
+//
+// หลักการทำงาน:
+// 1. fetchNotifications thunk: GET /notifications → เก็บ items[] ลง state
+// 2. markNotificationRead thunk: PATCH /notifications/:id/read → อัปเดต item.isRead=true ใน state
+// 3. markAllNotificationsRead thunk: PATCH /notifications/read-all → forEach item.isRead=true
+// 4. state.isLoading ใช้แสดง spinner, state.error ใช้แสดงข้อความ error
+
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import {
   AppNotification,

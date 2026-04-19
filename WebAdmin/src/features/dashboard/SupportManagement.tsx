@@ -1,3 +1,10 @@
+// หน้าจัดการ Support tickets — แสดงรายการ ticket จาก users, ตอบกลับ, เปลี่ยน status (open/resolved)
+//
+// หลักการทำงาน:
+// 1. GET /support → รายการ tickets ที่ user ส่งมา
+// 2. admin reply: POST /support/:id/reply → ส่งข้อความตอบกลับ + trigger notification ฝั่ง user
+// 3. filter ตาม status (open/closed)
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Send, RefreshCw, User, MessageSquare } from "lucide-react";
 import Sidebar from "../../components/layout/Sidebar";

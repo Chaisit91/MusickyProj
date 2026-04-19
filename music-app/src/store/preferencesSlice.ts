@@ -1,3 +1,11 @@
+// Redux slice ตั้งค่าผู้ใช้ — state: musicLanguage, streamingQuality, downloadQuality, autoPlay, showLyrics | sync กับ backend ผ่าน preferencesApi | persist ลง AsyncStorage
+//
+// หลักการทำงาน:
+// 1. loadPreferences (เรียกหลัง login): GET /users/me/preferences → เก็บใน state + sync ลง AsyncStorage
+// 2. savePreferences: PUT /users/me/preferences (Partial) → อัปเดต state + sync AsyncStorage
+// 3. setPreferenceLocal: อัปเดต state ทันที (optimistic) ก่อน API ตอบ ใช้คู่กับ savePreferences
+// 4. logout: reset กลับ DEFAULT values + isLoaded=false
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getPreferencesApi, updatePreferencesApi, UserPreferences } from "../api/preferencesApi";

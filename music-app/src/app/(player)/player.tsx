@@ -1,3 +1,16 @@
+// หน้า player เต็มจอ — album art, title/artist, progress slider (drag), controls (shuffle/prev/play/next/repeat), lyrics tab (SyncedLyrics), volume slider, Up Next preview | skip แสดง ad สำหรับ free user
+//
+// หลักการทำงาน:
+// 1. แสดง album art, ชื่อ/ศิลปิน, progress slider, controls, volume slider
+// 2. Tab: PLAYER แสดง album art, LYRICS แสดง SyncedLyrics (โหลด lyrics จาก API เมื่อเปิด tab)
+// 3. handleSkip (next direction):
+//    - ตรวจ canSkip (skipsUsed < FREE_SKIP_LIMIT หรือ premium)
+//    - ถ้าไม่ได้: แสดง toast "skip หมดแล้ว"
+//    - free user: dispatch consumeSkip → dispatch showAfterSongAd → ถ้ามี ad return (BetweenSongAd จัดการ nextSong)
+//    - ถ้าไม่มี ad หรือ premium: dispatch nextSong ทันที
+// 4. Slider onSlidingComplete: dispatch seekTo(value) → AudioController seek
+// 5. heart/download icon: dispatch toggleLikeSong/toggleDownload (optimistic)
+// 6. "..." menu: แสดง AddToPlaylistSheet
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -21,6 +34,7 @@ import {
 } from "../../store/playerSlice";
 import { toggleLikeSong, toggleDownload, loadLibrary } from "../../store/librarySlice";
 import { consumeSkip, FREE_SKIP_LIMIT } from "../../store/skipSlice";
+import { showAfterSongAd } from "../../store/adsSlice";
 import AddToPlaylistSheet from "../../Components/ui/AddToPlaylistSheet";
 import SyncedLyrics from "../../Components/player/SyncedLyrics";
 import { Image } from "expo-image";
@@ -187,35 +201,35 @@ export default function PlayerScreen() {
   const [skipToast, setSkipToast] = useState(false);
   const [fetchedLyrics, setFetchedLyrics] = useState<string | null | undefined>(undefined);
 
-  const handleSkip = (direction: "next" | "prev") => {
-    if (direction === "next" && !canSkip) {
+  const handleSkip = async (direction: "next" | "prev") => {
+    if (direction === "prev") { dispatch(prevSong()); return; }
+
+    if (!canSkip) {
       setSkipToast(true);
       setTimeout(() => setSkipToast(false), 2500);
       return;
     }
-    if (direction === "next" && !isPremium) dispatch(consumeSkip());
-    if (direction === "next") dispatch(nextSong());
-    else dispatch(prevSong());
+
+    if (!isPremium) {
+      dispatch(consumeSkip());
+      // แสดงโฆษณาก่อนข้ามเพลง — ถ้ามี ad, BetweenSongAd จะ call nextSong เอง
+      const result = await dispatch(showAfterSongAd());
+      if ((result as any).payload) return;
+    }
+
+    dispatch(nextSong());
   };
 
   useEffect(() => {
     setActiveTab(showLyrics ? "lyrics" : "player");
   }, [showLyrics]);
 
-  // Fetch lyrics when song changes
   useEffect(() => {
-    console.log("[player] lyrics effect, song=", currentSong?.id, currentSong?.title);
     if (!currentSong) return;
     setFetchedLyrics(undefined);
     getSongLyricsApi(currentSong.id)
-      .then((lrc) => {
-        console.log("[player] lyrics result=", lrc ? "HAS_LYRICS" : "NULL");
-        setFetchedLyrics(lrc);
-      })
-      .catch((err) => {
-        console.log("[player] lyrics error=", err?.message ?? err);
-        setFetchedLyrics(null);
-      });
+      .then((lrc) => setFetchedLyrics(lrc))
+      .catch(() => setFetchedLyrics(null));
   }, [currentSong?.id]);
 
   // ── Misc ──────────────────────────────────────────────────────────────────

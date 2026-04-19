@@ -1,3 +1,10 @@
+// Mini audio player สำหรับ preview เพลงใน Admin — progress bar, ปุ่ม play/pause, เวลาผ่านไป/ทั้งหมด, ปุ่ม stop | รับ props จาก useAudioPlayer hook
+//
+// หลักการทำงาน:
+// 1. แถบ player เล็กสำหรับ WebAdmin — ใช้ HTML audio element
+// 2. แสดงชื่อเพลง + ปุ่ม play/pause ขณะ preview
+// 3. ใช้ใน Songmanagement เพื่อ listen เพลงก่อน publish
+
 import React from "react";
 import { Play, Pause, X, Music, Volume2, VolumeX } from "lucide-react";
 import type { PlayingSong } from "../../hooks/useAudioPlayer";

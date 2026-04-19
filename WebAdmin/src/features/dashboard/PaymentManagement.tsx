@@ -1,3 +1,11 @@
+// หน้ารายการชำระเงิน — แสดงประวัติ Premium subscription ทั้งหมด, filter ตามช่วงเวลา, ดู status การชำระ
+//
+// หลักการทำงาน:
+// 1. usePremiumStats hook: summary cards (active premium, revenue, expiring)
+// 2. GET /payments → รายการ transactions ทั้งหมด พร้อม status (PENDING/SUCCESS/FAILED)
+// 3. admin approve: PATCH /payments/:id/approve → เปลี่ยน status เป็น SUCCESS + activate premium
+// 4. filter ตาม status, search ตาม user email
+
 import { useEffect, useState, useCallback } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

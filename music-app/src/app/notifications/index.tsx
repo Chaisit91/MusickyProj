@@ -1,3 +1,5 @@
+// หน้าการแจ้งเตือน — แสดงรายการ notifications ทั้งหมด, mark all read, ลบแต่ละรายการ | badge unread count จาก Redux
+
 import React, { useEffect, useState } from "react";
 import {
   View,

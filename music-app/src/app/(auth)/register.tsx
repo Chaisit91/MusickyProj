@@ -1,3 +1,12 @@
+// หน้า Register — form ชื่อ, email, รหัสผ่าน, วันเกิด (zod validation) | dispatch registerThunk → auto login หลังสมัคร
+//
+// หลักการทำงาน:
+// 1. react-hook-form + zodResolver(registerSchema) validate ชื่อ, email, รหัสผ่าน, ยืนยันรหัสผ่าน
+// 2. useWatch("password") → PasswordStrength component คำนวณความแข็งแกร่ง real-time
+// 3. onSubmit: dispatch registerThunk → ถ้าสำเร็จ router.replace("/login") ให้ login เอง
+// 4. ถ้า error มีคำว่า "email"/"already" → setError บน email field (email ซ้ำ)
+// 5. ปุ่ม "Fill test data": setValue ทุก field → ใช้สำหรับ dev testing
+
 import React, { useRef, useEffect, useState } from "react";
 import {
   View,

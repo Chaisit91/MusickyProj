@@ -1,3 +1,9 @@
+// Hook ดึงสถิติ premium — จำนวน premium users, revenue รายเดือน | ใช้ใน UserManagement
+//
+// หลักการทำงาน:
+// 1. fetch /payments/stats → คืน premium stats: active users, revenue, expiring soon
+// 2. ใช้ใน PaymentManagement สำหรับแสดง summary cards ด้านบน
+
 import { useEffect, useState, useCallback } from "react";
 import { getUserStatsApi } from "../api/userApi";
 

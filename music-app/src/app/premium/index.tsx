@@ -1,3 +1,5 @@
+// หน้าแพ็กเกจ Premium — แสดง feature ของ Premium vs Free, ปุ่มสมัคร navigate ไป payment
+
 import React, { useState } from "react";
 import {
   View,

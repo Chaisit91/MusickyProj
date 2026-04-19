@@ -1,3 +1,11 @@
+// Hook จัดการศิลปิน — fetch list, create, update, delete | จัดการ loading/error state
+//
+// หลักการทำงาน:
+// 1. fetchArtists: GET /artists → โหลดศิลปินทั้งหมด
+// 2. createArtist/updateArtist: POST/PUT /artists (FormData สำหรับ image)
+// 3. deleteArtist: DELETE /artists/:id
+// 4. pagination: totalPages, currentPage state สำหรับ paginated artist list
+
 import { useState, useEffect, useCallback } from "react";
 import type { Artist } from "../types/artist";
 import {

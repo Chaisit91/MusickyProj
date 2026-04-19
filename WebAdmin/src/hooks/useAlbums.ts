@@ -1,3 +1,11 @@
+// Hook จัดการอัลบั้ม — fetch list, create, update, delete | จัดการ loading/error state
+//
+// หลักการทำงาน:
+// 1. fetchAlbums: GET /albums → โหลดอัลบั้มทั้งหมด
+// 2. createAlbum/updateAlbum: POST/PUT /albums (FormData สำหรับ cover image)
+// 3. deleteAlbum: DELETE /albums/:id → ลบและ refetch
+// 4. จัดการ modal states: showCreate, showEdit, editTarget ภายใน hook
+
 import { useState, useEffect, useCallback } from "react";
 import type { Album } from "../types/album";
 import {

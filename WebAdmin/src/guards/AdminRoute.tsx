@@ -1,3 +1,11 @@
+// Route guard ตรวจสิทธิ์ admin — isAuthenticated + role=ADMIN → render children | ไม่ authenticated → redirect /login | authenticated แต่ไม่ใช่ admin → redirect /forbidden
+//
+// หลักการทำงาน:
+// 1. ใช้ useAuth hook ดึง isAuthenticated + isAdmin
+// 2. ถ้าไม่ authenticated → Navigate to /login
+// 3. ถ้า authenticated แต่ไม่ใช่ admin → Navigate to /forbidden
+// 4. ถ้าผ่านทั้งคู่ → render children (หรือ Outlet)
+
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";

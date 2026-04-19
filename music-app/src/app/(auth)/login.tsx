@@ -1,3 +1,13 @@
+// หน้า Login — form email/password (zod validation), Google login, link ไป register/forgot-password | dispatch loginThunk หรือ googleLoginThunk
+//
+// หลักการทำงาน:
+// 1. react-hook-form + zodResolver(loginSchema) validate email/password
+// 2. onSubmit: dispatch loginThunk → ถ้า rejected แสดง error บน field, ถ้า fulfilled:
+//    - dispatch loadPreferences
+//    - ถ้า user ไม่ premium → router.replace("/home-ads") (ดู splash ad ก่อน)
+//    - ถ้า premium → AuthGuard redirect ไป /home อัตโนมัติ
+// 3. Animated.parallel: fade + slide-up เมื่อ mount
+
 import React, { useRef, useEffect, useState } from "react";
 import {
   View,

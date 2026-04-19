@@ -1,3 +1,9 @@
+// หน้า 403 Forbidden — แสดงเมื่อ user login แล้วแต่ไม่มีสิทธิ์ admin
+//
+// หลักการทำงาน:
+// 1. แสดงข้อความ 403 Forbidden เมื่อ user ไม่มีสิทธิ์เข้าถึงหน้านั้น
+// 2. ปุ่ม "Go back" → navigate(-1) หรือ /dashboard
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";

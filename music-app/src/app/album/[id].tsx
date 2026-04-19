@@ -1,3 +1,5 @@
+// หน้ารายละเอียดอัลบั้ม — ดึงข้อมูลจาก detailApi ด้วย id | แสดงปก, ชื่อ, ศิลปิน, รายการเพลง | กดเล่นทั้งอัลบั้มหรือเลือกเพลง
+
 import React, { useEffect, useState } from "react";
 import {View,
   Text,

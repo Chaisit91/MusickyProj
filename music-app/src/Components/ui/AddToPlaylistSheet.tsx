@@ -1,3 +1,13 @@
+// Bottom sheet เพิ่มเพลงเข้า playlist — แสดง playlist ที่มีอยู่ให้เลือก + สร้าง playlist ใหม่ | dismiss เมื่อ song prop เป็น null
+//
+// หลักการทำงาน:
+// 1. ถ้า song prop เป็น null → return null (sheet ไม่แสดง)
+// 2. render Modal slide-up จากด้านล่าง, กด backdrop → onClose
+// 3. แสดงรายการ playlist ที่มีอยู่ทั้งหมด, ถ้า song อยู่ใน playlist แล้ว → แสดง check icon
+// 4. กด playlist row: ตรวจว่าเพลงอยู่ใน playlist หรือยัง → dispatch removeSongFromPlaylistThunk หรือ addSongToPlaylistThunk
+// 5. กด "New playlist" → แสดง NewPlaylistForm (react-hook-form + zod)
+// 6. NewPlaylistForm submit: dispatch createPlaylistThunk แล้ว dispatch addSongToPlaylistThunk เพิ่มเพลงทันที
+
 import React from "react";
 import {View,
   Text,

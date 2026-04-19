@@ -1,3 +1,10 @@
+// Sidebar navigation ของ admin panel — links: Dashboard, Users, Artists, Albums, Songs, Genres, Ads, Payments, Support | highlight active route
+//
+// หลักการทำงาน:
+// 1. แสดงลิงก์ navigate ไปหน้าต่างๆ: Dashboard, Songs, Artists, Albums, Genres, Users, Payments, Ads, Support
+// 2. highlight เมนูปัจจุบันตาม useLocation pathname
+// 3. ปุ่ม logout: เรียก useAuth().logout → dispatch logoutThunk → navigate /login
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';

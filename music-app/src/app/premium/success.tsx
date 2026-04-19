@@ -1,3 +1,5 @@
+// หน้า Premium สมัครสำเร็จ — แสดง confirmation + navigate กลับ home
+
 import React, { useEffect, useRef } from "react";
 import {
   View,

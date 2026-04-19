@@ -1,3 +1,10 @@
+// Modal ยืนยันก่อนลบ — รับ props: isOpen, itemName, onConfirm, onCancel | แสดงชื่อ item ที่จะลบให้ยืนยันหรือยกเลิก
+//
+// หลักการทำงาน:
+// 1. Modal dialog ยืนยันการลบ — แสดงข้อความ + ปุ่ม Confirm/Cancel
+// 2. รับ onConfirm, onCancel callbacks
+// 3. ใช้ร่วมกันทุกหน้า management เพื่อ prevent accidental delete
+
 import React from "react";
 import { Trash2 } from "lucide-react";
 

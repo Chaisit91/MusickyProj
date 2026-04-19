@@ -1,3 +1,5 @@
+// หน้ารายการ playlist — แสดง playlist ของ user, สร้างใหม่ได้ | กดเข้าไปดู/เล่นได้
+
 import React, { useEffect, useState } from "react";
 import {View,
   Text,

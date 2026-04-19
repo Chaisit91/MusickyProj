@@ -1,3 +1,11 @@
+// Zod schema validation สำหรับ admin forms — loginSchema และ schema อื่นๆ สำหรับ CRUD forms
+//
+// หลักการทำงาน:
+// 1. Zod schemas สำหรับ form validation ฝั่ง WebAdmin
+// 2. loginSchema: email + password validation
+// 3. song/artist/album/genre schemas: validate ชื่อ, URL, required fields
+// 4. export types ด้วย z.infer สำหรับ react-hook-form
+
 import { z } from "zod";
 
 // ── Shared fields ──────────────────────────────────────────────

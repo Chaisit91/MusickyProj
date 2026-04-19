@@ -1,3 +1,13 @@
+// หน้าจัดการ queue — แสดง Now Playing + รายการเพลงทั้งหมด, reorder ด้วย up/down, ลบเพลงออกจาก queue, เลือก repeat mode (none/all/one) | auto-load เพลงสุ่มเมื่อ queue ว่าง
+//
+// หลักการทำงาน:
+// 1. mount: ถ้า queue ว่าง → fetch /songs (สุ่ม 20 เพลง) → dispatch setQueue + playSong
+// 2. แสดง Now Playing card + FlatList รายการเพลงที่เหลือใน queue
+// 3. ปุ่มลูกศรขึ้น/ลง: dispatch moveQueueItem (เลื่อนเพลงใน queue)
+// 4. กด เพลง: dispatch playSong เล่นทันที
+// 5. กด trash: dispatch removeFromQueue ลบออกจาก queue
+// 6. Repeat mode badge: cycleRepeat (none→all→one) แสดง icon ที่ด้านบน
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity,

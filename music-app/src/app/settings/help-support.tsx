@@ -1,3 +1,5 @@
+// หน้าช่วยเหลือ — FAQ, ติดต่อ support, link ไป email/social | ไม่มี API call
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StatusBar,

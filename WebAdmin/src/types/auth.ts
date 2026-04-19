@@ -1,3 +1,10 @@
+// TypeScript types สำหรับ auth — AdminUser, LoginRequest, LoginResponse, TokenPayload
+//
+// หลักการทำงาน:
+// 1. export interface AdminUser: id, name, email, role
+// 2. export interface LoginResponse: accessToken, user
+// 3. ใช้โดย auth.store.ts และ useAuth hook
+
 export interface User {
   id: string;
   name: string;

@@ -1,3 +1,9 @@
+// TypeScript types สำหรับ Song — id, title, artistId, albumId, genreId, filePath, coverUrl, duration, lyrics
+//
+// หลักการทำงาน:
+// 1. export interface Song: id, title, duration, filePath, coverUrl, artist, album, genre, playCount
+// 2. export interface SongFormData: fields สำหรับ upload เพลงใหม่
+
 import type { Artist } from "./artist";
 import type { Album } from "./album";
 import type { Genre } from "./genre";

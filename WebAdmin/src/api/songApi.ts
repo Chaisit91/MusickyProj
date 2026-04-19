@@ -1,3 +1,5 @@
+// API จัดการเพลง (Admin) — getSongs, createSong, updateSong, deleteSong | รองรับ multipart upload audio file + ปก
+
 import api from "./axios";
 
 export const getSongStatsApi = async () => {

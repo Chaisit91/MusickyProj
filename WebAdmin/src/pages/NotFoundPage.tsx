@@ -1,3 +1,9 @@
+// หน้า 404 Not Found — แสดงเมื่อ route ไม่ตรงกับที่กำหนดใน authRouter
+//
+// หลักการทำงาน:
+// 1. แสดงข้อความ 404 Not Found สำหรับ route ที่ไม่มีอยู่
+// 2. ปุ่ก "Go home" → navigate /dashboard
+
 import { useNavigate } from "react-router-dom";
 
 const NotFoundPage = () => {

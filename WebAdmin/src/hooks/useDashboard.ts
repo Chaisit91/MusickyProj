@@ -1,3 +1,10 @@
+// Hook ดึงสถิติ dashboard — total users, songs, revenue, กราฟรายได้ | auto-fetch เมื่อ mount
+//
+// หลักการทำงาน:
+// 1. mount: fetch stats (GET /dashboard/stats), activities (GET /dashboard/recent), topSongs, growth
+// 2. คืน object ที่มี stats, activities, topSongs, revenueData สำหรับ Dashboard component ใช้วาดกราฟ
+// 3. revenueData แปลงเป็น format ที่ chart.js ต้องการ (labels + datasets)
+
 import { useState, useEffect } from "react";
 import { getDashboardApi } from "../api/dashboardApi";
 

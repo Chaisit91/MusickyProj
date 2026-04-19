@@ -1,3 +1,5 @@
+// หน้าชำระเงิน Premium — กรอกข้อมูล, เลือกแพ็กเกจ, ยืนยันการสมัคร | dispatch paymentThunk
+
 import React, { useState } from "react";
 import {
   View,

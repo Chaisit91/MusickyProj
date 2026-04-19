@@ -1,3 +1,5 @@
+// หน้าศิลปินที่ติดตาม — แสดงรายการจาก state.library.followedArtists | กด navigate ไปหน้าศิลปิน
+
 import React, { useEffect, useState } from "react";
 import {View,
   Text,

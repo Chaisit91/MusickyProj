@@ -1,3 +1,5 @@
+// หน้ารายการเพลงตามแนวเพลง — ดึงเพลงทั้งหมดของ genre ด้วย id | กดเล่นได้ทันที
+
 import React, { useEffect, useState } from "react";
 import {View,
   Text,

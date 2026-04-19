@@ -1,3 +1,10 @@
+// หน้าจัดการ Genres — table + modal CRUD: สร้าง/แก้ไข/ลบแนวเพลง, upload icon | ใช้ useGenres
+//
+// หลักการทำงาน:
+// 1. useGenres hook: โหลด genres, CRUD
+// 2. แสดง grid แนวเพลง + สี + รูป
+// 3. modal สร้าง/แก้ไข: form มี color picker + image upload
+
 import React, { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

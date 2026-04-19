@@ -1,3 +1,11 @@
+// Redux slice นับการข้ามเพลงของ free user — จำกัด 5 ครั้ง/วัน | reset อัตโนมัติทุก 24 ชม. | persist ลง AsyncStorage | ไม่ reset เมื่อ logout (ขึ้นกับอุปกรณ์)
+//
+// หลักการทำงาน:
+// 1. restoreSkips (เรียกตอนเปิดแอป): อ่านจาก AsyncStorage → ตรวจ resetAt ถ้าเลย 24 ชม. reset → คืนค่า
+// 2. consumeSkip: ตรวจว่าหมดรอบ 24 ชม.ยัง → ถ้าหมดให้ reset → เพิ่ม skipsUsed ถ้ายังไม่เต็ม MAX_SKIPS
+// 3. ตั้ง resetAt ตอนใช้ครั้งแรกของรอบ (resetAt===0) → บันทึกลง AsyncStorage
+// 4. limit ผูกกับอุปกรณ์ ไม่ reset เมื่อ logout (intentional design)
+
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logoutThunk } from "./authSlice";

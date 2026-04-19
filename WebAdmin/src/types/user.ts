@@ -1,3 +1,9 @@
+// TypeScript types สำหรับ User — id, name, email, role, isPremium, avatarUrl, createdAt, bannedAt
+//
+// หลักการทำงาน:
+// 1. export interface User: id, name, email, role, isPremium, premiumExpiresAt, isBanned
+// 2. ใช้โดย useUsers hook และ Usermanagement component
+
 export interface User {
   id: string;
   name: string;

@@ -1,3 +1,10 @@
+// Password input — เหมือน FormInput แต่มีปุ่ม toggle แสดง/ซ่อนรหัสผ่าน (secureTextEntry)
+//
+// หลักการทำงาน:
+// 1. เหมือน FormInput แต่มี state show (boolean) ควบคุม secureTextEntry
+// 2. ปุ่ม eye icon ขวาใน input: toggle show → เปลี่ยน icon ระหว่าง eye open/closed
+// 3. เมื่อ show=false → secureTextEntry=true (ซ่อนตัวอักษร), show=true → แสดง
+
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { Control, Controller, FieldError, FieldPath, FieldValues } from "react-hook-form";

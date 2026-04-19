@@ -1,3 +1,5 @@
+// แก้ไขโปรไฟล์ — เปลี่ยนชื่อ, เลือก avatar จาก gallery, upload ด้วย multipart/form-data | dispatch updateProfileThunk
+
 import React, { useState } from "react";
 import {View,
   Text,

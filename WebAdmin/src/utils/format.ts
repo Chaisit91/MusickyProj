@@ -1,3 +1,10 @@
+// Utility functions — formatDate, formatNumber (comma), formatDuration (mm:ss), formatBytes (file size) | ใช้ทั่ว WebAdmin
+//
+// หลักการทำงาน:
+// 1. formatDate: แปลง ISO string → วันที่แบบ readable (dd/mm/yyyy หรือ relative)
+// 2. formatCurrency: แปลงตัวเลข → string เงิน (THB) พร้อม comma separator
+// 3. formatDuration: แปลงวินาที → mm:ss string สำหรับแสดงความยาวเพลง
+
 // แปลง ISO / dd/mm/yyyy → yyyy-mm-dd (สำหรับ input[type=date])
 export const toDateInputValue = (val?: string | Date | null): string => {
   if (!val) return "";

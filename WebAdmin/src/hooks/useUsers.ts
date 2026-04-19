@@ -1,3 +1,11 @@
+// Hook จัดการผู้ใช้ — fetch list, search, update role, ban/unban, delete | จัดการ loading/error state
+//
+// หลักการทำงาน:
+// 1. fetchUsers: GET /users (paginated, search) → รายการผู้ใช้ทั้งหมด
+// 2. updateUserRole: PATCH /users/:id/role → เปลี่ยน role (USER/ADMIN)
+// 3. banUser/unbanUser: PATCH /users/:id/ban → สั่งแบน/ปลดแบน
+// 4. pagination + search + filter state
+
 import { useState, useEffect, useCallback } from "react";
 import type { User } from "../types/user";
 import {

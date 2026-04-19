@@ -1,3 +1,11 @@
+// Bottom navigation — tabs: Home, Search, Library | highlight tab ปัจจุบัน | ซ่อนเมื่ออยู่ในหน้า player
+//
+// หลักการทำงาน:
+// 1. render 3 tab buttons: Home, Search, Your Library แนวนอนด้านล่างหน้าจอ
+// 2. แต่ละ TabButton ใช้ useSharedValue + useAnimatedStyle (Reanimated) สำหรับ animation
+// 3. เมื่อ active เปลี่ยน: icon scale ขึ้น (withSpring), dot indicator ปรากฏ (withSpring + withTiming)
+// 4. parent component ส่ง activeTab และ onTabPress มา — BottomNav ไม่จัดการ navigation เอง
+
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import Animated, {

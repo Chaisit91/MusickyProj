@@ -1,3 +1,10 @@
+// API Premium — สมัครและต่ออายุ Premium subscription | ดึงประวัติการชำระเงิน
+//
+// หลักการทำงาน:
+// 1. submitPaymentApi: POST /payments ด้วย multipart/form-data รองรับ slip upload (QR_CODE/BANK_TRANSFER)
+// 2. getMyTransactionsApi: GET /payments/my → ประวัติการชำระเงินของ user คนนั้น
+// 3. cancelPremiumApi: DELETE /payments/cancel → ยกเลิก premium, validateStatus <500 เพื่อรับ error detail กลับมาด้วย
+
 import apiClient from "./apiClient";
 
 export interface SubmitPaymentParams {

@@ -1,3 +1,9 @@
+// Layout หน้าหลัก — ครอบ Topbar + Bottomnav + Stack navigator สำหรับ home, search, library pages
+//
+// หลักการทำงาน:
+// 1. Stack navigator สำหรับ (main) group: home, search, library ฯลฯ
+// 2. headerShown: false — แต่ละหน้าจัดการ header เอง
+
 import { Stack } from "expo-router";
 
 // ─── Main Layout ──────────────────────────────────────────────────────────────

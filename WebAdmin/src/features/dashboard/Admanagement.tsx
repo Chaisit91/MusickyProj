@@ -1,3 +1,11 @@
+// หน้าจัดการโฆษณา — table + modal CRUD: สร้าง/แก้ไข/ลบ ad, เลือกประเภท (SPLASH/AFTER_SONG/AFTER_MULTIPLE), upload image/video, toggle active, preview media | ใช้ useAds
+//
+// หลักการทำงาน:
+// 1. useAds hook: โหลด ads list, CRUD, toggle active
+// 2. แสดง table โฆษณา: ชื่อ, ประเภท (SPLASH/AFTER_SONG), impression count, status
+// 3. modal สร้าง/แก้ไข: form มี image/video upload + duration + link URL
+// 4. toggle switch: เปิด/ปิดโฆษณาได้โดยไม่ต้องลบ
+
 import React, { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

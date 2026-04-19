@@ -1,3 +1,10 @@
+// หน้ารายการเพลงของศิลปิน — แสดงเพลงทั้งหมดของ artistId จาก URL params, preview เพลงด้วย MiniPlayer | ใช้ useSongs + useAudioPlayer
+//
+// หลักการทำงาน:
+// 1. รับ artistId จาก URL params → GET /songs?artistId= → แสดงเพลงของศิลปินนั้น
+// 2. ปุ่ม back กลับไปหน้า ArtistManagement
+// 3. สามารถลบเพลงออกจาก artist ได้โดยตรง
+
 import React, { useState, useEffect, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

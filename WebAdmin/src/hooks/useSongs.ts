@@ -1,3 +1,12 @@
+// Hook จัดการเพลง — fetch list (filter ตาม artistId ได้), create, update, delete | จัดการ loading/error state
+//
+// หลักการทำงาน:
+// 1. fetchSongs: GET /songs (paginated) → โหลดเพลงพร้อม artist/album/genre
+// 2. createSong: POST /songs (FormData: audio file + cover image + metadata)
+// 3. updateSong: PUT /songs/:id (FormData)
+// 4. deleteSong: DELETE /songs/:id
+// 5. pagination + search filter state
+
 import { useState, useEffect, useCallback } from "react";
 import type { Song } from "../types/song";
 import {

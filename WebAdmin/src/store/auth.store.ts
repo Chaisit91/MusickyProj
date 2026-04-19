@@ -1,3 +1,12 @@
+// Auth slice ของ WebAdmin — state: user, accessToken, isAuthenticated | actions: setCredentials, clearCredentials | persist token ลง localStorage
+//
+// หลักการทำงาน:
+// 1. initialState: อ่าน user จาก localStorage, accessToken เป็น null (ต้อง refresh เสมอ)
+// 2. loginThunk: เรียก adminLoginApi → บันทึก user ลง localStorage + accessToken ใน memory
+// 3. logoutThunk: เรียก logoutApi → ล้าง user+token ออกจาก state + localStorage
+// 4. refreshTokenThunk: เรียก refreshApi ผ่าน HttpOnly Cookie → อัปเดต accessToken ใน memory
+// 5. เมื่อ refresh ล้มเหลว: ล้าง state + localStorage ทั้งหมด (force re-login)
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { adminLoginApi, logoutApi, refreshApi } from "../api/authApi";

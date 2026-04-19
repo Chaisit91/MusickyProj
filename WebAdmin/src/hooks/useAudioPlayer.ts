@@ -1,3 +1,11 @@
+// Hook เล่นเสียงใน admin panel — play (toggle pause ถ้าเพลงเดิม), stop, seek, setVolume | ติดตาม progress/duration/isPlaying real-time ผ่าน HTML Audio element
+//
+// หลักการทำงาน:
+// 1. ใช้ HTMLAudioElement สร้าง audio player สำหรับเว็บ (ไม่ใช่ expo-audio)
+// 2. play(url): โหลด src และ play audio
+// 3. pause: หยุดเล่นชั่วคราว
+// 4. ใช้ใน Songmanagement เพื่อ preview เพลงก่อน upload หรือหลัง upload
+
 import { useState, useRef, useEffect, useCallback } from "react";
 
 export interface PlayingSong {

@@ -1,3 +1,5 @@
+// หน้าเพลงที่ถูกใจ — แสดงรายการจาก state.library.likedSongs | กดเล่นใส่ queue ได้เลย
+
 import React, { useEffect, useState } from "react";
 import {View,
   Text,

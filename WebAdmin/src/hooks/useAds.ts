@@ -1,3 +1,12 @@
+// Hook จัดการโฆษณา — fetch list, create, update, delete, toggle active | จัดการ loading/error state
+//
+// หลักการทำงาน:
+// 1. useState สำหรับ ads list, loading, error, modal states
+// 2. fetchAds: GET /ads → โหลดรายการโฆษณาทั้งหมด
+// 3. createAd/updateAd: POST/PUT /ads → บันทึกโฆษณาใหม่หรือแก้ไข (FormData สำหรับรูป/วิดีโอ)
+// 4. deleteAd: DELETE /ads/:id → ลบและ refetch list
+// 5. toggleActive: PATCH /ads/:id/toggle → สลับ isActive ของโฆษณา
+
 import { useState, useEffect, useCallback } from "react";
 import {
   getAdsStatsApi,

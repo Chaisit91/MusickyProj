@@ -1,3 +1,12 @@
+// หน้าจัดการ Songs — table + modal CRUD: สร้าง/แก้ไข/ลบเพลง, upload audio + ปก, เลือกศิลปิน/อัลบั้ม/แนวเพลง, preview เพลง | ใช้ useSongs + useAudioPlayer
+//
+// หลักการทำงาน:
+// 1. useSongs hook: โหลดเพลง, CRUD operations
+// 2. แสดง table รายการเพลง + paginator
+// 3. modal สร้าง/แก้ไข: form มี file upload สำหรับ audio + cover
+// 4. ปุ่ม play: useAudioPlayer preview เพลงก่อน
+// 5. search + filter โดย artist/genre
+
 import React, { useState, useEffect } from "react";
 import { Search, Plus, Music, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";

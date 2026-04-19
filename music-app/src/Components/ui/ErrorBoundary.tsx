@@ -1,3 +1,11 @@
+// React Error Boundary — ดักจับ JavaScript error ใน component tree ไม่ให้แอพพัง | แสดงหน้า fallback พร้อมปุ่ม retry
+//
+// หลักการทำงาน:
+// 1. Class component ที่ implement getDerivedStateFromError: เมื่อ child โยน error → ตั้ง hasError=true
+// 2. componentDidCatch: log error ไปยัง console (สามารถ extend ส่ง Sentry ได้)
+// 3. render: ถ้า hasError → แสดง fallback UI (หรือ custom fallback จาก props)
+// 4. ปุ่ม retry: reset state hasError=false ให้ React พยายาม render children ใหม่
+
 import React, { Component } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 

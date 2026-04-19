@@ -1,3 +1,11 @@
+// ตั้งชื่อหลัง Google login ครั้งแรก — แสดงเฉพาะเมื่อ requiresName=true | dispatch googleLoginThunk พร้อม name
+//
+// หลักการทำงาน:
+// 1. รับ params จาก URL: accessToken, email, suggestedName, avatarUrl (ส่งมาจาก login Google หน้าแรก)
+// 2. แสดง avatar (จาก URL หรือ initial letter) + email ของ user
+// 3. useForm + zodResolver(setUsernameSchema) validate ชื่อ (2-50 ตัว)
+// 4. handleConfirm: dispatch googleLoginThunk({ accessToken, name }) → fulfilled → AuthGuard redirect ไป home
+
 import React, { useState } from "react";
 import {View,
   Text,

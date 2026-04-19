@@ -1,3 +1,13 @@
+// Banner แจ้งเตือนไม่มีอินเทอร์เน็ต — อ่าน state.network.isOnline จาก Redux | แสดงที่ด้านบนสุดของหน้าจอเมื่อ offline
+//
+// หลักการทำงาน:
+// 1. useEffect mount: subscribe NetInfo.addEventListener → dispatch setOnline(isConnected) ทุกครั้ง network เปลี่ยน
+// 2. useEffect isOnline เปลี่ยน:
+//    - offline (isOnline=false): setVisible=true, spring translateY 0→0 (slide in จาก -60)
+//    - กลับมา online (isOnline=true, visible=true): spring slide in แสดง "กลับมาแล้ว" → setTimeout 1.5 วิ → timing slide out → setVisible=false
+// 3. ถ้า visible=false → return null (ไม่ render)
+// 4. สีพื้นหลัง: แดง=offline, เขียว=online
+
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, Animated } from "react-native";
 import NetInfo from "@react-native-community/netinfo";

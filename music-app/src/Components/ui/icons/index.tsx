@@ -1,3 +1,11 @@
+// รวม SVG icon components ทั้งหมดที่ใช้ในแอพ — export เป็น named exports ให้ import ได้สะดวก
+//
+// หลักการทำงาน:
+// 1. รวม SVG icon components ทั้งหมดไว้ที่เดียว
+// 2. แต่ละ icon รับ props: size, color (หรือ filled/active สำหรับ icon ที่มีสถานะ)
+// 3. ใช้ react-native-svg Svg + Path/Circle เพื่อ render vector icon ที่คมชัดทุกขนาด
+// 4. export เป็น named exports เพื่อให้ import ได้เฉพาะตัวที่ต้องการ (tree-shaking)
+
 import React from "react";
 import Svg, { Path, Circle } from "react-native-svg";
 

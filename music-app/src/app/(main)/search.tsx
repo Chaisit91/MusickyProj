@@ -1,3 +1,13 @@
+// หน้าค้นหา — real-time search (debounce), ค้นได้ทั้ง เพลง/ศิลปิน/อัลบั้ม/แนวเพลง | แสดง recent searches เมื่อยังไม่พิมพ์
+//
+// หลักการทำงาน:
+// 1. แสดง Trending Artists + Browse Genres เมื่อ input ว่าง (ก่อนค้นหา)
+// 2. กดค้นหา: debounce 400ms → searchAll(query) → แสดงผล songs + artists
+// 3. mic icon: toggle AI lyrics search mode → searchByLyrics (ส่งให้ AI วิเคราะห์เนื้อเพลง)
+// 4. กด result item: บันทึกลง search history (addSearchHistoryItemApi) → navigate/เล่นเพลง
+// 5. แสดง recent searches (SearchHistoryItem) เมื่อ query ว่าง — กด X ลบทีละอัน หรือ "clear all"
+// 6. BottomNav + MiniPlayer แสดงตลอด
+
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {View,
   Text,

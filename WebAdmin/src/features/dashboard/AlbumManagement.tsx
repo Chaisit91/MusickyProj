@@ -1,3 +1,10 @@
+// หน้าจัดการ Albums — table + modal CRUD: สร้าง/แก้ไข/ลบอัลบั้ม, เลือกศิลปิน, upload ปก | ใช้ useAlbums + useArtists
+//
+// หลักการทำงาน:
+// 1. useAlbums hook: โหลดอัลบั้ม, CRUD
+// 2. แสดง table อัลบั้ม + รูปปก
+// 3. modal สร้าง/แก้ไข: form มี cover image upload
+
 import React, { useState, useRef, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

@@ -1,3 +1,10 @@
+// Text input สำหรับ form — รองรับ error state (เปลี่ยนสี border), label, placeholder | ใช้คู่กับ react-hook-form Controller
+//
+// หลักการทำงาน:
+// 1. ใช้ Controller จาก react-hook-form เพื่อ bind TextInput เข้ากับ form control
+// 2. prop error: ถ้ามี → เปลี่ยน borderColor เป็นแดง + แสดง error message ด้านล่าง
+// 3. รองรับ generic type T extends FieldValues เพื่อ type-safe กับ form schema ใดก็ได้
+
 import React from "react";
 import { View, Text, TextInput, KeyboardTypeOptions } from "react-native";
 import { Control, Controller, FieldError, FieldPath, FieldValues } from "react-hook-form";

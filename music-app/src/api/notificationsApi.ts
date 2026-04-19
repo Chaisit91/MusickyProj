@@ -1,3 +1,10 @@
+// API การแจ้งเตือน — ดึงรายการ, mark all read, ลบ notification
+//
+// หลักการทำงาน:
+// 1. getNotificationsApi: GET /notifications → รายการ notification ทั้งหมดของ user
+// 2. markReadApi: PATCH /notifications/:id/read → mark notification เดียวว่าอ่านแล้ว
+// 3. markAllReadApi: PATCH /notifications/read-all → mark ทั้งหมดว่าอ่านแล้วในครั้งเดียว
+
 import apiClient from "./apiClient";
 
 export interface AppNotification {

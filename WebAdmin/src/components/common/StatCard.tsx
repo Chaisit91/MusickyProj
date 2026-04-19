@@ -1,3 +1,10 @@
+// Card แสดงตัวเลขสถิติ — รับ props: title, value, icon, color | ใช้ใน Dashboard สำหรับแสดง total users, songs, revenue
+//
+// หลักการทำงาน:
+// 1. card แสดงตัวเลข stat: label + value + icon + optional trend (เปลี่ยนแปลง%)
+// 2. รับ props: title, value, icon, trend
+// 3. ใช้ใน Dashboard สำหรับ 4 card หลัก
+
 import React from "react";
 
 const StatCard: React.FC<{ label: string; value: string | number; icon?: React.ReactNode }> = ({ label, value, icon }) => (

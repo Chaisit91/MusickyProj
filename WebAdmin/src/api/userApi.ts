@@ -1,3 +1,5 @@
+// API จัดการผู้ใช้ (Admin) — getUsers, updateUser (role/premium), banUser, unbanUser, deleteUser
+
 import api from "./axios";
 
 export const getUserStatsApi = async () => api.get("/admin/users/stats");

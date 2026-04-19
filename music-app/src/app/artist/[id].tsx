@@ -1,3 +1,5 @@
+// หน้ารายละเอียดศิลปิน — hero image, ชื่อ, ปุ่ม follow, รายการเพลงของศิลปิน | กดเล่นเพลงหรือ follow/unfollow
+
 import React, { useEffect, useState } from "react";
 import {View,
   Text,

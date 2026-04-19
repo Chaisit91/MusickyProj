@@ -1,3 +1,9 @@
+// Redux store ของ WebAdmin — มีเฉพาะ authReducer | export RootState, AppDispatch
+//
+// หลักการทำงาน:
+// 1. configureStore รวม auth reducer เพียงตัวเดียว (ข้อมูลอื่นดึง API โดยตรงผ่าน hooks)
+// 2. export RootState, AppDispatch สำหรับ type-safe dispatch + selector
+
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./auth.store";
 

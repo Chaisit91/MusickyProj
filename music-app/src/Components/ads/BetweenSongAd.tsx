@@ -1,3 +1,13 @@
+// Modal โฆษณาระหว่างเพลง (AFTER_SONG) — แสดงเหนือ player UI, countdown + progress bar, รองรับ image/video ad, เมื่อจบ auto-next song + bumpReload | ปิดด้วยปุ่ม chevron down
+//
+// หลักการทำงาน:
+// 1. ตรวจสอบ Redux state: adVisible=true + adContext="AFTER_SONG" + currentAd มีข้อมูล → แสดง Modal
+// 2. เมื่อ visible: บันทึก impression, เริ่ม countdown timer (setInterval ลดทีละ 1 วิ), เริ่ม progress bar animation (Animated.timing)
+// 3. ถ้า ad เป็นวิดีโอ (URL มี /video/upload/ หรือนามสกุล .mp4/.webm/.mov) → render AdVideo (useVideoPlayer)
+// 4. เมื่อ timeLeft === 0: รอ 500ms แล้ว dispatch dismissAd + nextSong + bumpReload (โหลด player ใหม่)
+// 5. ผู้ใช้กด chevron down: ปิด ad ทันทีโดย dismiss + router.back() (ไม่ข้ามเพลง)
+// 6. กด ad image: Linking.openURL(linkUrl) เปิด URL โฆษณาใน browser ภายนอก
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,

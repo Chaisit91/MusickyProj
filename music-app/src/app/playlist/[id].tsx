@@ -1,3 +1,5 @@
+// หน้ารายละเอียด playlist — ปก, ชื่อ, รายการเพลง, ปุ่มเล่นทั้ง playlist | เพิ่ม/ลบเพลงได้ถ้าเป็นเจ้าของ
+
 import React, { useState } from "react";
 import {View,
   Text,

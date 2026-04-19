@@ -1,3 +1,12 @@
+// Topbar หน้า home — แสดง logo, ปุ่ม notifications (มี unread badge), ปุ่ม settings
+//
+// หลักการทำงาน:
+// 1. รับ props: username, avatarUrl, isPremium, unreadCount, callbacks ต่างๆ
+// 2. แสดงโลโก้ "Musicky" + dot badge ด้านซ้าย
+// 3. ปุ่ม Premium: สีต่างกันตาม isPremium (เขียว=มี, เข้ม=ยังไม่มี) → เรียก onPremiumPress
+// 4. Bell icon: ถ้า unreadCount > 0 แสดง badge แดง (แสดง "9+" ถ้า >9) → เรียก onBellPress
+// 5. Gear icon → onSettingsPress, Avatar circle → onAvatarPress
+
 import React from "react";
 import {View, Text, TouchableOpacity} from "react-native";
 import Svg, { Path } from "react-native-svg";

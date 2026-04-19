@@ -1,3 +1,11 @@
+// กำหนด routes ทั้งหมดของ WebAdmin — /login, /forbidden, /dashboard, /users, /artists, /albums, /songs, /songs/:artistId, /Genres, /ads, /payments, /support | ครอบด้วย AdminRoute guard
+//
+// หลักการทำงาน:
+// 1. กำหนด routes ทั้งหมด: /login → AdminLogin, / + /dashboard/... → protected routes ครอบ AdminRoute
+// 2. AdminRoute ตรวจ isAuthenticated + isAdmin ก่อนแสดง children — redirect /login ถ้าไม่ผ่าน
+// 3. ProtectedRoute: ตรวจ isAuthenticated อย่างเดียว (ไม่ตรวจ role)
+// 4. Sidebar + Outlet pattern: layout มี Sidebar ซ้าย, Outlet เปลี่ยนตาม route ขวา
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLogin from "../../features/auth/AdminLogin";
 import Dashboard from "../../features/dashboard/Dashboard";

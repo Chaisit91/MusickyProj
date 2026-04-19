@@ -1,3 +1,10 @@
+// Redux store หลัก — รวม reducer ทั้งหมด (auth, player, library, preferences, ads, notifications, network, skip) | export RootState, AppDispatch
+//
+// หลักการทำงาน:
+// 1. configureStore รวม reducer ทั้งหมด 8 slice: auth, player, library, preferences, notifications, ads, network, skip
+// 2. export RootState = ReturnType<typeof store.getState> → type ของ state ทั้งหมด
+// 3. export AppDispatch = typeof store.dispatch → type ที่รองรับ async thunk
+
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import playerReducer from "./playerSlice";

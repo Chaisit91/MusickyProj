@@ -1,3 +1,10 @@
+// Hook จัดการแนวเพลง — fetch list, create, update, delete | จัดการ loading/error state
+//
+// หลักการทำงาน:
+// 1. fetchGenres: GET /genres → รายการแนวเพลงทั้งหมด
+// 2. createGenre/updateGenre: POST/PUT /genres (FormData สำหรับ image)
+// 3. deleteGenre: DELETE /genres/:id
+
 import { useState, useEffect, useCallback } from "react";
 import type { Genre } from "../types/genre";
 import {

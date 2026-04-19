@@ -1,3 +1,13 @@
+// หน้า Home — แสดง: เพลงแนะนำ, เพลงใหม่, เพลงยอดนิยม, แนวเพลง, ศิลปิน | กด item เพื่อเล่นเพลงหรือ navigate
+//
+// หลักการทำงาน:
+// 1. useFocusEffect: โหลด data ทุกครั้งที่ screen ได้ focus (เพลง/แนวเพลง/ศิลปิน/recently played)
+// 2. Tab bar category (For you/Relax/Workout/Travel/Party): เปลี่ยน CategoryContent ที่แสดง
+// 3. กด category ที่ต้องใช้ mood songs → getCategorySongs ตาม genre keywords ที่ตรงกัน
+// 4. กดเพลง: dispatch playSong พร้อม queue=เพลงทั้งหมดในหมวดนั้น → navigate ไปหน้า player
+// 5. BottomNav, MiniPlayer, TopBar แสดงพร้อมกัน
+// 6. pullRefresh: reload ข้อมูลทั้งหมด + dispatch loadLibrary
+
 import React, { useEffect, useState, useCallback } from "react";
 import {View,
   Text,

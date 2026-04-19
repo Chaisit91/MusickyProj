@@ -1,3 +1,5 @@
+// หน้าตั้งค่าหลัก — links ไป: edit-profile, download-quality, streaming-quality, music-language, help-support | ปุ่ม logout
+
 import React, { useState, useEffect, useCallback } from "react";
 import {View,
   Text,

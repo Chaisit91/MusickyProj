@@ -1,3 +1,12 @@
+// Zod validation schema สำหรับ form auth — loginSchema, registerSchema, forgotEmailSchema, resetPasswordSchema | export types สำหรับใช้กับ react-hook-form
+//
+// หลักการทำงาน:
+// 1. กำหนด reusable field schemas: nameField, emailField (@gmail.com only), passwordField
+// 2. registerSchema: รวมทุก field + refine ตรวจ password === confirmPassword
+// 3. loginSchema: email + password เท่านั้น
+// 4. export type ด้วย z.infer เพื่อใช้กับ react-hook-form โดยไม่ต้องกำหนด type แยก
+// 5. schema อื่น: playlistSchema, setUsernameSchema, editProfileSchema, helpSupportSchema
+
 import { z } from "zod";
 
 // ─── Reusable Field Schemas ───────────────────────────────────────────────────
