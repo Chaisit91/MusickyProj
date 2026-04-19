@@ -146,8 +146,6 @@ export default function SettingsScreen() {
   };
 
   const initial = user?.name?.charAt(0)?.toUpperCase() ?? "?";
-  const langLabel = prefs.musicLanguages.join(", ");
-
   return (
     <View style={{ flex: 1, backgroundColor: "#111111" }}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />

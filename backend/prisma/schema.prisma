@@ -36,9 +36,6 @@ model User {
 model UserPreference {
   id               String   @id @default(uuid())
   userId           String   @unique
-  streamingQuality String   @default("Normal")
-  downloadQuality  String   @default("High")
-  musicLanguages   String[] @default(["English", "Thai"])
   autoPlay         Boolean  @default(true)
   showLyrics       Boolean  @default(false)
   createdAt        DateTime @default(now())

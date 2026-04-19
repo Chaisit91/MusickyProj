@@ -1,12 +1,11 @@
-// API auth — register, login, logout, googleLogin, fetchMe, updateProfile (multipart), forgotPassword (ส่ง OTP), resetPassword
+// API auth — register, login, logout, fetchMe, updateProfile (multipart)
 //
 // หลักการทำงาน:
 // 1. registerApi: POST /auth/register → backend คืน tokens ทันที (auto-login)
 // 2. loginApi: POST /auth/login → คืน accessToken, refreshToken, user
-// 3. googleLoginApi: POST /auth/google → ถ้า requiresName=true ต้องตั้งชื่อก่อน (Google login ครั้งแรก)
-// 4. fetchMeApi: GET /auth/me → ตรวจสอบ session + ดึง user ล่าสุด (ใช้หลัง restore session)
-// 5. updateProfileApi: PATCH /auth/profile ด้วย multipart/form-data (รองรับ upload รูป avatar)
-// 6. logoutApi: POST /auth/logout → invalidate refresh token ฝั่ง server
+// 3. fetchMeApi: GET /auth/me → ตรวจสอบ session + ดึง user ล่าสุด (ใช้หลัง restore session)
+// 4. updateProfileApi: PATCH /auth/profile ด้วย multipart/form-data (รองรับ upload รูป avatar)
+// 5. logoutApi: POST /auth/logout → invalidate refresh token ฝั่ง server
 
 // นำเข้า apiClient ที่ตั้งค่า interceptor และ base URL ไว้แล้ว
 import apiClient from "./apiClient";
@@ -46,31 +45,12 @@ export interface LoginResponse {
   };
 }
 
-<<<<<<< HEAD
-// ─── ขอ OTP สำหรับรีเซ็ตรหัสผ่าน ─────────────────────────────────────────────
-// params: email - อีเมลที่ต้องการรีเซ็ตรหัสผ่าน
-// return: success flag, ข้อความ, และอาจมี OTP (dev mode)
-export const forgotPasswordApi = async (email: string) => {
-  const { data } = await apiClient.post("/auth/forgot-password", { email });
-  return data as { success: boolean; message: string; data?: { otp: string } };
-};
-
-// ─── รีเซ็ตรหัสผ่านด้วย OTP ──────────────────────────────────────────────────
-// params: email - อีเมลที่ขอ OTP, otp - รหัส OTP ที่ได้รับ, newPassword - รหัสผ่านใหม่
-// return: success flag และข้อความแจ้งผล
-export const resetPasswordApi = async (email: string, otp: string, newPassword: string) => {
-  const { data } = await apiClient.post("/auth/reset-password", { email, otp, newPassword });
-  return data as { success: boolean; message: string };
-};
-
 // ─── สมัครสมาชิกใหม่ ──────────────────────────────────────────────────────────
 // params: payload - ข้อมูลสมาชิกใหม่ (ชื่อ, อีเมล, รหัสผ่าน, วันเกิด)
 // return: LoginResponse (backend คืน token ทันทีหลังสมัคร ไม่ต้อง login ซ้ำ)
-=======
->>>>>>> d644fe44f32236481b9e824505657910f9ebd318
 export const registerApi = async (payload: RegisterPayload) => {
   const { data } = await apiClient.post("/auth/register", payload);
-  return data as LoginResponse; // backend now returns tokens on register
+  return data as LoginResponse;
 };
 
 // ─── เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน ────────────────────────────────────────
@@ -83,46 +63,13 @@ export const loginApi = async (payload: LoginPayload) => {
 
 // ─── ออกจากระบบ ───────────────────────────────────────────────────────────────
 // ส่ง request ไปยัง backend เพื่อ invalidate refresh token ฝั่ง server
-// return: ข้อมูล response ทั่วไปจาก server
 export const logoutApi = async () => {
   const { data } = await apiClient.post("/auth/logout");
   return data;
 };
 
-<<<<<<< HEAD
-// ─── Interface สำหรับ response เมื่อ login ด้วย Google ──────────────────────
-export interface GoogleLoginResponse {
-  success: boolean;      // API สำเร็จหรือไม่
-  requiresName: boolean; // true = ผู้ใช้ใหม่ที่ยังไม่มีชื่อ ต้องให้กรอกชื่อ
-  // กรณี requiresName = true → ส่งข้อมูลชั่วคราวเพื่อให้กรอกชื่อก่อน
-  googleData?: {
-    googleId: string;      // Google unique ID
-    email: string;         // อีเมลจาก Google
-    suggestedName: string; // ชื่อที่ Google แนะนำ (จาก profile)
-    avatarUrl: string | null; // URL รูปโปรไฟล์จาก Google
-    accessToken: string;   // token ชั่วคราวสำหรับส่งชื่อในขั้นต่อไป
-  };
-  // กรณี requiresName = false → ผู้ใช้เคย login Google แล้ว คืน token ปกติ
-  data?: {
-    accessToken: string;  // JWT access token
-    refreshToken: string; // JWT refresh token
-    user: AuthUser;       // ข้อมูลผู้ใช้
-  };
-}
-
-// ─── Login หรือ register ด้วย Google OAuth ────────────────────────────────────
-// params: accessToken - Google OAuth token, name - ชื่อที่ผู้ใช้กรอก (เฉพาะครั้งแรก)
-// return: GoogleLoginResponse ที่บอกว่าต้องกรอกชื่อหรือเข้าได้เลย
-export const googleLoginApi = async (params: { accessToken: string; name?: string }) => {
-  const { data } = await apiClient.post("/auth/google", params);
-  return data as GoogleLoginResponse;
-};
-
 // ─── ดึงข้อมูลผู้ใช้ปัจจุบัน (ตาม token ที่แนบ) ─────────────────────────────
 // ใช้ตรวจสอบ session ว่ายังใช้งานได้อยู่หรือไม่ และดึงข้อมูล user ล่าสุด
-// return: ข้อมูล AuthUser ของผู้ใช้ที่ login อยู่
-=======
->>>>>>> d644fe44f32236481b9e824505657910f9ebd318
 export const fetchMeApi = async () => {
   const { data } = await apiClient.get("/auth/me");
   return data as { success: boolean; data: AuthUser };
@@ -133,28 +80,21 @@ export const fetchMeApi = async () => {
 //   name - ชื่อใหม่ (optional)
 //   avatarUri - path ของรูปภาพบน device (optional)
 //   avatarMimeType - MIME type ของรูป เช่น "image/jpeg" (optional)
-// ใช้ FormData เพราะมีการอัปโหลดไฟล์ภาพ (ต้อง multipart/form-data)
-// return: ข้อมูล AuthUser หลังอัปเดต
 export const updateProfileApi = async (params: {
   name?: string;
   avatarUri?: string;
   avatarMimeType?: string;
 }) => {
-  // สร้าง FormData สำหรับส่งข้อมูลแบบ multipart
   const formData = new FormData();
-  // เพิ่มชื่อถ้ามีการส่งมา
   if (params.name) formData.append("name", params.name);
   if (params.avatarUri) {
-    // ดึงชื่อไฟล์จาก URI (ตัด path ส่วนหน้าออก)
     const filename = params.avatarUri.split("/").pop() ?? "avatar.jpg";
-    // เพิ่มไฟล์รูปภาพเข้า FormData พร้อม metadata ที่ React Native ต้องการ
     formData.append("avatar", {
-      uri: params.avatarUri,       // path ของไฟล์บน device
-      name: filename,              // ชื่อไฟล์
-      type: params.avatarMimeType ?? "image/jpeg", // MIME type (default jpeg)
+      uri: params.avatarUri,
+      name: filename,
+      type: params.avatarMimeType ?? "image/jpeg",
     } as any);
   }
-  // ส่ง PATCH request พร้อม override Content-Type เป็น multipart/form-data
   const { data } = await apiClient.patch("/auth/profile", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });

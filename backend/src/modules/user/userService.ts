@@ -45,21 +45,15 @@ export const getMyPreferences = async (req: Request, res: Response) => {
 
 export const updateMyPreferences = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
-  const { streamingQuality, downloadQuality, musicLanguages, autoPlay, showLyrics } = req.body;
+  const { autoPlay, showLyrics } = req.body;
   const pref = await prisma.userPreference.upsert({
     where: { userId },
     create: {
       userId,
-      ...(streamingQuality !== undefined && { streamingQuality }),
-      ...(downloadQuality !== undefined && { downloadQuality }),
-      ...(musicLanguages !== undefined && { musicLanguages }),
       ...(autoPlay !== undefined && { autoPlay }),
       ...(showLyrics !== undefined && { showLyrics }),
     },
     update: {
-      ...(streamingQuality !== undefined && { streamingQuality }),
-      ...(downloadQuality !== undefined && { downloadQuality }),
-      ...(musicLanguages !== undefined && { musicLanguages }),
       ...(autoPlay !== undefined && { autoPlay }),
       ...(showLyrics !== undefined && { showLyrics }),
     },

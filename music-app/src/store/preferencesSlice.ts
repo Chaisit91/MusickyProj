@@ -1,4 +1,4 @@
-// Redux slice ตั้งค่าผู้ใช้ — state: musicLanguage, streamingQuality, downloadQuality, autoPlay, showLyrics | sync กับ backend ผ่าน preferencesApi | persist ลง AsyncStorage
+// Redux slice ตั้งค่าผู้ใช้ — state: autoPlay, showLyrics | sync กับ backend ผ่าน preferencesApi | persist ลง AsyncStorage
 //
 // หลักการทำงาน:
 // 1. loadPreferences (เรียกหลัง login): GET /users/me/preferences → เก็บใน state + sync ลง AsyncStorage
@@ -12,9 +12,6 @@ import { getPreferencesApi, updatePreferencesApi, UserPreferences } from "../api
 import { logoutThunk } from "./authSlice";
 
 const DEFAULT: UserPreferences = {
-  streamingQuality: "Normal",
-  downloadQuality: "High",
-  musicLanguages: ["English", "Thai"],
   autoPlay: true,
   showLyrics: false,
 };

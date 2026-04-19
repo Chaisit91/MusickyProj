@@ -1,4 +1,4 @@
-// Redux slice จัดการ auth — state: user, accessToken, isLoggedIn | thunks: loginThunk, googleLoginThunk, logoutThunk, fetchMeThunk, updateProfileThunk | ล้าง state ทั้งหมดเมื่อ logout
+// Redux slice จัดการ auth — state: user, accessToken, isLoggedIn | thunks: loginThunk, logoutThunk, fetchMeThunk, updateProfileThunk | ล้าง state ทั้งหมดเมื่อ logout
 //
 // หลักการทำงาน:
 // 1. restoreSession (เรียกตอนแอปเปิด): อ่าน token+user จาก AsyncStorage → setCachedToken → fetchMeApi sync user ล่าสุด → คืน session หรือ null
@@ -11,13 +11,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // นำเข้า AsyncStorage สำหรับเก็บ/อ่าน token และข้อมูลผู้ใช้ใน local storage ของอุปกรณ์
 import AsyncStorage from "@react-native-async-storage/async-storage";
-<<<<<<< HEAD
 // นำเข้า API functions และ types สำหรับระบบ authentication
-import { loginApi, registerApi, logoutApi, fetchMeApi, updateProfileApi, googleLoginApi, AuthUser, LoginPayload, RegisterPayload } from "../api/authApi";
-// นำเข้า setCachedToken เพื่ออัปเดต token ที่ใช้กับ axios instance ทันที (ไม่ต้องรอ AsyncStorage)
-=======
 import { loginApi, registerApi, logoutApi, fetchMeApi, updateProfileApi, AuthUser, LoginPayload, RegisterPayload } from "../api/authApi";
->>>>>>> d644fe44f32236481b9e824505657910f9ebd318
+// นำเข้า setCachedToken เพื่ออัปเดต token ที่ใช้กับ axios instance ทันที (ไม่ต้องรอ AsyncStorage)
 import { setCachedToken } from "../api/apiClient";
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -67,34 +63,6 @@ export const restoreSession = createAsyncThunk("auth/restoreSession", async () =
   }
 });
 
-<<<<<<< HEAD
-// Google Login
-// รับ Google access token แล้วส่งไป backend เพื่อแลก JWT ของแอป
-export const googleLoginThunk = createAsyncThunk(
-  "auth/googleLogin",
-  async (params: { accessToken: string; name?: string }, { rejectWithValue }) => {
-    try {
-      const res = await googleLoginApi(params);
-      if (res.requiresName) {
-        // backend แจ้งว่าบัญชีใหม่ที่ยังไม่มีชื่อ → ต้องตั้งชื่อก่อน navigate ไป home
-        return { requiresName: true as const, googleData: res.googleData! };
-      }
-      const { accessToken, refreshToken, user } = res.data!;
-      // บันทึก token และ user ลง AsyncStorage สำหรับ session ต่อไป
-      await AsyncStorage.setItem("accessToken", accessToken);
-      await AsyncStorage.setItem("refreshToken", refreshToken);
-      await AsyncStorage.setItem("user", JSON.stringify(user));
-      // อัปเดต token ใน axios ทันที
-      setCachedToken(accessToken);
-      return { requiresName: false as const, accessToken, user };
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message ?? "Google login failed");
-    }
-  }
-);
-
-=======
->>>>>>> d644fe44f32236481b9e824505657910f9ebd318
 // Fetch latest user from API (call after focus on profile screens)
 // ใช้รีเฟรช user data หลังผู้ใช้แก้ไข profile เพื่อให้ UI แสดงข้อมูลล่าสุด
 export const fetchMeThunk = createAsyncThunk("auth/fetchMe", async (_, { rejectWithValue }) => {
@@ -238,26 +206,7 @@ const authSlice = createSlice({
         state.isLoading = false;
       });
 
-<<<<<<< HEAD
-    // googleLogin: จัดการ Google OAuth login
-    builder
-      .addCase(googleLoginThunk.fulfilled, (state, action) => {
-        if (!action.payload.requiresName) {
-          // login สำเร็จและมีชื่อแล้ว → ตั้งค่า state เหมือน loginThunk
-          state.user = action.payload.user;
-          state.accessToken = action.payload.accessToken;
-          state.isLoggedIn = true;
-        }
-        // requiresName=true → state ไม่เปลี่ยน รอให้ตั้งชื่อก่อน (caller จะ navigate ไปหน้าตั้งชื่อ)
-      })
-      .addCase(googleLoginThunk.rejected, (state, action) => {
-        state.error = action.payload as string; // เก็บ error เช่น "Google login failed"
-      });
-
     // fetchMe: อัปเดต user data ล่าสุดจาก API
-=======
-    // fetchMe
->>>>>>> d644fe44f32236481b9e824505657910f9ebd318
     builder.addCase(fetchMeThunk.fulfilled, (state, action) => {
       state.user = action.payload; // แทนที่ user เดิมด้วยข้อมูลล่าสุด
     });

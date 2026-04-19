@@ -1,4 +1,4 @@
-// API ตั้งค่าผู้ใช้ — ดึงและอัปเดต: musicLanguage, streamingQuality, downloadQuality, autoPlay, showLyrics
+// API ตั้งค่าผู้ใช้ — ดึงและอัปเดต: autoPlay, showLyrics
 //
 // หลักการทำงาน:
 // 1. getPreferencesApi: GET /users/me/preferences → ดึง preferences ของ user ที่ login อยู่
@@ -10,11 +10,8 @@ import apiClient from "./apiClient";
 
 // ─── Interface สำหรับการตั้งค่าความชอบของผู้ใช้ ──────────────────────────────
 export interface UserPreferences {
-  streamingQuality: string;   // คุณภาพเสียงตอน streaming เช่น "LOW", "MEDIUM", "HIGH"
-  downloadQuality: string;    // คุณภาพเสียงตอนดาวน์โหลด เช่น "LOW", "MEDIUM", "HIGH"
-  musicLanguages: string[];   // รายการภาษาเพลงที่ชอบ เช่น ["th", "en"]
-  autoPlay: boolean;          // เล่นเพลงต่อเนื่องอัตโนมัติหรือไม่
-  showLyrics: boolean;        // แสดงเนื้อเพลงอัตโนมัติขณะเล่นหรือไม่
+  autoPlay: boolean;
+  showLyrics: boolean;
 }
 
 // ─── ดึงการตั้งค่าความชอบของผู้ใช้ปัจจุบัน ──────────────────────────────────
