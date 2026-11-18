@@ -1,5 +1,22 @@
-import { PrismaClient } from '@prisma/client';
+export interface RegisterInput {
+  name: string;
+  email: string;
+  password: string;
+  birthDate: string; // วันเดือนปีเกิด เก็บเป็น ISO string
+}
 
-const prisma = new PrismaClient();
+export interface LoginInput {
+  email: string;
+  password: string;
+}
 
-export const User = prisma.user;
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+}

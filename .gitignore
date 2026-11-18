@@ -417,5 +417,6 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-.env
-/node_modules
+CLAUDE.md
+.claude
+PROJECT_STRUCTURE.txt
